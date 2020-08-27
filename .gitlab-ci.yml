@@ -1,0 +1,29 @@
+include:
+  - template: 'Workflows/MergeRequest-Pipelines.gitlab-ci.yml'
+
+image: debian:unstable
+
+before_script:
+  - apt update -qq
+  - apt install -y -qq build-essential autoconf automake autoconf-archive git
+  - git clone https://github.com/ashinn/chibi-scheme.git --depth 1
+  - cd chibi-scheme
+  - make
+  - make install
+  - cd ..
+
+stages:
+  - build
+
+build-distcheck:
+  stage: build
+  script:
+    - ./bootstrap
+    - mkdir build
+    - cd build
+    - ../configure
+    - make distcheck
+  artifacts:
+    paths:
+      - build/*
+    expire_in: 1 week

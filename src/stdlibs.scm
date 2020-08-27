@@ -1,0 +1,57 @@
+;; Copyright © Marc Nieper-Wißkirchen (2020).
+
+;; This file is part of unsyntax.
+
+;; Permission is hereby granted, free of charge, to any person
+;; obtaining a copy of this software and associated documentation files
+;; (the "Software"), to deal in the Software without restriction,
+;; including without limitation the rights to use, copy, modify, merge,
+;; publish, distribute, sublicense, and/or sell copies of the Software,
+;; and to permit persons to whom the Software is furnished to do so,
+;; subject to the following conditions:
+
+;; The above copyright notice and this permission notice (including the
+;; next paragraph) shall be included in all copies or substantial
+;; portions of the Software.
+
+;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+;; EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+;; MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+;; NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+;; BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+;; ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+;; SOFTWARE.
+
+(scheme base)
+(scheme case-lambda)
+(scheme char)
+(scheme complex)
+(scheme cxr)
+(scheme eval)
+(scheme file)
+(scheme inexact)
+(scheme lazy)
+(scheme load)
+(scheme process-context)
+(scheme read)
+(scheme repl)
+(scheme r5rs)
+(scheme write)
+(srfi 1)
+(srfi 2)
+(srfi 8)
+(srfi 28)
+(srfi 37)
+(srfi 59)
+(srfi 64)
+(srfi 125)
+(srfi 128)
+(srfi 139)
+(srfi 158)
+(srfi 190)
+(srfi 211 identifier-syntax)
+(srfi 211 syntax-case)
+(srfi 211 syntax-parameter)
+(srfi 211 variable-transformer)
+(srfi 211 with-ellipsis)

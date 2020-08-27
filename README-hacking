@@ -1,0 +1,106 @@
+This README-hacking file describes the development environment.
+
+Everything related to the development of Unsyntax is on GitLab:
+https://nieper.gitlab.com/unsyntax.
+
+
+* Working from the Repository
+
+** Autotools
+
+This distribution uses the latest stable versions of Automake, Autoconf.  If
+you are getting the sources from git (or change configure.ac), you'll need
+to have these tools installed to (re)build.  All of these programs are
+available from ftp://ftp.gnu.org/gnu.
+
+If you're using a GNU/Linux distribution, the easiest way to install these
+packages depends on your system.  The following shell command should work
+for Debian-based systems such as Ubuntu:
+
+    $ sudo apt-get install autoconf automake
+
+** Chibi-Scheme
+
+This package needs the latest development version of Chibi-Scheme installed
+on the build and the host system.  It is available from
+https://github.com/ashinn/chibi-scheme.
+
+** Building
+
+After getting the git sources, and installing the tools above, you can run
+
+    $ ./bootstrap
+    $ ./configure
+    $ make
+    $ make check
+
+to do a fresh build.  At this point, there should be no difference between
+your local copy, and the master copy:
+
+    $ git diff
+
+should output no difference.
+
+After that first time, running make should suffice.
+
+** Gnulib
+
+This distribution also uses Gnulib (https://www.gnu.org/software/gnulib) to
+share common files, stroed as a submodule in git.
+
+** Updating
+
+    $ git pull
+    $ git submodule update
+
+** Updating a submodule
+
+To update a submodule, say gnulib, do as follows:
+
+Get the most recent version of the master branch from git.
+
+    $ cd .gnulib
+    $ git pull
+
+Make sure Unsyntax can live with that version of gnulib.
+
+    $ cd ..
+    $ ./bootstrap
+    $ make distcheck
+
+Register your changes.
+
+    $ git commit ...
+
+
+-----
+
+Copyright (C) 2020 Marc Nieper-Wißkirchen
+
+This file is part of Unsyntax.
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation files
+(the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software,
+and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice (including the
+next paragraph) shall be included in all copies or substantial
+portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+Local Variables:
+mode: outline
+fill-column: 76
+End:
