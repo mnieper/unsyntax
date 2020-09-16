@@ -1,0 +1,13 @@
+title: Unsyntax
+email: marc@unsyntax.org
+description: >-
+  This is the homepage of the software Unsyntax. Unsyntax is an
+  implementation of the Scheme programming language, or more
+  specifically, an expander for the R7RS programs.
+baseurl: ""
+url: "https://www.unsyntax.org"
+
+markdown: kramdown
+theme: minima
+plugins:
+  - jekyll-feed

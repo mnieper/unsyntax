@@ -1,0 +1,20 @@
+image: ruby:2.7
+
+cache:
+  paths:
+    - vendor/
+
+before_script:
+  - gem install bundler
+  - bundle install
+
+pages:
+  script:
+    - bundle exec jekyll build -d public
+    - find public -type f -regex '.*\.\(htm\|html\|txt\|text\|js\|css\)$' -exec gzip -f -k {} \;
+  artifacts:
+    paths:
+      - public
+  only:
+    - pages
+
