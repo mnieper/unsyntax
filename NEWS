@@ -2,6 +2,12 @@ Unsyntax NEWS
 
 * Noteworthy changes in release ?.? (????-??-??) [?]
 
+** New features
+
+*** SRFI 188
+
+  SRFI 188 (Splicing binding constructs for syntactic keywords) is now
+  supported.
 
 * Noteworthy changes in release 0.0.1 (2020-09-17) [alpha]
 

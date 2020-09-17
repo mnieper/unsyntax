@@ -24,8 +24,8 @@
 # SOFTWARE.
 
 scheme_tests = r7rs-tests.scm syntax-case-tests.scm srfi-1-tests.scm	\
-               srfi-2-tests.scm srfi-46-tests.scm srfi-190-tests.scm	\
-               library-tests.scm
+               srfi-2-tests.scm srfi-46-tests.scm srfi-188-tests.scm	\
+               srfi-190-tests.scm library-tests.scm
 
 unsyntax_scheme = $(top_builddir)/bin/unsyntax-scheme
 

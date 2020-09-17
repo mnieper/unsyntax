@@ -36,7 +36,7 @@ scheme_sources = scheme/base.scm scheme/base.sld			\
                  srfi/37.sld srfi/59.scm srfi/59.sld srfi/64.scm	\
                  srfi/64.sld srfi/111.scm srfi/111.sld srfi/125.sld	\
                  srfi/128.scm srfi/128.sld srfi/139.sld srfi/158.scm	\
-                 srfi/158.sld srfi/190.scm srfi/190.sld			\
+                 srfi/158.sld srfi/188.sld srfi/190.scm srfi/190.sld	\
                  srfi/211/identifier-syntax.scm				\
                  srfi/211/identifier-syntax.sld				\
                  srfi/211/syntax-case.scm srfi/211/syntax-case.sld	\
