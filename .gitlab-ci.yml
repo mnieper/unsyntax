@@ -3,6 +3,9 @@ include:
 
 image: debian:unstable
 
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
 before_script:
   - apt update -qq
   - apt install -y -qq build-essential autoconf automake autoconf-archive git
