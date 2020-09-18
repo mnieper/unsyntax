@@ -9,6 +9,10 @@ Unsyntax NEWS
   SRFI 188 (Splicing binding constructs for syntactic keywords) is now
   supported.
 
+** Documentation
+
+  Man pages have been added.
+
 * Noteworthy changes in release 0.0.1 (2020-09-17) [alpha]
 
   Initial release.
