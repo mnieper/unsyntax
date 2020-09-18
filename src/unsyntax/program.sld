@@ -25,6 +25,7 @@
 
 (define-library (unsyntax program)
   (export run
+	  expand-program
 	  read-program)
   (import (scheme base)
 	  (unsyntax backend)

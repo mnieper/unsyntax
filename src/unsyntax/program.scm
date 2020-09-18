@@ -28,7 +28,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (run stx)
-  (let-values (((defs invreqs) (expand-program stx))
+  (let-values (((defs implibs invreqs) (expand-program stx))
 	       ((loc) (syntax-object-srcloc stx)))
     (for-each invoke-library! invreqs)
     (execute (build-body loc defs
@@ -49,7 +49,9 @@
       (expand-top-level body
 			import-env
 			(lambda (stxdefs defs env)
-			  (values defs (invoke-requirements)))))))
+			  (values defs
+				  imported-libs
+				  (invoke-requirements)))))))
 
 (define (parse-program stx)
   (let ((body (syntax->list stx)))

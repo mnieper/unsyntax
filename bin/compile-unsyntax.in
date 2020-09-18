@@ -1,6 +1,8 @@
+#!/bin/sh
+
 # Copyright © Marc Nieper-Wißkirchen (2020).
 
-# This file is part of unsyntax.
+# This file is part of Unsyntax.
 
 # Permission is hereby granted, free of charge, to any person
 # obtaining a copy of this software and associated documentation files
@@ -23,6 +25,47 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-/compile-unsyntax
-/expand-unsyntax
-/unsyntax-scheme
+if [ -n "$COMPILE_R7RS" -a "$0" != "$COMPILE_R7RS" ]; then
+    exec "$COMPILE_R7RS" "$@"
+fi
+
+outfile=
+cmdline="${EXPAND_UNSYNTAX:-expand-unsyntax}"
+
+while getopts :A:D:I:o: name
+do
+    case $name in
+	A) cmdline="$cmdline -A $OPTARG";;
+	D) cmdline="$cmdline -D $OPTARG";;
+	I) cmdline="$cmdline -I $OPTARG";;
+	o) outfile="$OPTARG";;
+	:) printf "%s: error: argument missing after ‘-%s’\n" $0 $OPTARG
+	   exit 2;;
+	?) printf "%s: error: unrecognized command line option ‘-%s’\n" $0 $OPTARG
+	exit 2;;
+    esac
+done
+
+shift $(($OPTIND - 1))
+
+if [ -z "$1" ]; then
+    printf "%s: error: no input file\n" $0
+   exit 0
+fi
+
+if [ -z "$outfile" ]
+then
+    case "$1" in
+	*.scm) outfile=$(basename -- "$1" .scm);;
+	*) outfile="a.out";;
+    esac
+fi
+
+cat << EOF > "$outfile"
+#! /bin/sh
+#|
+exec chibi-scheme -h4G -A'@PKGDATADIR@' -- "\$0" "\$@"
+|#
+EOF
+$cmdline "$1" >> "$outfile" || { rm -f "$outfile"; exit 1; }
+chmod +x "$outfile"

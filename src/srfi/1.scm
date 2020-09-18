@@ -1221,7 +1221,7 @@
 		 (new-tail (recur (delete x tail elt=))))
 	    (if (eq? tail new-tail) lis (cons x new-tail)))))))
 
-(define (delete-duplicates! lis maybe-=)
+(define (delete-duplicates! lis . maybe-=)
   (let ((elt= (:optional maybe-= equal?)))
     (check-arg procedure? elt= delete-duplicates!)
     (let recur ((lis lis))

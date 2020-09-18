@@ -56,7 +56,8 @@ scheme_sources = scheme/base.scm scheme/base.sld			\
                  unsyntax/define-record-type.sld			\
                  unsyntax/environment.scm unsyntax/environment.sld	\
                  unsyntax/error.scm unsyntax/error.sld			\
-                 unsyntax/eval.sld unsyntax/expander.sld		\
+                 unsyntax/eval.sld unsyntax/expand.scm			\
+                 unsyntax/expand.sld unsyntax/expander.sld		\
                  unsyntax/expander/auxiliary-syntax.scm			\
                  unsyntax/expander/cond-expand.scm			\
                  unsyntax/expander/core-bindings.scm			\

@@ -59,6 +59,9 @@
    ;; REPL
    unsyntax-scheme
 
+   ;; Compiler
+   expand-unsyntax
+
    ;; Boxes for mutable variables
    unbox
    set-box!
@@ -66,7 +69,8 @@
    ;; Base Library
    command-line
 
-   ;; Features for cond-expand
+   ;; Features for cond-expand and the -D command-line flag.
+   current-features
    features)
   (import (srfi 1)
           (srfi 111)
@@ -75,6 +79,7 @@
           (unsyntax environment)
           (rename (unsyntax error)
                   (reader-error? read-error?))
+	  (unsyntax expand)
           (unsyntax expander)
           (unsyntax features)
           (unsyntax identifier)
