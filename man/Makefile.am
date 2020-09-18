@@ -29,22 +29,25 @@ endif
 
 if BUILD_FROM_GIT
 noinst_SCRIPTS = unsyntax-scheme
-MAINTAINERCLEANFILES = $(noinst_SCRIPTS) $(dist_man_MANS)
-
-unsyntax-scheme.1: ../src/unsyntax/scheme.scm 		\
-                   ../src/unsyntax/version-etc.scm	\
-                   unsyntax-scheme.h2m unsyntax-scheme	\
-                   $(top_srcdir)/configure.ac
-	$(AM_V_GEN)$(HELP2MAN) --include=$(srcdir)/unsyntax-scheme.h2m	\
-        -L C.UTF-8 -o $@-t $(builddir)/unsyntax-scheme
-	$(AM_V_at)chmod a=r $@-t
-	$(AM_V_at)mv -f $@-t $@
+CLEANFILES = $(noinst_bin_SCRIPTS)
+MAINTAINERCLEANFILES = $(dist_man_MANS)
 
 do_subst = $(SED) -e 's,[@]CHIBI_SCHEME[@],$(chibi_scheme),g'	\
                   -e 's,[@]TOP_BUILDDIR[@],$(top_builddir),g'	\
                   -e 's,[@]TOP_SRCDIR[@],$(top_srcdir),g'
 
-unsyntax-scheme: unsyntax-scheme.in Makefile.in
+unsyntax-scheme.1: ../src/unsyntax/scheme.scm				\
+                   ../src/unsyntax/version-etc.scm			\
+                   unsyntax-scheme.h2m $(top_srcdir)/configure.ac	\
+                   unsyntax-scheme.in
+	$(AM_V_at)$(MAKE) unsyntax-scheme
+	$(AM_V_GEN)$(HELP2MAN) --include=$(srcdir)/unsyntax-scheme.h2m	\
+	-L C.UTF-8 -o $@-t $(builddir)/unsyntax-scheme
+	$(AM_V_at)chmod a=r $@-t
+	$(AM_V_at)mv -f $@-t $@
+
+unsyntax-scheme: unsyntax-scheme.in
 	$(AM_V_GEN)$(do_subst) < $(srcdir)/unsyntax-scheme.in > $@
 	$(AM_V_at)chmod +x $@
+
 endif
