@@ -61,7 +61,7 @@ Options:
 
 (define (output-file opt name arg source target)
   (when target
-    (error "more than one output file"))
+    (raise-error #f "more than one output file"))
   (values source arg))
 
 (define (prepend-path opt name arg . seed*)
