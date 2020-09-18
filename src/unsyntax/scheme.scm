@@ -49,13 +49,18 @@
 
 (define (help opt name arg . seeds)
   (write-string (format "Usage: ~a [options] [--] [program [arg]...]
-Options:
+Evaluate code with Unsyntax, interactively or from a program.
+
   -h, --help      Display this help and exit.
   -v, --version   Display version information and exit.
   -I <directory>  Prepend <directory> to library search paths.
   -A <directory>  Append <directory> to library search paths.
   -D <feature>    Add <feature> to list of feature identifiers.
-"                        (program-invocation-short-name)))
+
+Environment:
+  UNSYNTAX_LIBRARY_PATH  A colon separated list of library search paths to be
+                         used instead ‘~a’.
+"                        (program-invocation-name) (library-vicinity)))
   (emit-bug-reporting-address)
   (exit 0))
 

@@ -8,7 +8,8 @@ variables:
 
 before_script:
   - apt update -qq
-  - apt install -y -qq build-essential autoconf automake autoconf-archive git
+  - apt install -y -qq build-essential autoconf automake help2man
+                       autoconf-archive git
   - git clone https://github.com/ashinn/chibi-scheme.git --depth 1
   - cd chibi-scheme
   - make
@@ -24,6 +25,9 @@ build-distcheck:
     - ./bootstrap
     - mkdir build
     - cd build
+    - ../configure
+    - make check
+    - make distclean
     - ../configure
     - make distcheck
   artifacts:

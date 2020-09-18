@@ -25,7 +25,7 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = lib bin src tests
+SUBDIRS = lib src bin man tests
 
 EXTRA_DIST = $(top_srcdir)/.prev-version $(top_srcdir)/.version
 BUILT_SOURCES = $(top_srcdir)/.version

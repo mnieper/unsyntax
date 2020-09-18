@@ -31,7 +31,7 @@
 
 (define (emit-bug-reporting-address)
   (write-string (format "~%Report bugs to: ~a~%" (package-bugreport)))
-  (write-string (format "~a home: page: <~a>~%" (package-name) (package-url))))
+  (write-string (format "~a home page: <~a>~%" (package-name) (package-url))))
 
 (define (emit-version)
   (write-string (format "~a ~a~%"

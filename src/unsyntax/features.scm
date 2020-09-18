@@ -23,11 +23,13 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
+(define name (string-downcase (package-name)))
+
 (define *features*
   (lset-adjoin
    symbol=? (host-features)
-   (string->symbol (package-name))
-   (string->symbol (format "~a-~a" (package-name) (package-version)))))
+   (string->symbol name)
+   (string->symbol (format "~a-~a" name (package-version)))))
 
 (define current-features
   (case-lambda

@@ -10,14 +10,14 @@ https://nieper.gitlab.com/unsyntax.
 
 This distribution uses the latest stable versions of Automake, Autoconf.  If
 you are getting the sources from git (or change configure.ac), you'll need
-to have these tools installed to (re)build.  All of these programs are
-available from ftp://ftp.gnu.org/gnu.
+to have these tools installed to (re)build.  You'll also need help2man.  All
+of these programs are available from ftp://ftp.gnu.org/gnu.
 
 If you're using a GNU/Linux distribution, the easiest way to install these
 packages depends on your system.  The following shell command should work
 for Debian-based systems such as Ubuntu:
 
-    $ sudo apt-get install autoconf automake
+    $ sudo apt-get install autoconf automake help2man
 
 ** Chibi-Scheme
 

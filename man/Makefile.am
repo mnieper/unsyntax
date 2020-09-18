@@ -23,12 +23,28 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-bin_SCRIPTS = unsyntax-scheme
-CLEANFILES = $(bin_SCRIPTS)
-EXTRA_DIST = unsyntax-scheme.in
+if !GIT_CROSS_COMPILING
+dist_man_MANS = unsyntax-scheme.1
+endif
 
-do_subst = $(SED) -e 's,[@]PKGDATADIR[@],$(pkgdatadir),g'
+if BUILD_FROM_GIT
+noinst_SCRIPTS = unsyntax-scheme
+MAINTAINERCLEANFILES = $(noinst_SCRIPTS) $(dist_man_MANS)
 
-unsyntax-scheme: unsyntax-scheme.in Makefile
-	$(AM_V_GEN)$(do_subst) < $(srcdir)/unsyntax-scheme.in > unsyntax-scheme
-	$(AM_V_at)chmod +x unsyntax-scheme
+unsyntax-scheme.1: ../src/unsyntax/scheme.scm 		\
+                   ../src/unsyntax/version-etc.scm	\
+                   unsyntax-scheme.h2m unsyntax-scheme	\
+                   $(top_srcdir)/configure.ac
+	$(AM_V_GEN)$(HELP2MAN) --include=$(srcdir)/unsyntax-scheme.h2m	\
+        -L C.UTF-8 -o $@-t $(builddir)/unsyntax-scheme
+	$(AM_V_at)chmod a=r $@-t
+	$(AM_V_at)mv -f $@-t $@
+
+do_subst = $(SED) -e 's,[@]CHIBI_SCHEME[@],$(chibi_scheme),g'	\
+                  -e 's,[@]TOP_BUILDDIR[@],$(top_builddir),g'	\
+                  -e 's,[@]TOP_SRCDIR[@],$(top_srcdir),g'
+
+unsyntax-scheme: unsyntax-scheme.in Makefile.in
+	$(AM_V_GEN)$(do_subst) < $(srcdir)/unsyntax-scheme.in > $@
+	$(AM_V_at)chmod +x $@
+endif

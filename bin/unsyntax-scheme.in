@@ -1,7 +1,6 @@
 #!/bin/sh
 #|
-chibi-scheme -h4G -A'@PKGDATADIR@' -- "$0" "$@"
-exit $?
+exec chibi-scheme -h4G -A'@PKGDATADIR@' -- "$0" "$@"
 |#
 
 ;; Copyright © Marc Nieper-Wißkirchen (2020).

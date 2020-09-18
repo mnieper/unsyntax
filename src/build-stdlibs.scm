@@ -48,14 +48,15 @@
 
 (define (help opt name arg . seed*)
   (write-string (format "Usage: ~a [options] file
-Options:
+Bootstrap Unsyntax and build its standard library.
+
   -h, --help      Display this help and exit.
   -v, --version   Display version information and exit.
   -I <directory>  Prepend <directory> to library search paths.
   -A <directory>  Append <directory> to library search paths.
   -D <feature>    Add <feature> to list of feature identifiers.
   -o <file>       Place the output into <file>.
-"                        (program-invocation-short-name)))
+"                        (program-invocation-name)))
   (emit-bug-reporting-address)
   (exit 0))
 

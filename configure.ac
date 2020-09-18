@@ -24,7 +24,7 @@
 # SOFTWARE.
 
 AC_PREREQ([2.69])
-AC_INIT([unsyntax],
+AC_INIT([Unsyntax],
         [m4_esyscmd([build-aux/git-version-gen .tarball-version])],
         [bug@unsyntax.org], [],
         [https://www.unsyntax.org])
@@ -45,6 +45,15 @@ AC_PROG_MKDIR_P
 AC_PROG_SED
 AC_PATH_PROG([chibi_scheme], [chibi-scheme])
 
+AM_CONDITIONAL([BUILD_FROM_GIT], [test -d "$srcdir/.git"])
+AM_CONDITIONAL([GIT_CROSS_COMPILING],
+               [test -d "$srcdir/.git" && test $cross_compiling = yes])
+AS_IF([test $cross_compiling = no], [
+  AM_MISSING_PROG([HELP2MAN], [help2man])
+], [
+  HELP2MAN=:
+])
+
 # For gnulib.
 gl_INIT
 
@@ -58,8 +67,9 @@ gl_INIT
 
 AC_CONFIG_FILES([Makefile
                  lib/Makefile
-		 bin/Makefile
 		 src/Makefile
+		 bin/Makefile
+		 man/Makefile
 		 tests/Makefile])
 AC_CONFIG_LINKS([src/unsyntax/stdlibs/runtime.scm:src/unsyntax/stdlibs/runtime.scm
                  src/unsyntax/stdlibs/runtime-exports.scm:src/unsyntax/stdlibs/runtime-exports.scm])

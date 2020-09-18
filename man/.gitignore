@@ -23,12 +23,5 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-bin_SCRIPTS = unsyntax-scheme
-CLEANFILES = $(bin_SCRIPTS)
-EXTRA_DIST = unsyntax-scheme.in
-
-do_subst = $(SED) -e 's,[@]PKGDATADIR[@],$(pkgdatadir),g'
-
-unsyntax-scheme: unsyntax-scheme.in Makefile
-	$(AM_V_GEN)$(do_subst) < $(srcdir)/unsyntax-scheme.in > unsyntax-scheme
-	$(AM_V_at)chmod +x unsyntax-scheme
+/unsyntax-scheme
+/unsyntax-scheme.1
