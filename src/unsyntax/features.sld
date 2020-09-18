@@ -33,6 +33,7 @@
      (import (rename (scheme base) (features host-features)))))
   (import (scheme case-lambda)
 	  (scheme char)
+          (scheme lazy)
           (srfi 1)
           (srfi 28)
           (unsyntax config))

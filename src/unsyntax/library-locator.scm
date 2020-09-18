@@ -50,13 +50,12 @@
         (else
          (list (library-vicinity)))))
 
-;; FIXME: Delay the initialization until after the libraries are loaded.
-(define *library-path* (library-vicinities))
+(define *library-path* (delay (library-vicinities)))
 
 (define current-library-path
   (case-lambda
-    (() *library-path*)
-    ((path) (set! *library-path* path))))
+    (() (force *library-path*))
+    ((path) (set! *library-path* (make-promise path)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; Library Filenames ;;

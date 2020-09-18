@@ -26,16 +26,17 @@
 (define name (string-downcase (package-name)))
 
 (define *features*
-  (lset-adjoin
-   symbol=? (host-features)
-   (string->symbol name)
-   (string->symbol (format "~a-~a" name (package-version)))))
+  (delay
+    (lset-adjoin
+     symbol=? (host-features)
+     (string->symbol name)
+     (string->symbol (format "~a-~a" name (package-version))))))
 
 (define current-features
   (case-lambda
     (()
-     *features*)
+     (features))
     ((features)
-     (set! *features* (delete-duplicates! features symbol=?)))))
+     (set! *features* (make-promise  (delete-duplicates! features symbol=?))))))
 
-(define (features) *features*)
+(define (features) (force *features*))

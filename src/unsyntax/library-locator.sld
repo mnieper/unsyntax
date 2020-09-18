@@ -29,6 +29,7 @@
   (import (scheme base)
           (scheme case-lambda)
           (scheme file)
+          (scheme lazy)
           (scheme process-context)
           (srfi 2)
           (srfi 8)
