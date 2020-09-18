@@ -27,7 +27,7 @@
         (srfi 64)
         (example library))
 
-(test-begin "Libraries")
+(test-begin "Compiler Test")
 
 (test-equal 42 foo)
 

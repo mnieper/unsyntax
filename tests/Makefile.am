@@ -25,16 +25,26 @@
 
 scheme_tests = r7rs-tests.scm syntax-case-tests.scm srfi-1-tests.scm	\
                srfi-2-tests.scm srfi-46-tests.scm srfi-188-tests.scm	\
-               srfi-190-tests.scm library-tests.scm
+               srfi-190-tests.scm
+compiler_tests = test-program.test
 
+wrapper = $(chibi_scheme) -h4G -A$(top_builddir)/src	\
+          -A$(top_srcdir)/src --
 unsyntax_scheme = $(top_builddir)/bin/unsyntax-scheme
+expand_unsyntax = $(top_builddir)/bin/expand-unsyntax
 
-TESTS = $(scheme_tests)
-EXTRA_DIST = $(scheme_tests) example/library.sld
+TESTS = $(compiler_tests) $(scheme_tests)
+EXTRA_DIST = $(scheme_tests) test-program.scm example/library.sld
 
-TEST_EXTENSIONS = .scm
-SCM_LOG_COMPILER = $(chibi_scheme) -h4G -A$(top_builddir)/src		\
-                   -A$(top_srcdir)/src -- $(unsyntax_scheme)		\
-                   -A $(builddir) -A $(srcdir)
-SCM_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL)	\
-                 $(top_srcdir)/build-aux/tap-driver.sh
+TEST_EXTENSIONS = .scm .test
+LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL)		\
+             $(top_srcdir)/build-aux/tap-driver.sh
+SCM_LOG_DRIVER = $(LOG_DRIVER)
+SCM_LOG_COMPILER = $(wrapper) $(unsyntax_scheme) -A $(builddir) -A	\
+                   $(srcdir)
+TEST_LOG_DRIVER = $(LOG_DRIVER)
+TEST_LOG_COMPILER = $(wrapper)
+
+.scm.test:
+	$(AM_V_GEN)$(wrapper) $(expand_unsyntax) -A $(builddir) -A	\
+	$(srcdir) -o $@ $<
