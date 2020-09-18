@@ -7,6 +7,10 @@ outputs its expanded version relative to the standard libraries.
 
 Complete the REPL interface so that it allows top-level special syntax.
 
+* Documentation
+
+Write a Texinfo manual.
+
 * Backends
 
 Support other backends besides Chibi-Scheme.
