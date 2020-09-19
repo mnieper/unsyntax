@@ -32,16 +32,39 @@ fi
 outfile=
 cmdline="${EXPAND_UNSYNTAX:-expand-unsyntax}"
 
-while getopts :A:D:I:o: name
+while getopts :A:D:I:o:hv name
 do
     case $name in
 	A) cmdline="$cmdline -A $OPTARG";;
 	D) cmdline="$cmdline -D $OPTARG";;
 	I) cmdline="$cmdline -I $OPTARG";;
 	o) outfile="$OPTARG";;
-	:) printf "%s: error: argument missing after ‘-%s’\n" $0 $OPTARG
+        h) printf "Usage: %s [options] file\n" "$0"
+           printf "Compile code with Unsyntax.\n"
+           printf "\n"
+           printf "  -h              Display this help and exit.\n"
+           printf "  -v              Display version information and exit.\n"
+           printf "  -I <directory>  Prepend <directory> to library search paths.\n"
+           printf "  -A <directory>  Append <directory> to library search paths.\n"
+           printf "  -D <feature>    Add <feature> to list of feature identifiers.\n"
+           printf "  -o <file>       Please the output into <file>.\n"
+           printf "\n"
+           printf "Environment:\n"
+           printf "  UNSYNTAX_LIBRARY_PATH  A colon separated list of library search paths to be\n"
+           printf "                         used instead of ‘/usr/local/share/unsyntax’.\n"
+           printf "\n"
+           printf "Report bugs to: %s\n" '@PACKAGE_BUGREPORT@'
+           printf "Unsyntax home page: %s\n" '@PACKAGE_URL@'
+           exit 0;;
+        v) printf "%s %s\n" '@PACKAGE_NAME@' '@PACKAGE_VERSION@'
+           printf "Copyright (C) 2020 Marc Nieper-Wißkirchen\n"
+           printf "\n"
+           printf "This is free software: you are free to change and redistribute it.\n"
+           printf "There is NO WARRANTY, to the extent permitted by law.\n"
+           exit 0;;
+	:) printf "%s: error: argument missing after ‘-%s’\n" "$0" "$OPTARG" 1>&2
 	   exit 2;;
-	?) printf "%s: error: unrecognized command line option ‘-%s’\n" $0 $OPTARG
+	?) printf "%s: error: unrecognized command line option ‘-%s’\n" "$0" "$OPTARG" 1>&2
 	exit 2;;
     esac
 done
@@ -49,7 +72,7 @@ done
 shift $(($OPTIND - 1))
 
 if [ -z "$1" ]; then
-    printf "%s: error: no input file\n" $0
+    printf "%s: error: no input file\n" $0 1>&2
    exit 0
 fi
 

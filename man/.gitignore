@@ -23,5 +23,8 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+/compile-unsyntax.1
+/expand-unsyntax
+/expand-unsyntax.1
 /unsyntax-scheme
 /unsyntax-scheme.1

@@ -24,11 +24,11 @@
 # SOFTWARE.
 
 if !GIT_CROSS_COMPILING
-dist_man_MANS = unsyntax-scheme.1
+dist_man_MANS = unsyntax-scheme.1 expand-unsyntax.1 compile-unsyntax.1
 endif
 
 if BUILD_FROM_GIT
-noinst_SCRIPTS = unsyntax-scheme
+noinst_SCRIPTS = unsyntax-scheme expand-unsyntax
 CLEANFILES = $(noinst_bin_SCRIPTS)
 MAINTAINERCLEANFILES = $(dist_man_MANS)
 
@@ -46,8 +46,29 @@ unsyntax-scheme.1: ../src/unsyntax/scheme.scm				\
 	$(AM_V_at)chmod a=r $@-t
 	$(AM_V_at)mv -f $@-t $@
 
+expand-unsyntax.1: ../src/unsyntax/scheme.scm				\
+                   ../src/unsyntax/version-etc.scm			\
+                   expand-unsyntax.h2m $(top_srcdir)/configure.ac	\
+                   expand-unsyntax.in
+	$(AM_V_at)$(MAKE) expand-unsyntax
+	$(AM_V_GEN)$(HELP2MAN) --include=$(srcdir)/expand-unsyntax.h2m	\
+	-L C.UTF-8 -o $@-t $(builddir)/expand-unsyntax
+	$(AM_V_at)chmod a=r $@-t
+	$(AM_V_at)mv -f $@-t $@
+
+compile-unsyntax.1: ../bin/compile-unsyntax.in				\
+                   compile-unsyntax.h2m $(top_srcdir)/configure.ac
+	$(AM_V_GEN)$(HELP2MAN) --include=$(srcdir)/compile-unsyntax.h2m	\
+	-L C.UTF-8 -o $@-t -h -h -v -v ../bin/compile-unsyntax
+	$(AM_V_at)chmod a=r $@-t
+	$(AM_V_at)mv -f $@-t $@
+
 unsyntax-scheme: unsyntax-scheme.in
 	$(AM_V_GEN)$(do_subst) < $(srcdir)/unsyntax-scheme.in > $@
+	$(AM_V_at)chmod +x $@
+
+expand-unsyntax: expand-unsyntax.in
+	$(AM_V_GEN)$(do_subst) < $(srcdir)/expand-unsyntax.in > $@
 	$(AM_V_at)chmod +x $@
 
 endif

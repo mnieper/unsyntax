@@ -59,7 +59,7 @@ Evaluate code with Unsyntax, interactively or from a program.
 
 Environment:
   UNSYNTAX_LIBRARY_PATH  A colon separated list of library search paths to be
-                         used instead ‘~a’.
+                         used instead of ‘~a’.
 "                        (program-invocation-name) (library-vicinity)))
   (emit-bug-reporting-address)
   (exit 0))
