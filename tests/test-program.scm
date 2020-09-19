@@ -24,11 +24,18 @@
 ;; SOFTWARE.
 
 (import (scheme base)
+        (scheme eval) (scheme write)
         (srfi 64)
         (example library))
 
 (test-begin "Compiler Test")
 
+(test-assert (memq 'test (features)))
+
 (test-equal 42 foo)
+(test-equal 'bar (bar))
+
+(test-equal 42 (eval 'foo (environment '(example library))))
+(test-equal 'bar (eval '(bar) (environment '(example library))))
 
 (test-end)

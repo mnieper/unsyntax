@@ -24,7 +24,10 @@
 ;; SOFTWARE.
 
 (define-library (example library)
-  (export foo)
+  (export foo bar)
   (import (scheme base))
   (begin
-    (define foo 42)))
+    (define foo 42)
+    (define-syntax bar
+      (syntax-rules ()
+        ((bar) 'bar)))))

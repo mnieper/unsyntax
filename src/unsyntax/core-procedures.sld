@@ -27,6 +27,7 @@
   (export
    ;; Libraries
    install-stdlib!
+   install-library
    bind-global-variable!
    bind-global-keyword!
    set-global!

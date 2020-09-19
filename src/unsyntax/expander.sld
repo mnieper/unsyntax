@@ -39,6 +39,7 @@
    find-library
    make-exports
    install-stdlib!
+   install-library
    bind-global-variable!
    bind-global-keyword!
    environment-import*

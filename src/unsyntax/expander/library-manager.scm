@@ -88,7 +88,16 @@
   (library-table-intern!
    name
    (lambda ()
-     (let ((lib (make-library name '() '() '() '() '() #f #f
+     (make-library name '() '() '() '() '() #f #f
+                   (alist->exports exports)
+                   keywords vars))))
+
+(define (install-library name visreqs invreqs visiter invoker exports keywords
+                         vars)
+  (library-table-intern!
+   name
+   (lambda ()
+     (let ((lib (make-library name '() visreqs invreqs '() '() visiter invoker
                               (alist->exports exports)
                               keywords vars)))
        (library-bind-globals! lib)

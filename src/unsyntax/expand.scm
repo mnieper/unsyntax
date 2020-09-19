@@ -28,22 +28,76 @@
 ;;;;;;;;;;;;;;;;;
 
 (define (write-code defs implibs invreqs)
-  (for-each (lambda (e)
-	      (write e)
-	      (newline))
-	    (build-code defs implibs invreqs)))
+  (for-each (lambda (form)
+              (write form)
+              (newline))
+            (build-code defs implibs invreqs)))
 
 (define (build-code defs implibs invreqs)
   `((import (unsyntax stdlibs))
     (current-features ',(current-features))
-    ,@(build-invokers invreqs)
-    ,@defs))
+    ,@(compile* (append (build-libs implibs invreqs)
+                        defs))))
 
-(define (build-invokers libs)
-  (append-map (lambda (lib)
-                (or (library-invoke-code lib)
-                    '()))
-              libs))
+(define (build-libs implibs invreqs)
+  (let* ((libvars (make-hash-table eq-comparator))
+         (invreqs (hash-table-unfold null? (lambda (invreqs)
+                                             (values (car invreqs) #t))
+                                     cdr invreqs eq-comparator))
+         (invreq? (lambda (lib) (hash-table-ref/default invreqs lib #f))))
+    (append-map (lambda (lib)
+                  (if (stdlib? lib)
+                      '()
+                      (build-lib lib invreq? libvars)))
+                (get-dependencies implibs))))
+
+(define (build-lib lib invreq? libnames)
+  (let ((var (generate-variable "library"))
+        (invoker
+         ;; TODO: Unify this code with `make-initializer' in
+         ;; library-manager.scm.
+         (append (library-invoke-code lib)
+                 (map (lambda (var)
+                        (let ((loc (cdr var)))
+                          `(set-global! ',loc ,loc)))
+                      (library-variables lib)))))
+    (hash-table-set! libnames lib var)
+    `((define ,var
+        (install-library
+         ;; Library name
+         ',(library-name lib)
+         ;; Visit requirements
+         (list ,@(fold (lambda (visreq vars)
+                         (let ((var (hash-table-ref libnames visreq)))
+                           (if var (cons var vars) vars)))
+                       '() (library-visit-requirements lib)))
+         ;; Invoke requirements
+         (list ,@(fold (lambda (invreq vars)
+                         (let ((var (hash-table-ref libnames invreq)))
+                           (if var (cons var vars) vars)))
+                       '() (library-invoke-requirements lib)))
+         ;; Visiter
+         (lambda ()
+           ,@(library-visit-code lib)
+           (if #f #f))
+         ;; Invoker
+         ,(if (invreq? lib)
+              #f
+              `(lambda ()
+                 ,@invoker
+                 (if #f #f)))
+         ;; Exports
+         ',(exports->alist (library-exports lib))
+         ;; Keywords
+         ',(library-keywords lib)
+         ;; Variables
+         ',(library-variables lib)))
+      ,@(if (invreq? lib)
+            invoker
+            '()))))
+
+(define (stdlib? lib)
+  (null? (library-imports lib)))
 
 ;;;;;;;;;;;;;;;;;;
 ;; Main Program ;;
@@ -115,8 +169,5 @@ Environment:
   (apply values seed*))
 
 (define (add-feature opt name arg . seed*)
-  ;; TODO: We have to pass the current features to the compiled
-  ;; program.  This can be done by exporting ‘current-features’ from
-  ;; ‘(unsyntax stdlibs)’ and setting it.
   (current-features (cons (string->symbol arg) (current-features)))
   (apply values seed*))

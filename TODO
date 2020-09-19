@@ -1,8 +1,3 @@
-* Compiler
-
-Actually implement the compiler tool that takes an R7RS program and
-outputs its expanded version relative to the standard libraries.
-
 * REPL
 
 Complete the REPL interface so that it allows top-level special syntax.

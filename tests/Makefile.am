@@ -23,9 +23,9 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-scheme_tests = r7rs-tests.scm syntax-case-tests.scm srfi-1-tests.scm	\
-               srfi-2-tests.scm srfi-46-tests.scm srfi-188-tests.scm	\
-               srfi-190-tests.scm
+scheme_tests = r7rs-tests.sch syntax-case-tests.sch srfi-1-tests.sch	\
+               srfi-2-tests.sch srfi-46-tests.sch srfi-188-tests.sch	\
+               srfi-190-tests.sch
 compiler_tests = test-program.test
 
 wrapper = $(chibi_scheme) -h4G -A$(top_builddir)/src	\
@@ -36,15 +36,15 @@ expand_unsyntax = $(top_builddir)/bin/expand-unsyntax
 TESTS = $(compiler_tests) $(scheme_tests)
 EXTRA_DIST = $(scheme_tests) test-program.scm example/library.sld
 
-TEST_EXTENSIONS = .scm .test
+TEST_EXTENSIONS = .test .sch
 LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL)		\
              $(top_srcdir)/build-aux/tap-driver.sh
-SCM_LOG_DRIVER = $(LOG_DRIVER)
-SCM_LOG_COMPILER = $(wrapper) $(unsyntax_scheme) -A $(builddir) -A	\
+SCH_LOG_DRIVER = $(LOG_DRIVER)
+SCH_LOG_COMPILER = $(wrapper) $(unsyntax_scheme) -A $(builddir) -A	\
                    $(srcdir)
 TEST_LOG_DRIVER = $(LOG_DRIVER)
 TEST_LOG_COMPILER = $(wrapper)
 
 .scm.test:
-	$(AM_V_GEN)$(wrapper) $(expand_unsyntax) -A $(builddir) -A	\
-	$(srcdir) -o $@ $<
+	$(AM_V_GEN)$(wrapper) $(expand_unsyntax) -D test -A	\
+	$(builddir) -A $(srcdir) -o $@ $<
