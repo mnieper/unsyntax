@@ -23,12 +23,19 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
+(define the-known-features
+  '(r7rs exact-closed exact-complex ieee-float full-unicode ratios posix windows
+    unix darwin gnu-linux bsd freebsd solaris i386 x86-64 ppc sparc jvm clr llvm
+    ilp32 lp64 ilp64 big-endian little-endian))
+
 (define name (string-downcase (package-name)))
 
 (define *features*
   (delay
     (lset-adjoin
-     symbol=? (host-features)
+     symbol=? (lset-intersection symbol=?
+                                 the-known-features
+                                 (host-features))
      (string->symbol name)
      (string->symbol (format "~a-~a" name (package-version))))))
 
