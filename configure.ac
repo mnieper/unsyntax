@@ -33,7 +33,7 @@ AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])
 AC_REQUIRE_AUX_FILE([tap-driver.sh])
-AM_INIT_AUTOMAKE([1.16 subdir-objects]
+AM_INIT_AUTOMAKE([1.16 subdir-objects std-options]
                  m4_bmatch(m4_defn([AC_PACKAGE_VERSION]), [[-_]],
                            [gnu], [gnits]))
 AM_SILENT_RULES([yes])

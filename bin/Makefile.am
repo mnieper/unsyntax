@@ -26,6 +26,7 @@
 bin_SCRIPTS = unsyntax-scheme expand-unsyntax compile-unsyntax
 CLEANFILES = $(bin_SCRIPTS)
 EXTRA_DIST = unsyntax-scheme.in expand-unsyntax.in compile-unsyntax.in
+AM_INSTALLCHECK_STD_OPTIONS_EXEMPT = compile-unsyntax
 
 do_subst = $(SED) -e 's,[@]PACKAGE_NAME[@],$(PACKAGE_NAME),g' \
             -e 's,[@]PACKAGE_BUGREPORT[@],$(PACKAGE_BUGREPORT),g' \
