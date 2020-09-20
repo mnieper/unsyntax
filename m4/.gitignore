@@ -3,3 +3,4 @@
 /gnulib-comp.m4
 /gnulib-tool.m4
 /zzgnulib.m4
+/non-recursive-gnulib-prefix-hack.m4

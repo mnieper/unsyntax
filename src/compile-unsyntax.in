@@ -87,7 +87,7 @@ fi
 cat << EOF > "$outfile"
 #! /bin/sh
 #|
-exec chibi-scheme -h4G -A'@PKGDATADIR@' -- "\$0" "\$@"
+exec chibi-scheme -h2G -A'@PKGDATADIR@' -- "\$0" "\$@"
 |#
 EOF
 $cmdline "$1" >> "$outfile" || { rm -f "$outfile"; exit 1; }

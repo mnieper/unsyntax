@@ -23,25 +23,4 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-bin_SCRIPTS = unsyntax-scheme expand-unsyntax compile-unsyntax
-CLEANFILES = $(bin_SCRIPTS)
-EXTRA_DIST = unsyntax-scheme.in expand-unsyntax.in compile-unsyntax.in
-AM_INSTALLCHECK_STD_OPTIONS_EXEMPT = compile-unsyntax
-
-do_subst = $(SED) -e 's,[@]PACKAGE_NAME[@],$(PACKAGE_NAME),g' \
-            -e 's,[@]PACKAGE_BUGREPORT[@],$(PACKAGE_BUGREPORT),g' \
-            -e 's,[@]PACKAGE_URL[@],$(PACKAGE_URL),g' \
-            -e 's,[@]PACKAGE_VERSION[@],$(PACKAGE_VERSION),g' \
-            -e 's,[@]PKGDATADIR[@],$(pkgdatadir),g'
-
-unsyntax-scheme: unsyntax-scheme.in Makefile
-	$(AM_V_GEN)$(do_subst) < $(srcdir)/unsyntax-scheme.in > $@
-	$(AM_V_at)chmod +x $@
-
-expand-unsyntax: expand-unsyntax.in Makefile
-	$(AM_V_GEN)$(do_subst) < $(srcdir)/expand-unsyntax.in > $@
-	$(AM_V_at)chmod +x $@
-
-compile-unsyntax: compile-unsyntax.in Makefile
-	$(AM_V_GEN)$(do_subst) < $(srcdir)/compile-unsyntax.in > $@
-	$(AM_V_at)chmod +x $@
+include lib/gnulib.mk

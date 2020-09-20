@@ -1,2 +1,3 @@
 /Makefile.am
 /dummy.c
+/gnulib.mk

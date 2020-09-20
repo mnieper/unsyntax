@@ -25,14 +25,41 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = lib src bin man tests
-
 EXTRA_DIST = $(top_srcdir)/.prev-version $(top_srcdir)/.version
 BUILT_SOURCES = $(top_srcdir)/.version
+MOSTLYCLEANFILES =
+CLEANFILES =
+MAINTAINERCLEANFILES =
+TESTS =
+noinst_LIBRARIES =
+bin_SCRIPTS =
+noinst_SCRIPTS =
+dist_man_MANS =
+AM_INSTALLCHECK_STD_OPTIONS_EXEMPT =
+
+scheme = env CHIBI_MODULE_PATH= $(chibi_scheme) -h2G		\
+-A$(top_builddir)/src -A$(top_srcdir)/src $(SCHEME_FLAGS) --
+
+do_subst = $(SED) -e 's,[@]PACKAGE_NAME[@],$(PACKAGE_NAME),g' \
+            -e 's,[@]PACKAGE_BUGREPORT[@],$(PACKAGE_BUGREPORT),g' \
+            -e 's,[@]PACKAGE_URL[@],$(PACKAGE_URL),g' \
+            -e 's,[@]PACKAGE_VERSION[@],$(PACKAGE_VERSION),g' \
+            -e 's,[@]BINDIR[@],$(bindir),g' \
+            -e 's,[@]TOP_BUILDDIR[@],$(top_builddir),g' \
+            -e 's,[@]TOP_SRCDIR[@],$(top_srcdir),g' \
+            -e 's,[@]PKGDATADIR[@],$(pkgdatadir),g' \
+            -e 's,[@]CHIBI_SCHEME[@],$(chibi_scheme),g'
+
+include $(top_srcdir)/lib/local.mk
+include $(top_srcdir)/src/local.mk
+include $(top_srcdir)/man/local.mk
+include $(top_srcdir)/tests/local.mk
+
 $(top_srcdir)/.version:
-	echo $(VERSION) > $@-t && mv $@-t $@
+	$(AM_V_GEN)echo $(VERSION) > $@-t && mv $@-t $@
 dist-hook: gen-ChangeLog
-	echo $(VERSION) > $(distdir)/.tarball-version
+	$(AM_V_at)echo $(VERSION) > $(distdir)/.tarball-version
+	$(AM_V_at)chmod u+w $(distdir)/$(man_MANS)
 
 .PHONY: gen-ChangeLog
 gen-ChangeLog:

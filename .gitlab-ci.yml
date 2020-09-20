@@ -26,11 +26,9 @@ build-distcheck:
     - mkdir build
     - cd build
     - ../configure
-    - make check
-    - make distclean
-    - ../configure
-    - make distcheck
+    - make V=1 -j2 distcheck
   artifacts:
+    when: always
     paths:
       - build/*
     expire_in: 1 week

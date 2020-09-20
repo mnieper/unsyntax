@@ -24,6 +24,7 @@
 # SOFTWARE.
 
 /INSTALL
+/ChangeLog
 /aclocal.m4
 /build-aux
 /configure
@@ -37,12 +38,14 @@
 
 *~
 *.a
+*.bak
 *.cache
 *.log
 *.o
 *.scan
 *.tar.gz
 
+.dirstamp
 .deps
 .sc-*
 Makefile

@@ -65,12 +65,8 @@ gl_INIT
 
 # Checks for library functions.
 
-AC_CONFIG_FILES([Makefile
-                 lib/Makefile
-		 src/Makefile
-		 bin/Makefile
-		 man/Makefile
-		 tests/Makefile])
+AC_CONFIG_FILES([Makefile])
+
 AC_CONFIG_LINKS([src/unsyntax/stdlibs/runtime.scm:src/unsyntax/stdlibs/runtime.scm
                  src/unsyntax/stdlibs/runtime-exports.scm:src/unsyntax/stdlibs/runtime-exports.scm])
 

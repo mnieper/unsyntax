@@ -1,6 +1,7 @@
 #!/bin/sh
 #|
-exec chibi-scheme -h4G -A'@PKGDATADIR@' -- "$0" "$@"
+chibi-scheme -h2G -A'@PKGDATADIR@' -- "$0" "$@"
+exit $?
 |#
 
 ;; Copyright © Marc Nieper-Wißkirchen (2020).
@@ -29,7 +30,7 @@ exec chibi-scheme -h4G -A'@PKGDATADIR@' -- "$0" "$@"
 ;; SOFTWARE.
 
 (import (unsyntax stdlibs))
-(unsyntax-scheme)
+(expand-unsyntax)
 
 ;; Local Variables:
 ;; mode: scheme
