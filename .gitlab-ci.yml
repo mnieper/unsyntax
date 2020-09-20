@@ -27,6 +27,8 @@ build-distcheck:
     - cd build
     - ../configure
     - make V=1 -j2 distcheck
+    - ln -s `echo '@PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.gz'
+             | ./config.status --file=-` unsyntax-latest.tar.gz
   artifacts:
     when: always
     paths:
