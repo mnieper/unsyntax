@@ -3,6 +3,10 @@ include:
 
 image: debian:unstable
 
+cache:
+  paths:
+    - .gnulib/
+
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
 
