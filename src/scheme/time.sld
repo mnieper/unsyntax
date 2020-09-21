@@ -23,40 +23,6 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(include-library-declarations "stdlibs/runtime-exports.scm")
-(export current-features expand-unsyntax unsyntax-scheme install-library
-        environment syntax-object)
-(import (rename (except (scheme base) define-record-type)
-                (features host-features))
-        (scheme case-lambda)
-        (scheme char)
-        (scheme complex)
-        (scheme cxr)
-        (rename (scheme eval)
-                (eval host-eval)
-                (environment host-environment))
-        (scheme file)
-        (scheme inexact)
-        (scheme lazy)
-	(scheme time)
-        (rename (scheme process-context)
-		(command-line host-command-line))
-        (scheme write)
-        (srfi 125)
-        (srfi 128)
-        (unsyntax define-record-type)
-        (unsyntax syntax-object)
-        (unsyntax gensym))
-(begin
-  (define-syntax environment
-    (syntax-rules ()
-      ((environment . substs)
-       (cons #f 'substs))))
-
-  (define-syntax syntax-object
-    (syntax-rules ()
-      ((syntax-object expr marks substs)
-       (make-syntax-object expr
-                           'marks
-                           (list . substs)
-                           #f)))))
+(define-library (scheme time)
+  (export current-jiffy current-second jiffies-per-second)
+  (import (unsyntax $bootstrap)))

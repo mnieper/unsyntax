@@ -295,6 +295,11 @@
  get-environment-variable
  get-environment-variables
 
+ ;; Time Library
+ current-jiffy
+ current-second
+ jiffies-per-second
+
  ;; Write Library
  display
  write

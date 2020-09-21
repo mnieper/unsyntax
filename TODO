@@ -2,10 +2,6 @@
 
 Complete the REPL interface so that it allows top-level special syntax.
 
-* Language
-
-Add the missing (scheme time) library.
-
 * SRFIs
 
 Implement SRFI 206.

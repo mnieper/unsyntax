@@ -37,6 +37,7 @@
 (scheme read)
 (scheme repl)
 (scheme r5rs)
+(scheme time)
 (scheme write)
 (srfi 1)
 (srfi 2)

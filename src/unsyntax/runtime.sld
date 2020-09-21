@@ -37,6 +37,7 @@
           (scheme lazy)
 	  (rename (scheme process-context)
 		  (command-line host-command-line))
+	  (scheme time)
 	  (scheme write)
           (srfi 1)
           (srfi 111)
