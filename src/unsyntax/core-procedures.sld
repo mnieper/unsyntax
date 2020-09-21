@@ -26,8 +26,9 @@
 (define-library (unsyntax core-procedures)
   (export
    ;; Libraries
-   install-stdlib!
+   install-stdlib
    install-library
+   install-alias!
    bind-global-variable!
    bind-global-keyword!
    set-global!

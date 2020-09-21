@@ -38,8 +38,9 @@
    ;; library-manager
    find-library
    make-exports
-   install-stdlib!
+   install-stdlib
    install-library
+   install-alias!
    bind-global-variable!
    bind-global-keyword!
    environment-import*

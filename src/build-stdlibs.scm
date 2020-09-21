@@ -24,6 +24,7 @@
 ;; SOFTWARE.
 
 (import (scheme base)
+        (scheme cxr)
         (scheme file)
         (scheme read)
         (scheme write)
@@ -33,6 +34,8 @@
         (srfi 28)
         (srfi 37)
         (srfi 59)
+        (srfi 125)
+        (srfi 128)
         (srfi 158)
         (unsyntax backend)
         (unsyntax bootstrap)
@@ -44,6 +47,7 @@
         (unsyntax library)
         (unsyntax library-locator)
         (unsyntax store)
+        (unsyntax variable)
         (unsyntax version-etc))
 
 (define (help opt name arg . seed*)
@@ -82,18 +86,18 @@ Bootstrap Unsyntax and build its standard library.
 (define (read* port)
   (generator->list (lambda () (read port))))
 
-(define (write-stdlibs libs core-lib)
-  (write (build-stdlibs libs core-lib))
+(define (write-stdlibs libs core-lib aliases)
+  (write (build-stdlibs libs core-lib aliases))
   (newline))
 
-(define (build-stdlibs libs core-lib)
+(define (build-stdlibs libs core-lib aliases)
   `(define-library (unsyntax stdlibs)
      (export ,@(build-exports (current-globals)))
      (include-library-declarations "stdlibs/runtime.scm")
      (begin (gensym-count ,(gensym-count))
             ,@(compile* (append (build-defs* (current-libraries))
                                 (build-symbol-defs core-lib)
-                                (build-installers libs)
+                                (build-installers libs aliases)
                                 (build-globals (current-libraries))
                                 (build-visiters (current-libraries)))))))
 
@@ -118,8 +122,19 @@ Bootstrap Unsyntax and build its standard library.
                        `(define ,name ,(cadr (binding-value (lookup lbl)))))
                      (library-exports core-lib)))
 
-(define (build-installers libs)
-  (map build-installer libs))
+(define (build-installers libs aliases)
+  (let* ((libvars (make-hash-table equal-comparator))
+         (installers
+          (map (lambda (lib)
+                 (let ((var (generate-variable "library")))
+                   (hash-table-set! libvars (library-name lib) var)
+                   (build-installer lib var)))
+               libs)))
+    (append installers
+            (map (lambda (alias)
+                   `(install-alias! ,(hash-table-ref libvars (car alias))
+                                    ',(cdr alias)))
+                 aliases))))
 
 (define (build-globals libs)
   (append-map (lambda (lib)
@@ -135,14 +150,32 @@ Bootstrap Unsyntax and build its standard library.
 (define (build-visiters libs)
   (append-map library-visit-code (current-libraries)))
 
-(define (build-installer lib)
-  `(install-stdlib! ',(library-name lib)
-                    ',(exports->alist (library-exports lib))
-                    ',(library-keywords lib)
-                    ',(library-variables lib)))
+(define (build-installer lib var)
+  `(define ,var
+     (install-stdlib ',(library-name lib)
+                     ',(exports->alist (library-exports lib))
+                     ',(library-keywords lib)
+                     ',(library-variables lib))))
 
 (define (find-library/die name)
   (or (find-library name) (raise-error #f "library ‘~a’ not found" name)))
+
+(define (parse-stdlibs decls)
+  (let f ((decls decls) (stdlibs '()) (aliases '()))
+    (if (null? decls)
+        (values stdlibs aliases)
+        (let ((decl (car decls)))
+          (cond
+           ((alias decl)
+            => (lambda (alias)
+                 (f (cdr decls) stdlibs (cons alias aliases))))
+           (else
+            (f (cdr decls) (cons decl stdlibs) aliases)))))))
+
+(define (alias decl)
+  (and (pair? (cdr decl))
+       (pair? (cadr decl))
+       (cons (cadr decl) (caddr decl))))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; Initialization ;;
@@ -175,10 +208,11 @@ Bootstrap Unsyntax and build its standard library.
                   #f #f)
      (unless source
        (raise-error #f "no input file"))
-     (let* ((core-lib (find-library/die '(unsyntax core-procedures)))
-            (libs (map-in-order find-library/die
-                                (call-with-input-file source read*)))
-            (output (lambda () (write-stdlibs libs core-lib))))
+     (let*-values (((core-lib) (find-library/die '(unsyntax core-procedures)))
+                   ((stdlibs aliases)
+                    (parse-stdlibs (call-with-input-file source read*)))
+                   ((libs) (map find-library/die stdlibs))
+                   ((output) (lambda () (write-stdlibs libs core-lib aliases))))
        (cond (target
               (when (file-exists? target)
                 (delete-file target))

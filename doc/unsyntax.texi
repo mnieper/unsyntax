@@ -240,75 +240,99 @@ Additionally, it provides the following SRFI libraries:
 @table @code
 
 @cindex SRFI 1
+@cindex @code{(srfi 1)}
+@cindex @code{(scheme list)}
 @item (srfi 1)
+@itemx (scheme list)
 List library.
 
 @cindex SRFI 2
+@cindex @code{(srfi 2)}
 @item (srfi 2)
 @code{And-let*}: an @code{and} with local bindings, a guarded
 @code{let*} special form.
 
 @cindex SRFI 8
+@cindex @code{(srfi 9)}
 @item (srfi 8)
 @code{Receive}: binding to multiple values.
 
 @cindex SRFI 28
+@cindex @code{(srfi 28)}
 @item (srfi 28)
 Basic format strings.
 
 @cindex SRFI 37
+@cindex @code{(srfi 37)}
 @item (srfi 37)
 @code{Args-fold}: a program argument processor.
 
 @cindex SRFI 59
+@cindex @code{(srfi 59)}
 @item (srfi 59)
 Vicinity.
 
 @cindex SRFI 64
+@cindex @code{(srfi 64)}
 @item (srfi 64)
 A Scheme API for test suites.
 
 @cindex SRFI 125
+@cindex @code{(srfi 125)}
+@cindex @code{(scheme hash-table)}
 @item (srfi 125)
+@itemx (scheme hash-table)
 Intermediate hash tables.
 
 @cindex SRFI 128
+@cindex @code{(srfi 128)}
+@cindex @code{(scheme comparator)}
 @item (srfi 128)
+@itemx (scheme comparator)
 Comparators (reduced).
 
 @cindex SRFI 139
+@cindex @code{(srfi 139)}
 @item (srfi 139)
 Syntax parameters.
 
 @cindex SRFI 158
+@cindex @code{(srfi 158)}
 @item (srfi 158)
 Generators and accumulators.
 
 @cindex SRFI 188
+@cindex @code{(srfi 188)}
 @item (srfi 188)
 Splicing binding constructs for syntactic keywords.
 
 @cindex SRFI 190
+@cindex @code{(srfi 190)}
 @item (srfi 190)
 Coroutine generators.
 
 @cindex SRFI 211
+@cindex @code{(srfi 211 identifier-syntax)}
 @item (srfi 211 identifier-syntax)
 Identifier syntax.
 
 @cindex SRFI 211
+@cindex @code{(srfi 211 syntax-case)}
 @item (srfi 211 syntax-case)
 @code{Syntax-case}
 
 @cindex SRFI 211
+@cindex @code{(srfi 211 syntax-parameter)}
 @item (srfi 211 syntax-parameter)
 Syntax parameters.
 
 @cindex SRFI 211
+@cindex @code{(srfi 211 variable-transformer)}
 @item (srfi 211 variable-transformer)
 Variable transformers.
 
 @cindex SRFI 211
+@cindex @code{(srfi 211 with-ellipsis)}
 @item (srfi 211 with-ellipsis)
 Custom ellipsis identifiers for @code{syntax-case} macros.
 

@@ -84,7 +84,7 @@
 ;; Library Installer ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (install-stdlib! name exports keywords vars)
+(define (install-stdlib name exports keywords vars)
   (library-table-intern!
    name
    (lambda ()
@@ -102,6 +102,9 @@
                               keywords vars)))
        (library-bind-globals! lib)
        lib))))
+
+(define (install-alias! lib alias)
+  (library-table-intern! alias (lambda () lib)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Visit and Invoke Requirements ;;
