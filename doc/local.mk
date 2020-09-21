@@ -23,35 +23,4 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-/INSTALL
-/ChangeLog
-/aclocal.m4
-/build-aux
-/configure
-/gnulib
-/config.h
-/config.h.in
-/config.status
-/.version
-/vc-diffs
-
-*~
-*.a
-*.bak
-*.cache
-*.info
-*.log
-*.o
-*.pdf
-*.scan
-*.tar.gz
-
-.dirstamp
-.deps
-.sc-*
-stamp-*
-Makefile
-Makefile.in
-/GNUmakefile
-/maint.mk
-/README-release
+info_TEXINFOS = %D%/unsyntax.texi

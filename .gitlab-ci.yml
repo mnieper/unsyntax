@@ -7,13 +7,10 @@ cache:
   paths:
     - .gnulib/
 
-variables:
-  GIT_SUBMODULE_STRATEGY: recursive
-
 before_script:
   - apt update -qq
   - apt install -y -qq build-essential autoconf automake help2man
-                       autoconf-archive git
+                       autoconf-archive texinfo texlive git
   - git clone https://github.com/ashinn/chibi-scheme.git --depth 1
   - cd chibi-scheme
   - make
@@ -33,6 +30,7 @@ build-distcheck:
     - make V=1 -j2 distcheck
     - cp -p `echo '@PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.gz'
              | ./config.status --file=-` unsyntax-latest.tar.gz
+    - make pdf
   artifacts:
     when: always
     paths:

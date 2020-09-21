@@ -2,9 +2,13 @@
 
 Complete the REPL interface so that it allows top-level special syntax.
 
-* Documentation
+* Language
 
-Write a Texinfo manual.
+Add the missing (scheme time) library.
+
+* SRFIs
+
+Implement SRFI 206.
 
 * Backends
 

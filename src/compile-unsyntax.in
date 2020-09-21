@@ -47,7 +47,7 @@ do
            printf "  -I <directory>  Prepend <directory> to library search paths.\n"
            printf "  -A <directory>  Append <directory> to library search paths.\n"
            printf "  -D <feature>    Add <feature> to list of feature identifiers.\n"
-           printf "  -o <file>       Please the output into <file>.\n"
+           printf "  -o <file>       Place the output into <file>.\n"
            printf "\n"
            printf "Environment:\n"
            printf "  UNSYNTAX_LIBRARY_PATH  A colon separated list of library search paths to be\n"

@@ -1,0 +1,647 @@
+\input texinfo @c -*-texinfo-*-
+@c %**start of header
+@setfilename unsyntax.info
+@include version.texi
+@settitle Unsyntax @value{VERSION}
+
+@c Define a new index for options.
+@defcodeindex op
+@c Combine everything into one index (arbitrarily chosen to be the
+@c concept index).
+@syncodeindex op cp
+@c %**end of header
+
+@copying
+This manual is for Unsyntax (version @value{VERSION}, @value{UPDATED}),
+an R7RS implementation with extensions.
+
+Copyright @copyright{} 2020 Marc Nieper-Wißkirchen
+
+@quotation
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice (including the
+next paragraph) shall be included in all copies or substantial portions
+of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+@end quotation
+@end copying
+
+@dircategory Software development
+@direntry
+* Unsyntax: (unsyntax).         R7RS implementation with extensions.
+* unsyntax-scheme(unsyntax): (unsyntax).        Unsyntax interpreter.
+* compile-unsyntax(unsyntax): (unsyntax).       Unsyntax compiler.
+* expand-unsyntax(unsyntax): (unsyntax).        Unsyntax expander.
+@end direntry
+
+@titlepage
+@title Unsyntax
+@subtitle for version @value{VERSION}, @value{UPDATED}
+@author Marc Nieper-Wißkirchen (@email{marc@@unsyntax.org})
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top Unsyntax
+
+This manual is for Unsyntax (version @value{VERSION}, @value{UPDATED}),
+an R7RS implementation with extensions.
+@end ifnottex
+
+@menu
+* Overview::		General purpose and information.
+* Examples::	        Example uses of Unsyntax.
+* The Unsyntax programming language::
+                        Description of the implemented Scheme.
+* Invoking unsyntax-scheme::
+                        How to run @command{unsyntax-scheme}.
+* Invoking compile-unsyntax::
+                        How to run @command{compile-unsyntax}.
+* Invoking expand-unsyntax::
+                        How to run @command{expand-unsyntax}.
+* Environment::         The @env{UNSYNTAX_LIBRARY_PATH} environment variable.
+* Reporting bugs::	Sending bug reports and feature suggestions.
+* Concept index::	Index of concepts.
+@end menu
+
+
+@node Overview
+@chapter Overview
+
+@cindex overview
+@cindex Scheme
+@cindex R7RS
+@cindex Scheme Request for Implementation
+@cindex SRFI
+Unsyntax is an implementation of the Scheme programming language,
+specifically of its R7RS standard, and includes a number of extensions.
+Scheme itself is a dialect of the Lisp family of programming languages,
+amongst whose distinguishing features are its minimalism, lexical scope,
+proper tail recursion, first-class continuations, a unified namespace
+and hygienic macros.  Unsyntax's license allows its use in the Scheme
+Requests for Implementation (SRFI).
+
+@cindex evaluate
+@cindex compile
+@cindex run
+Unsyntax evaluates Scheme expressions and compiles and runs Scheme
+programs by first expanding them into a minimal dialect of R7RS (small)
+without any syntactic extensions.  The resulting expression or program
+is then evaluated by an existing Scheme implementation.
+
+@cindex extensions
+@cindex syntax-case
+@cindex R6RS
+@cindex R7RS (large)
+As said, Unsyntax implements the R7RS standard with a number of
+extensions.  Besides implementing a number of SRFIs that do not possess
+a portable implementation otherwise, Unsyntax notably fully implements
+the syntax-case system of R6RS.  It can be used as a test-bed for
+further additions to R7RS, which may become part of the future R7RS
+(large) standard.
+
+@cindex Alex Shinn
+@cindex bootstrap
+@cindex Chibi-Scheme
+Unsyntax is implemented in Scheme itself.  To bootstrap Unsyntax, a
+fairly standard-conforming implementation of R7RS (small) is needed.
+Currently, the build system presupposes the installation Alex Shinn's
+Chibi-Scheme implementation; see the Chibi-Scheme development page at
+@url{https://github.com/ashinn/chibi-scheme}.
+
+@cindex backend
+On the target system, an implementation of a compatible backend is
+required.  Currently, this is Chibi-Scheme as well.  It should be easy
+to modify Unsyntax for other backends, like Chez Scheme or Gambit.
+Patches are very welcome.
+
+@cindex authors
+@cindex Nieper-Wißkirchen, Marc
+Unsyntax was written by Marc Nieper-Wißkirchen.
+
+
+@node The Unsyntax programming language
+@chapter The Unsyntax programming language
+
+@section The Base language
+Unsyntax implements the Scheme programming language as described in the
+R7RS standard.
+
+@section Standard libraries
+
+It implements the following standard libraries:
+
+@table @code
+
+@cindex @code{(scheme base)}
+@item (scheme base)
+The @code{(scheme base)} library exports many of the procedures and
+syntax bindings that are traditionally associated with Scheme.
+
+@cindex @code{(scheme case-lambda)}
+@item (scheme case-lambda)
+The @code{(scheme case-lambda)} library exports the @code{case-lambda} syntax.
+
+@cindex @code{(scheme char)}
+@item (scheme char)
+The @code{(scheme char)} library provides the procedures for dealing
+with characters that involve potentially large tables when supporting
+all of Unicode.
+
+@cindex @code{(scheme complex)}
+@item (scheme complex)
+The @code{(scheme complex)} library exports procedures which are
+typically only useful with non-real numbers.
+
+@cindex @code{(scheme cxr)}
+@item (scheme cxr)
+The @code{(scheme cxr)} library exports twenty-four procedures which are
+the compositions of from three to four @code{car} and @code{cdr}
+operations.
+
+@cindex @code{(scheme eval)}
+@item (scheme eval)
+The @code{(scheme eval)} library exports procedures for evaluating
+Scheme data as programs.
+
+@cindex @code{(scheme file)}
+@item (scheme file)
+The @code{(scheme file)} library exports procedures for accessing files.
+
+@cindex @code{(scheme inexact)}
+@item (scheme inexact)
+The @code{(scheme inexact)} library exports procedures which are
+typically only useful with inexact values.
+
+@cindex @code{(scheme lazy)}
+@item (scheme lazy)
+The @code{(scheme lazy)} library exports procedures and syntax
+keywords for lazy evaluation.
+
+@cindex @code{(scheme load)}
+@item (scheme load)
+The @code{(scheme load)} library exports procedures for loading Scheme
+expressions from files.
+
+@cindex @code{(scheme process-context)}
+@item (scheme process-context)
+The @code{(scheme process-context)} library exports procedures for
+accessing the program's calling context.
+
+@cindex @code{(scheme r5rs)}
+@item (scheme r5rs)
+The @code{(scheme r5rs)} library provides the identifiers defined by
+R5RS, except that @code{transcript-on} and @code{transcript-off} are not
+present.
+
+@cindex @code{(scheme read)}
+@item (scheme read)
+The @code{(scheme read)} library provides a procedure for reading Scheme
+objects.
+
+@cindex @code{(scheme repl)}
+@item (scheme repl)
+The @code{(scheme repl)} library exports the
+@code{interaction-environment} procedure.
+
+@cindex @code{(scheme time)}
+@item (scheme time)
+The @code{(scheme time)} library provides access to time-related values.
+
+@cindex @code{(scheme write)}
+@item (scheme write)
+The @code{(scheme write)} library provides procedures for writing Scheme
+objects.
+
+@end table
+
+@section SRFI libraries
+
+Additionally, it provides the following SRFI libraries:
+@table @code
+
+@cindex SRFI 1
+@item (srfi 1)
+List library.
+
+@cindex SRFI 2
+@item (srfi 2)
+@code{And-let*}: an @code{and} with local bindings, a guarded
+@code{let*} special form.
+
+@cindex SRFI 8
+@item (srfi 8)
+@code{Receive}: binding to multiple values.
+
+@cindex SRFI 28
+@item (srfi 28)
+Basic format strings.
+
+@cindex SRFI 37
+@item (srfi 37)
+@code{Args-fold}: a program argument processor.
+
+@cindex SRFI 59
+@item (srfi 59)
+Vicinity.
+
+@cindex SRFI 64
+@item (srfi 64)
+A Scheme API for test suites.
+
+@cindex SRFI 125
+@item (srfi 125)
+Intermediate hash tables.
+
+@cindex SRFI 128
+@item (srfi 128)
+Comparators (reduced).
+
+@cindex SRFI 139
+@item (srfi 139)
+Syntax parameters.
+
+@cindex SRFI 158
+@item (srfi 158)
+Generators and accumulators.
+
+@cindex SRFI 188
+@item (srfi 188)
+Splicing binding constructs for syntactic keywords.
+
+@cindex SRFI 190
+@item (srfi 190)
+Coroutine generators.
+
+@cindex SRFI 211
+@item (srfi 211 identifier-syntax)
+Identifier syntax.
+
+@cindex SRFI 211
+@item (srfi 211 syntax-case)
+@code{Syntax-case}
+
+@cindex SRFI 211
+@item (srfi 211 syntax-parameter)
+Syntax parameters.
+
+@cindex SRFI 211
+@item (srfi 211 variable-transformer)
+Variable transformers.
+
+@cindex SRFI 211
+@item (srfi 211 with-ellipsis)
+Custom ellipsis identifiers for @code{syntax-case} macros.
+
+@end table
+
+@cindex SRFI 138
+The @command{compile-unsyntax} command implements SRFI 138.
+
+@section Implementation notes
+
+In implementing the R7RS standard, a few choices had to be made:
+
+@itemize
+@item
+The R7RS grammar for a program is ambigious when there is more than one
+import declaration at the beginning as it is unclear whether any
+subsequent form is already an expression or definition.  Unsyntax
+therefore only allows exactly one import declaration at the beginning of
+a program, which is enough because an import declaration can take more
+than import set.
+
+@item
+Inclusion expressions in Unsyntax search for files relative to the
+directory, which contains the including file.  The syntactic context of
+the included expression is the syntactic context of the corresponding
+@code{include} or @code{include-ci} keyword.
+
+@item
+The clauses of a @code{cond-expand} expression are matched
+unhygienically, that is by symbol and not by identifier equality.
+
+@item
+Field names in record-type definitions are identifiers and not symbols
+and are thus matched hygienically, that is by identifier and not by
+symbol equality.
+
+@item
+A program is evaluated by first expanding it and then executing it.
+During the expansion phase, macro transformers are applied.  In case of
+ahead-of-time compilation, the expansion phase may be separated from the
+final execution.  In no case will a library or a program being expanded
+more than once during the evaluation of a program.  During expansion of
+a program, no library is executed more than once.  The same is true for
+the execution of a program.  In case expansion and execution of a
+program is not separated, every library is executed at most once.  Only
+those libraries are evaluated, whose bindings are referenced, directly
+or indirectly, in the program.
+
+@item
+In evaluating bodies, libraries, and programs, Unsyntax follows the R6RS
+semantics.  In particular, for the definition of a variable, expansion
+is deferred until after all of the definitions have been seen.  A use of
+a syntax form can therefore appear before its definition.
+
+@end itemize
+
+@node Examples
+@chapter Examples
+
+@cindex examples
+
+Here are some examples of using Unsyntax:
+
+This is an example session of Unsyntax's REPL:
+
+@cindex repl
+@cindex interpreter
+@example
+$ unsyntax-scheme
+Unsyntax 0.0.1
+Copyright (C) 2020 Marc Nieper-Wißkirchen
+
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+#,> (+ 3 4)
+7
+#,> (import (srfi 1))
+#,> (iota 3)
+(0 1 2)
+#,> ^C
+@end example
+
+This is an example session of running a program with Unsyntax's
+interpreter:
+
+@cindex interpreter
+@example
+$ cat hello-world.scm
+(import (scheme base)
+        (scheme write))
+(display "Hello, World!")
+(newline)
+$ unsyntax-scheme hello-world.scm
+Hello, World!
+@end example
+
+This is an example session of compiling a program with Unsyntax and running it:
+
+@cindex compiler
+@example
+$ compile-unsyntax hello-world.scm
+$ ./hello-world
+Hello, World!
+@end example
+
+
+@node Invoking unsyntax-scheme
+@chapter Invoking @command{unsyntax-scheme}
+
+@cindex invoking
+@cindex options
+@cindex usage
+@cindex help
+@cindex @command{unsyntax-scheme}
+
+The format for running the @command{unsyntax-scheme} program to start
+the REPL is:
+
+@example
+unsyntax-scheme @var{option} @dots{}
+@end example
+
+The format for running the @command{unsyntax-scheme} program to run a
+Scheme program is:
+
+@example
+unsyntax-scheme @var{option} @dots{} -- @var{program} @var{arg} @dots{}
+@end example
+
+@command{unsyntax-scheme} supports the following options:
+
+@table @option
+@item -A @var{directory}
+@opindex -A
+Append @var{directory} to the library search paths.
+
+@item -D @var{feature}
+@opindex -D
+Add @var{feature} to the list of feature identifiers.
+
+@item -I @var{directory}
+@opindex -I
+Prepend @var{directory} to the library search paths.
+
+@item --help
+@itemx -h
+@opindex --help
+@opindex -h
+Print an informative help message on standard output and exit
+successfully.
+
+@item --version
+@itemx -v
+@opindex --version
+@opindex -v
+Print the version number and licensing information of Unsyntax on
+standard output and then exit successfully.
+
+@end table
+
+If more than one option is given, they are processed in left-to-right
+order.
+
+
+@node Invoking compile-unsyntax
+@chapter Invoking @command{compile-unsyntax}
+
+@cindex invoking
+@cindex options
+@cindex usage
+@cindex help
+@cindex @command{compile-unsyntax}
+
+The format for running the @command{compile-unsyntax} program is:
+
+@example
+compile-unsyntax @var{option} @dots{} @var{file}
+@end example
+
+@command{compile-unsyntax} compiles the Scheme program @var{file} into an
+executable, whose filename is the one of @var{file} stripped from the
+@code{.scm} extension if it has one or @code{a.out} if not.
+
+@command{unsyntax-scheme} supports the following options:
+
+@table @option
+@item -A @var{directory}
+@opindex -A
+Append @var{directory} to the library search paths.
+
+@item -D @var{feature}
+@opindex -D
+Add @var{feature} to the list of feature identifiers.
+
+@item -I @var{directory}
+@opindex -I
+Prepend @var{directory} to the library search paths.
+
+@item -h
+@opindex -h
+Print an informative help message on standard output and exit
+successfully.
+
+@item -o @var{file}
+@opindex -o
+Place the output into @var{file}.
+
+@item -v
+@opindex -v
+Print the version number and licensing information of Unsyntax on
+standard output and then exit successfully.
+
+@end table
+
+If more than one option is given, they are processed in left-to-right
+order.
+
+
+@node Invoking expand-unsyntax
+@chapter Invoking @command{expand-unsyntax}
+
+@cindex invoking
+@cindex options
+@cindex usage
+@cindex help
+@cindex @command{expand-unsyntax}
+
+The format for running the @command{expand-unsyntax} program is:
+
+@example
+expand-unsyntax @var{option} @dots{} @var{file}
+@end example
+
+@command{expand-unsyntax} expand the Scheme program @var{file} into a
+minimal dialect of R7RS.
+
+@command{unsyntax-scheme} supports the following options:
+
+@table @option
+@item -A @var{directory}
+@opindex -A
+Append @var{directory} to the library search paths.
+
+@item -D @var{feature}
+@opindex -D
+Add @var{feature} to the list of feature identifiers.
+
+@item -I @var{directory}
+@opindex -I
+Prepend @var{directory} to the library search paths.
+
+@item --help
+@itemx -h
+@opindex --help
+@opindex -h
+Print an informative help message on standard output and exit
+successfully.
+
+@item -o @var{file}
+@opindex -o
+Place the output into @var{file} instead of using stdout.
+
+@item --version
+@itemx -v
+@opindex --version
+@opindex -v
+Print the version number and licensing information of Unsyntax on
+standard output and then exit successfully.
+
+@end table
+
+If more than one option is given, they are processed in left-to-right
+order.
+
+
+@node Environment
+@chapter Environment variable
+@cindex Environment
+
+@cindex @env{UNSYNTAX_LIBRARY_PATH}
+The environment variable @env{UNSYNTAX_LIBRARY_PATH} can hold a
+colon-separated list of library search paths to be used instead of the
+usual system-defined path.
+
+
+@node Reporting bugs
+@chapter Reporting bugs
+
+@cindex bug reporting
+@cindex problems
+@cindex reporting bugs
+
+To report bugs, suggest enhancements or otherwise discuss Unsyntax,
+please send electronic mail to @email{bug@@unsyntax.org}.  You can also
+join the development at @url{https://gitlab.com/nieper/unsyntax}.
+
+@cindex checklist for bug reports
+For bug reports, please include enough information for the maintainers
+to reproduce the problem.  Generally speaking, that means:
+
+@itemize @bullet
+@item The version numbers of Unsyntax (which you can find by running
+      @w{@samp{unsyntax-scheme --version}}) and any other program(s) or
+      manual(s) involved.
+@item Hardware and operating system names and versions.
+@item The contents of any input files necessary to reproduce the bug.
+@item The expected behavior and/or output.
+@item A description of the problem and samples of any erroneous output.
+@item Options you gave to @command{configure} other than specifying
+      installation directories.
+@item Anything else that you think would be helpful.
+@end itemize
+
+When in doubt whether something is needed or not, include it.  It's
+better to include too much than to leave out something important.
+
+@cindex patches, contributing
+Patches are welcome; if possible, please make them with @samp{@w{diff
+-c}} (@pxref{Top,, Overview, diff, Comparing and Merging Files}) and
+include @file{ChangeLog} entries (@pxref{Change Log,,, emacs, The GNU
+Emacs Manual}).  Please follow the existing coding style.  You can also
+issue merge requests at @url{https://gitlab.com/nieper/unsyntax}.
+
+
+@node Concept index
+@unnumbered Concept index
+
+@printindex cp
+
+@bye
+
+@c Local Variables:
+@c mode: texinfo
+@c TeX-master: t
+@c End:
