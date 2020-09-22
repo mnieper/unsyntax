@@ -139,6 +139,57 @@ Patches are very welcome.
 Unsyntax was written by Marc Nieper-Wißkirchen.
 
 
+@node Examples
+@chapter Examples
+
+@cindex examples
+
+Here are some examples of using Unsyntax:
+
+This is an example session of Unsyntax's REPL:
+
+@cindex repl
+@cindex interpreter
+@example
+$ unsyntax-scheme
+Unsyntax 0.0.1
+Copyright (C) 2020 Marc Nieper-Wißkirchen
+
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+#,> (+ 3 4)
+7
+#,> (import (srfi 1))
+#,> (iota 3)
+(0 1 2)
+#,> ^C
+@end example
+
+This is an example session of running a program with Unsyntax's
+interpreter:
+
+@cindex interpreter
+@example
+$ cat hello-world.scm
+(import (scheme base)
+        (scheme write))
+(display "Hello, World!")
+(newline)
+$ unsyntax-scheme hello-world.scm
+Hello, World!
+@end example
+
+This is an example session of compiling a program with Unsyntax and running it:
+
+@cindex compiler
+@example
+$ compile-unsyntax hello-world.scm
+$ ./hello-world
+Hello, World!
+@end example
+
+
 @node The Unsyntax programming language
 @chapter The Unsyntax programming language
 
@@ -393,56 +444,6 @@ is deferred until after all of the definitions have been seen.  A use of
 a syntax form can therefore appear before its definition.
 
 @end itemize
-
-@node Examples
-@chapter Examples
-
-@cindex examples
-
-Here are some examples of using Unsyntax:
-
-This is an example session of Unsyntax's REPL:
-
-@cindex repl
-@cindex interpreter
-@example
-$ unsyntax-scheme
-Unsyntax 0.0.1
-Copyright (C) 2020 Marc Nieper-Wißkirchen
-
-This is free software: you are free to change and redistribute it.
-There is NO WARRANTY, to the extent permitted by law.
-
-#,> (+ 3 4)
-7
-#,> (import (srfi 1))
-#,> (iota 3)
-(0 1 2)
-#,> ^C
-@end example
-
-This is an example session of running a program with Unsyntax's
-interpreter:
-
-@cindex interpreter
-@example
-$ cat hello-world.scm
-(import (scheme base)
-        (scheme write))
-(display "Hello, World!")
-(newline)
-$ unsyntax-scheme hello-world.scm
-Hello, World!
-@end example
-
-This is an example session of compiling a program with Unsyntax and running it:
-
-@cindex compiler
-@example
-$ compile-unsyntax hello-world.scm
-$ ./hello-world
-Hello, World!
-@end example
 
 
 @node Invoking unsyntax-scheme

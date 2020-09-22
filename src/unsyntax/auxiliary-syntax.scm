@@ -24,14 +24,13 @@
 ;; SOFTWARE.
 
 (define (auxiliary-syntax-label sym)
-  (list 'auxiliary-syntax sym))
+  (symbol-append 'a. sym))
 
 (define (auxiliary-syntax-label? lbl)
-  (and (pair? lbl)
-       (eq? 'auxiliary-syntax (car lbl))))
+  (symbol-prefix? 'a. lbl))
 
 (define (auxiliary-syntax-name lbl)
-  (cadr lbl))
+  (symbol-drop lbl 2))
 
 (define (auxiliary-syntax name)
   (lambda (stx)

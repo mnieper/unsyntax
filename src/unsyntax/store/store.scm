@@ -94,7 +94,8 @@
 
 (define (lookup lbl)
   (or (store-ref (current-store) lbl)
-      (and (auxiliary-syntax-label? lbl)
+      (and lbl
+           (auxiliary-syntax-label? lbl)
            (make-binding 'macro-parameter
                          (auxiliary-syntax (auxiliary-syntax-name lbl))))))
 

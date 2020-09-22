@@ -23,15 +23,16 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define *debug* #f)
+(define (symbol-append . sym*)
+  (string->symbol (apply string-append
+                         (map symbol->string sym*))))
 
-(define (set-debug! flag)
-  (set! *debug* flag))
+(define (symbol-prefix? prefix sym)
+  (let* ((s1 (symbol->string prefix))
+         (s2 (symbol->string sym))
+         (len (string-length s1)))
+    (and (<= len (string-length s2))
+         (string=? s1 (substring s2 0 len)))))
 
-(define (debug who message . irritants)
-  (when *debug*
-    (write-string "debug: " (current-error-port))
-    (when who
-      (write-string (format "~a: " who) (current-error-port)))
-    (write-string (apply format message irritants) (current-error-port))
-    (newline (current-error-port))))
+(define (symbol-drop sym n)
+  (string->symbol (string-copy (symbol->string sym) n)))

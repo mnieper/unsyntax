@@ -23,15 +23,7 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define *debug* #f)
-
-(define (set-debug! flag)
-  (set! *debug* flag))
-
-(define (debug who message . irritants)
-  (when *debug*
-    (write-string "debug: " (current-error-port))
-    (when who
-      (write-string (format "~a: " who) (current-error-port)))
-    (write-string (apply format message irritants) (current-error-port))
-    (newline (current-error-port))))
+(define-library (unsyntax symbol)
+  (export symbol-append symbol-prefix? symbol-drop)
+  (import (scheme base))
+  (include "symbol.scm"))

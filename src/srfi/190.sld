@@ -30,6 +30,7 @@
   (import (scheme base)
 	  (srfi 139)
 	  (srfi 158)
+          (only (srfi 206 all) yield)
           (srfi 211 identifier-syntax)
           (srfi 211 syntax-case))
   (include "190.scm"))

@@ -227,7 +227,9 @@ Bootstrap Unsyntax and build its standard library.
      (let*-values (((core-lib) (find-library/die '(unsyntax core-procedures)))
                    ((stdlibs aliases auxlibs)
                     (parse-stdlibs (call-with-input-file source read*)))
-                   ((libs) (map find-library/die stdlibs))
+                   ((libs) (begin
+                             (for-each install-auxiliary-syntax! auxlibs)
+                             (map find-library/die stdlibs)))
                    ((output) (lambda ()
                                (write-stdlibs libs core-lib aliases auxlibs))))
        (cond (target

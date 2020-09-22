@@ -30,7 +30,7 @@
 (define (make-label)
   (gensym "l"))
 
-(define label=? equal?)
+(define label=? eq?)
 (define label-comparator eq-comparator)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -23,12 +23,6 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define-syntax-parameter yield
-  (lambda (stx)
-    (syntax-case stx ()
-      (_ (syntax-violation
-          'yield "yield used outside coroutine generator" stx)))))
-
 (define-syntax coroutine-generator
   (lambda (stx)
     (syntax-case stx ()

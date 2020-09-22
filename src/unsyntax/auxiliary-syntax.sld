@@ -29,5 +29,6 @@
           auxiliary-syntax-label?
           auxiliary-syntax-name)
   (import (scheme base)
-          (unsyntax error))
+          (unsyntax error)
+          (unsyntax symbol))
   (include "auxiliary-syntax.scm"))

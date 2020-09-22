@@ -83,7 +83,8 @@ scheme_sources = %D%/scheme/base.scm %D%/scheme/base.sld		\
 %D%/unsyntax/source-location.sld %D%/unsyntax/source-port.scm		\
 %D%/unsyntax/source-port.sld %D%/unsyntax/store.sld			\
 %D%/unsyntax/store/context.scm %D%/unsyntax/store/library-table.scm	\
-%D%/unsyntax/store/store.scm %D%/unsyntax/syntax.scm			\
+%D%/unsyntax/store/store.scm %D%/unsyntax/symbol.scm			\
+%D%/unsyntax/symbol.sld %D%/unsyntax/syntax.scm				\
 %D%/unsyntax/syntax.sld %D%/unsyntax/syntax-case.scm			\
 %D%/unsyntax/syntax-case.sld %D%/unsyntax/syntax-object.scm		\
 %D%/unsyntax/syntax-object.sld %D%/unsyntax/unicode.scm			\
