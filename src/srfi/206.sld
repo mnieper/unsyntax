@@ -23,13 +23,6 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define-core-syntax! 'begin)
-(define-core-syntax! 'define-auxiliary-syntax)
-(define-core-syntax! 'define-record-type)
-(define-core-syntax! 'define-syntax)
-(define-core-syntax! 'define-syntax-parameter)
-(define-core-syntax! 'define-values)
-(define-core-syntax! 'import)
-(define-core-syntax! 'splicing-let-syntax 'let-syntax)
-(define-core-syntax! 'splicing-letrec-syntax 'letrec-syntax)
-(define-core-syntax! 'with-ellipsis)
+(define-library (srfi 206)
+  (export define-auxiliary-syntax)
+  (import (unsyntax $bootstrap)))

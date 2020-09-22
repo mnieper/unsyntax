@@ -105,9 +105,9 @@
                (b (lookup lbl)))
           (kwd-table-add! (current-keywords) h lbl)
           (case (binding-type b)
-            ((begin define-record-type define-values define-syntax
-              define-syntax-parameter import let-syntax letrec-syntax
-              with-ellipsis)
+            ((begin define-auxiliary-syntax define-record-type define-values
+              define-syntax define-syntax-parameter import let-syntax
+              letrec-syntax with-ellipsis)
              => (lambda (type)
                   (values stx type #f)))
             ((core)
@@ -220,6 +220,10 @@
         ((begin)
          (expand-form* (append (parse-begin stx #f) stx*)
                        stxdef* rdef* env add!))
+        ((define-auxiliary-syntax)
+         (receive (id sym) (parse-define-auxiliary-syntax stx)
+           (add! id (auxiliary-syntax-label sym))
+           (expand-form* stx* stxdef* rdef* env add!)))
         ((define-record-type)
          (expand-form* stx*
                        stxdef*
@@ -448,6 +452,16 @@
     (unless (and form (pair? form))
       (raise-syntax-error stx "ill-formed procedure call"))
     (values (car form) (cdr form))))
+
+(define (parse-define-auxiliary-syntax stx)
+  (let ((fail
+         (lambda ()
+           (raise-syntax-error stx "ill-formed auxiliary syntax definition")))
+        (form (syntax->list stx)))
+    (unless (and form (= 3 (length form))) (fail))
+    (let ((id (cadr form)) (sym (caddr form)))
+      (unless (and (identifier? id) (identifier? sym)) (fail))
+      (values id (identifier-name sym)))))
 
 (define (parse-define-record-type stx)
   (let ((fail

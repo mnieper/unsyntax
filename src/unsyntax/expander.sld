@@ -41,6 +41,7 @@
    install-stdlib
    install-library
    install-alias!
+   install-auxiliary-syntax!
    bind-global-variable!
    bind-global-keyword!
    environment-import*

@@ -86,17 +86,18 @@ Bootstrap Unsyntax and build its standard library.
 (define (read* port)
   (generator->list (lambda () (read port))))
 
-(define (write-stdlibs libs core-lib aliases)
-  (write (build-stdlibs libs core-lib aliases))
+(define (write-stdlibs libs core-lib aliases auxlibs)
+  (write (build-stdlibs libs core-lib aliases auxlibs))
   (newline))
 
-(define (build-stdlibs libs core-lib aliases)
+(define (build-stdlibs libs core-lib aliases auxlibs)
   `(define-library (unsyntax stdlibs)
      (export ,@(build-exports (current-globals)))
      (include-library-declarations "stdlibs/runtime.scm")
      (begin (gensym-count ,(gensym-count))
             ,@(compile* (append (build-defs* (current-libraries))
                                 (build-symbol-defs core-lib)
+                                (build-auxlibs auxlibs)
                                 (build-installers libs aliases)
                                 (build-globals (current-libraries))
                                 (build-visiters (current-libraries)))))))
@@ -121,6 +122,11 @@ Bootstrap Unsyntax and build its standard library.
   (exports-map->list (lambda (name lbl)
                        `(define ,name ,(cadr (binding-value (lookup lbl)))))
                      (library-exports core-lib)))
+
+(define (build-auxlibs auxlibs)
+  (map (lambda (auxlib)
+         `(install-auxiliary-syntax! ',auxlib))
+       auxlibs))
 
 (define (build-installers libs aliases)
   (let* ((libvars (make-hash-table equal-comparator))
@@ -161,21 +167,31 @@ Bootstrap Unsyntax and build its standard library.
   (or (find-library name) (raise-error #f "library ‘~a’ not found" name)))
 
 (define (parse-stdlibs decls)
-  (let f ((decls decls) (stdlibs '()) (aliases '()))
+  (let f ((decls decls) (stdlibs '()) (aliases '()) (auxlibs '()))
     (if (null? decls)
-        (values stdlibs aliases)
+        (values stdlibs aliases auxlibs)
         (let ((decl (car decls)))
           (cond
            ((alias decl)
             => (lambda (alias)
-                 (f (cdr decls) stdlibs (cons alias aliases))))
+                 (f (cdr decls) stdlibs (cons alias aliases) auxlibs)))
+           ((auxiliary-syntax decl)
+            => (lambda (name)
+                 (f (cdr decls) stdlibs aliases (cons name auxlibs))))
            (else
-            (f (cdr decls) (cons decl stdlibs) aliases)))))))
+            (f (cdr decls) (cons decl stdlibs) aliases auxlibs)))))))
 
 (define (alias decl)
   (and (pair? (cdr decl))
        (pair? (cadr decl))
+       (eq? 'alias (car decl))
        (cons (cadr decl) (caddr decl))))
+
+(define (auxiliary-syntax decl)
+  (and (pair? (cdr decl))
+       (pair? (cadr decl))
+       (eq? 'auxiliary-syntax (car decl))
+       (cadr decl)))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; Initialization ;;
@@ -209,10 +225,11 @@ Bootstrap Unsyntax and build its standard library.
      (unless source
        (raise-error #f "no input file"))
      (let*-values (((core-lib) (find-library/die '(unsyntax core-procedures)))
-                   ((stdlibs aliases)
+                   ((stdlibs aliases auxlibs)
                     (parse-stdlibs (call-with-input-file source read*)))
                    ((libs) (map find-library/die stdlibs))
-                   ((output) (lambda () (write-stdlibs libs core-lib aliases))))
+                   ((output) (lambda ()
+                               (write-stdlibs libs core-lib aliases auxlibs))))
        (cond (target
               (when (file-exists? target)
                 (delete-file target))

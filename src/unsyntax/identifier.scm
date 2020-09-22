@@ -33,7 +33,7 @@
   (syntax-object-expr stx))
 
 (define (bound-identifier=? id1 id2)
-  (and (eq? (syntax-object-expr id1)
-            (syntax-object-expr id2))
+  (and (symbol=? (syntax-object-expr id1)
+                 (syntax-object-expr id2))
        (marks=? (syntax-object-marks id1)
                 (syntax-object-marks id2))))

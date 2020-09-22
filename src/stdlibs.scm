@@ -52,6 +52,7 @@
 (srfi 158)
 (srfi 188)
 (srfi 190)
+(srfi 206)
 (srfi 211 identifier-syntax)
 (srfi 211 syntax-case)
 (srfi 211 syntax-parameter)
@@ -60,3 +61,4 @@
 (alias (srfi 1) (scheme list))
 (alias (srfi 125) (scheme hash-table))
 (alias (srfi 128) (scheme comparator))
+(auxiliary-syntax (srfi 206 all))

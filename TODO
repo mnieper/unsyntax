@@ -4,12 +4,8 @@ Complete the REPL interface so that it allows top-level special syntax.
 
 * Language
 
-Give each cond-expand clause the semantics of a begin form.  In particular, 
+Give each cond-expand clause the semantics of a begin form.  In particular,
 allow definitions to be cond-expanded.
-
-* SRFIs
-
-Implement SRFI 206.
 
 * Backends
 

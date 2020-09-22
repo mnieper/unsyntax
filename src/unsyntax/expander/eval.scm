@@ -100,6 +100,9 @@
               ((begin)
                (f (append (body (parse-begin stx #f))) vals))
               ;; FIXME
+              ((define-auxiliary-syntax)
+               (error "not implemented"))
+              ;; FIXME
               ((define-record-type)
                (error "not implemented"))
               ;; FIXME

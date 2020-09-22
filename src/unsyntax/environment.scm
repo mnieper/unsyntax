@@ -30,7 +30,7 @@
 (define (make-label)
   (gensym "l"))
 
-(define label=? eq?)
+(define label=? equal?)
 (define label-comparator eq-comparator)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -166,5 +166,5 @@
   (let ((l1 (resolve id1))
         (l2 (resolve id2)))
     (if (or l1 l2)
-        (eq? l1 l2)
-        (eq? (identifier-name id1) (identifier-name id2)))))
+        (label=? l1 l2)
+        (symbol=? (identifier-name id1) (identifier-name id2)))))

@@ -46,9 +46,10 @@
 	  (scheme case-lambda)
           (srfi 125)
           (srfi 128)
-          (unsyntax variable)
+          (unsyntax auxiliary-syntax)
+          (unsyntax environment)
           (unsyntax library)
-          (unsyntax environment))
+          (unsyntax variable))
   (include "store/store.scm"
            "store/library-table.scm"
            "store/context.scm"))

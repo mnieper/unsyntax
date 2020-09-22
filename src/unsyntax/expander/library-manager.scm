@@ -23,25 +23,41 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Auxiliary Syntax Libraries ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define *auxiliary-syntax-libraries* '())
+
+(define (install-auxiliary-syntax! libname)
+  (set! *auxiliary-syntax-libraries*
+    (cons libname *auxiliary-syntax-libraries*)))
+
+(define (auxiliary-syntax-library? libname)
+  (and (member libname *auxiliary-syntax-libraries*) #t))
+
 ;;;;;;;;;;;;;;;;;;;;
 ;; Library Finder ;;
 ;;;;;;;;;;;;;;;;;;;;
 
 (define pending-libraries (make-parameter '()))
 
-(define (%import-library stx)
+(define (%import-library stx magic?)
   (let ((name (parse-library-name stx)))
-    (cond ((member name (pending-libraries))
+    (cond ((auxiliary-syntax-library? name)
+           (or magic?
+               (raise-syntax-error stx "invalid import of library ‘~a’" name)))
+          ((member name (pending-libraries))
            (raise-syntax-error stx "circular import of library"))
           (else
            (parameterize ((pending-libraries (cons name (pending-libraries))))
              (find-library name))))))
 
 (define (library-present? stx)
-  (and (%import-library stx) #t))
+  (and (%import-library stx #t) #t))
 
 (define (import-library stx)
-  (or (%import-library stx)
+  (or (%import-library stx #f)
       (raise-syntax-error stx "library ‘~a’ not found" (syntax->datum stx))))
 
 (define (find-library name)
@@ -334,7 +350,8 @@
 (define (environment-import* env import-sets)
   (let ((libs (make-hash-table eq-comparator)))
     (for-each (lambda (import-set)
-                (hash-table-set! libs (environment-import env import-set) #t))
+                (and-let* ((imported-lib (environment-import env import-set)))
+                  (hash-table-set! libs imported-lib #t)))
               import-sets)
     (hash-table-keys libs)))
 
@@ -352,9 +369,16 @@
                                    (syntax->datum import-set)))
              (environment-add-library-exports! env lib import-set)
              lib))
+          ((not (identifier? (car form)))
+           (fail))
+          ;; Magic auxiliary syntax library
+          ((and (eq? 'only (identifier-name (car form)))
+                (not (null? (cdr form)))
+                (syntax-pair? (cadr form))
+                (auxiliary-syntax-library? (syntax->datum (cadr form))))
+           (import-auxiliary-syntax! (cddr form) env)
+           #f)
           (else
-           (unless (identifier? (car form))
-             (fail))
            (let ((orig-env (make-environment)))
              (let ((lib (environment-import orig-env (cadr form))))
                (case (identifier-name (car form))
@@ -371,6 +395,14 @@
                  (else
                   (fail)))
                lib))))))
+
+(define (import-auxiliary-syntax! stx* env)
+  (for-each (lambda (id)
+              (unless (identifier? id)
+                (raise-syntax-error id "identifier expected"))
+              (environment-set! env id
+                                (auxiliary-syntax-label (identifier-name id))))
+            stx*))
 
 (define (map-environment-only! stx* orig-env env)
   (for-each (lambda (id)

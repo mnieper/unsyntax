@@ -23,6 +23,16 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
+(define (auxiliary-syntax-label sym)
+  (list 'auxiliary-syntax sym))
+
+(define (auxiliary-syntax-label? lbl)
+  (and (pair? lbl)
+       (eq? 'auxiliary-syntax (car lbl))))
+
+(define (auxiliary-syntax-name lbl)
+  (cadr lbl))
+
 (define (auxiliary-syntax name)
   (lambda (stx)
     (raise-syntax-error stx "invalid use of auxiliary syntax ‘~a’" name)))

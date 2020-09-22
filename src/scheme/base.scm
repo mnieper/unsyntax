@@ -29,10 +29,10 @@
 ;; Auxiliary syntax ;;
 ;;;;;;;;;;;;;;;;;;;;;;
 
-(define-syntax => (auxiliary-syntax '=>))
-(define-syntax else (auxiliary-syntax 'else))
-(define-syntax unquote (auxiliary-syntax 'unquote))
-(define-syntax unquote-splicing (auxiliary-syntax 'unquote-splicing))
+(define-auxiliary-syntax => =>)
+(define-auxiliary-syntax else else)
+(define-auxiliary-syntax unquote unquote)
+(define-auxiliary-syntax unquote-splicing unquote-splicing)
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; Derived syntax ;;

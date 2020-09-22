@@ -28,6 +28,5 @@
       (gensym prefix)
       (gensym (string-append (symbol->string prefix) "."))))
 
-(define variable=? eq?)
-
+(define variable=? symbol=?)
 (define variable-comparator eq-comparator)

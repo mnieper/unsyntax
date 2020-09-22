@@ -93,7 +93,10 @@
          swap!)))))
 
 (define (lookup lbl)
-  (store-ref (current-store) lbl))
+  (or (store-ref (current-store) lbl)
+      (and (auxiliary-syntax-label? lbl)
+           (make-binding 'macro-parameter
+                         (auxiliary-syntax (auxiliary-syntax-name lbl))))))
 
 (define (bind! lbl b)
   (when lbl

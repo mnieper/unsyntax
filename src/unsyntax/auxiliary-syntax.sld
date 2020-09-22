@@ -24,7 +24,10 @@
 ;; SOFTWARE.
 
 (define-library (unsyntax auxiliary-syntax)
-  (export auxiliary-syntax)
+  (export auxiliary-syntax
+          auxiliary-syntax-label
+          auxiliary-syntax-label?
+          auxiliary-syntax-name)
   (import (scheme base)
           (unsyntax error))
   (include "auxiliary-syntax.scm"))

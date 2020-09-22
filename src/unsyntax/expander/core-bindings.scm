@@ -31,9 +31,12 @@
 (define *core-exports* (make-exports))
 (define (core-exports) *core-exports*)
 
+(define (define-export! name lbl)
+  (environment-set! *core-environment* (datum->syntax #f name) lbl)
+  (exports-set! *core-exports* name lbl))
+
 (define (define-core! name b)
-  (environment-set! *core-environment* (datum->syntax #f name) name)
-  (exports-set! *core-exports* name name)
+  (define-export! name name)
   (bind-core! name b))
 
 ;;;;;;;;;;;;;;;;;
@@ -52,7 +55,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;
 
 (define (define-auxiliary-syntax! name)
-  (define-core! name (make-binding 'core (auxiliary-syntax name))))
+  (define-export! name (auxiliary-syntax-label name)))
 
 ;;;;;;;;;;;;;;;;
 ;; Primitives ;;

@@ -40,9 +40,10 @@ scheme_sources = %D%/scheme/base.scm %D%/scheme/base.sld		\
 %D%/srfi/59.sld %D%/srfi/64.scm %D%/srfi/64.sld %D%/srfi/111.scm	\
 %D%/srfi/111.sld %D%/srfi/125.sld %D%/srfi/128.scm %D%/srfi/128.sld	\
 %D%/srfi/139.sld %D%/srfi/158.scm %D%/srfi/158.sld %D%/srfi/188.sld	\
-%D%/srfi/190.scm %D%/srfi/190.sld %D%/srfi/211/identifier-syntax.scm	\
-%D%/srfi/211/identifier-syntax.sld %D%/srfi/211/syntax-case.scm		\
-%D%/srfi/211/syntax-case.sld %D%/srfi/211/syntax-parameter.sld		\
+%D%/srfi/190.scm %D%/srfi/190.sld %D%/srfi/206.sld			\
+%D%/srfi/211/identifier-syntax.scm %D%/srfi/211/identifier-syntax.sld	\
+%D%/srfi/211/syntax-case.scm %D%/srfi/211/syntax-case.sld		\
+%D%/srfi/211/syntax-parameter.sld					\
 %D%/srfi/211/variable-transformer.sld %D%/srfi/211/with-ellipsis.sld	\
 %D%/unsyntax/auxiliary-syntax.scm %D%/unsyntax/auxiliary-syntax.sld	\
 %D%/unsyntax/backend.scm %D%/unsyntax/backend.sld			\

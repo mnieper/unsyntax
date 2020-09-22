@@ -397,9 +397,6 @@
    ;; Errors
    raise-syntax-error
 
-   ;; Auxiliary syntax
-   auxiliary-syntax
-
    ;; Syntax objects
    make-syntax-object
    syntax-object?

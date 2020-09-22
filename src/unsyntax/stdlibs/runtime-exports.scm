@@ -311,9 +311,6 @@
  ;; Errors
  raise-syntax-error
 
- ;; Auxiliary syntax
- auxiliary-syntax
-
  ;; Feature identifiers
  host-features
  features
