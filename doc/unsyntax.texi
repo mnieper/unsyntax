@@ -417,8 +417,8 @@ the included expression is the syntactic context of the corresponding
 @code{include} or @code{include-ci} keyword.
 
 @item
-The clauses of a @code{cond-expand} expression are matched
-unhygienically, that is by symbol and not by identifier equality.
+The clauses of a @code{cond-expand} form are matched unhygienically,
+that is by symbol and not by identifier equality.
 
 @item
 Field names in record-type definitions are identifiers and not symbols
@@ -442,6 +442,11 @@ In evaluating bodies, libraries, and programs, Unsyntax follows the R6RS
 semantics.  In particular, for the definition of a variable, expansion
 is deferred until after all of the definitions have been seen.  A use of
 a syntax form can therefore appear before its definition.
+
+@item
+The clauses of a @code{cond-expand} form allow both expressions and
+definitions.  In particular, like @code{begin}, @code{cond-expand}
+doesn't have to be an expression.
 
 @end itemize
 
