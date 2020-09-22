@@ -23,6 +23,7 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
+(define-core-syntax! 'alias)
 (define-core-syntax! 'begin)
 (define-core-syntax! 'define-auxiliary-syntax)
 (define-core-syntax! 'define-record-type)

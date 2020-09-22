@@ -392,6 +392,11 @@ Variable transformers.
 @item (srfi 211 with-ellipsis)
 Custom ellipsis identifiers for @code{syntax-case} macros.
 
+@cindex SRFI 212
+@cindex @code{(srfi 212)}
+@item (srfi 212)
+Aliases.
+
 @end table
 
 @cindex SRFI 138

@@ -105,9 +105,9 @@
                (b (lookup lbl)))
           (kwd-table-add! (current-keywords) h lbl)
           (case (binding-type b)
-            ((begin define-auxiliary-syntax define-record-type define-values
-              define-syntax define-syntax-parameter import let-syntax
-              letrec-syntax with-ellipsis)
+            ((alias begin define-auxiliary-syntax define-record-type
+              define-values define-syntax define-syntax-parameter import
+              let-syntax letrec-syntax with-ellipsis)
              => (lambda (type)
                   (values stx type #f)))
             ((core)
@@ -217,6 +217,12 @@
   (let ((loc (syntax-object-srcloc stx)))
     (receive (stx type val) (syntax-type stx env)
       (case type
+        ((alias)
+         (let*-values (((id1 id2) (parse-alias stx))
+                       ((lbl) (resolve id2)))
+           (kwd-table-add! (current-keywords) id2 lbl)
+           (add! id1 lbl)
+           (expand-form* stx* stxdef* rdef* env add!)))
         ((begin)
          (expand-form* (append (parse-begin stx #f) stx*)
                        stxdef* rdef* env add!))
@@ -438,6 +444,16 @@
 ;;;;;;;;;;;;;
 ;; Parsers ;;
 ;;;;;;;;;;;;;
+
+(define (parse-alias stx)
+  (let ((fail
+         (lambda ()
+           (raise-syntax-error stx "ill-formed alias definition")))
+        (form (syntax->list stx)))
+    (unless (and form (= 3 (length form))) (fail))
+    (let ((id1 (cadr form)) (id2 (caddr form)))
+      (unless (and (identifier? id1) (identifier? id2)) (fail))
+      (values id1 id2))))
 
 (define (parse-begin stx non-empty?)
   (let ((form (syntax->list stx)))

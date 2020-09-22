@@ -11,6 +11,8 @@ Unsyntax NEWS
 
   SRFI 206 (Auxiliary Syntax Keywords) is now supported.
 
+  SRFI 212 (Aliases) is now supported.
+
 ** Documentation
 
   Man pages and a manual have been added.

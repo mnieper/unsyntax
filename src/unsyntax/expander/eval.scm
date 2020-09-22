@@ -97,6 +97,12 @@
           (apply values vals)
           (receive (stx type val) (syntax-type (car body) env)
             (case type
+              ;; FIXME
+              ((alias)
+               (let*-values (((id1 id2) (parse-alias stx))
+                             ((lbl) (resolve id2)))
+                 (environment-set! env id1 lbl)
+                 (f (cdr body) (list (if #f #f)))))
               ((begin)
                (f (append (parse-begin stx #f) (cdr body)) vals))
               ;; FIXME
