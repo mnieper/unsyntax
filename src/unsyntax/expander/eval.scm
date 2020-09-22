@@ -98,7 +98,7 @@
           (receive (stx type val) (syntax-type (car body) env)
             (case type
               ((begin)
-               (f (append (body (parse-begin stx #f))) vals))
+               (f (append (parse-begin stx #f) (cdr body)) vals))
               ;; FIXME
               ((define-auxiliary-syntax)
                (error "not implemented"))
