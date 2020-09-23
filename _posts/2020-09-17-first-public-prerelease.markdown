@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Welcome to Unsyntax!"
+title:  "First public prerelease"
 date:   2020-09-17 08:08:33 +0200
 categories: unsyntax release update
 ---
