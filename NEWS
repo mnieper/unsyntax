@@ -2,6 +2,13 @@ Unsyntax NEWS
 
 * Noteworthy changes in release ?.? (????-??-??) [?]
 
+** Bug fixes
+
+*** Interactive environment
+
+  The REPL and the interactive environment are now complete.  In
+  particular, they now allow top-level definitions.
+
 ** New features
 
 *** SRFI 188
