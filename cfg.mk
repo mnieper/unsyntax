@@ -32,4 +32,4 @@ exclude_file_name_regexp--sc_prohibit_doubled_word = \
 exclude_file_name_regexp--sc_prohibit_gnu_make_extensions = \
   ^lib/Makefile$$
 exclude_file_name_regexp--sc_unmarked_diagnostics = \
-  ^(.*\.scm)$$
+  ^(.*\.(scm|sch))$$
