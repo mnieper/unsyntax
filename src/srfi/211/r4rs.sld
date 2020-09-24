@@ -23,7 +23,16 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define (generate-temporaries lst)
-  (map (lambda (x)
-	 (generate-identifier))
-       lst))
+(define-library (srfi 211 r4rs)
+  (export syntax unwrap-syntax identifier?
+	  free-identifier=? bound-identifier=?
+	  identifier->symbol
+	  generate-identifier
+	  construct-identifier)
+  (import (scheme base)
+	  (scheme case-lambda)
+	  (srfi 211 syntax-case)
+	  ;; TODO: Rename identifier-name to identifier->symbol in the
+	  ;; code.
+	  (rename (unsyntax identifier) (identifier-name identifier->symbol))
+	  (rename (unsyntax syntax) (datum->syntax construct-identifier))))

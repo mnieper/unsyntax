@@ -521,7 +521,7 @@
       (values spec spec)
       (let ((form (syntax->list spec)))
         (unless (and (= 3 (length form))
-                     (eq? 'rename (car form))
+                     (eq? 'rename (syntax->datum (car form)))
                      (identifier? (cadr form))
                      (identifier? (caddr form)))
           (raise-syntax-error spec "invalid export spec"))

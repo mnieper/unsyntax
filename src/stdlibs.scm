@@ -58,6 +58,7 @@
 (srfi 211 syntax-parameter)
 (srfi 211 variable-transformer)
 (srfi 211 with-ellipsis)
+(srfi 211 r4rs)
 (srfi 212)
 (alias (srfi 1) (scheme list))
 (alias (srfi 125) (scheme hash-table))

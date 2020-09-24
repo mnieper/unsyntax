@@ -375,7 +375,7 @@
 				       ...))
                          (cdr envs)
                          #t)))))
-       ;; (<pattern> . <pattern>)
+       ;; (<template> . <element>)
        (else
         (let*-values (((out1 envs var1?)
                        (gen-template (syntax-car tmpl) envs lvl #f))
@@ -384,6 +384,15 @@
           (if (or var1? var2?)
               (values (build loc (cons ,out1 ,out2)) envs #t)
               (values (build loc ',tmpl) envs #f))))))
+     ;; #(<element> ...)
+     ((syntax-vector? tmpl)
+      (receive (out envs var?)
+	  (gen-template (datum->syntax #f (syntax-vector->list tmpl) loc)
+			envs lvl #f)
+	(if var?
+	    (values (build loc (list->vector (syntax->list ,out))) envs #t)
+	    (values (build loc ',tmpl) envs #f))))
+     ;; <identifier>
      ((identifier? tmpl)
       (cond
        ((pattern-variable tmpl)

@@ -37,3 +37,10 @@
                  (syntax-object-expr id2))
        (marks=? (syntax-object-marks id1)
                 (syntax-object-marks id2))))
+
+(define generate-identifier
+  (case-lambda
+    (()
+     (generate-identifier (gensym "t")))
+    ((sym)
+     (add-mark (make-mark) sym))))

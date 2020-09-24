@@ -26,7 +26,10 @@
 (define-library (unsyntax identifier)
   (export make-identifier identifier?
           identifier-name
-          bound-identifier=?)
+          bound-identifier=?
+	  generate-identifier)
   (import (scheme base)
+	  (scheme case-lambda)
+	  (unsyntax gensym)
           (unsyntax syntax))
   (include "identifier.scm"))

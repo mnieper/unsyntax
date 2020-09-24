@@ -44,10 +44,18 @@
 ;; Unwrapping ;;
 ;;;;;;;;;;;;;;;;
 
-(define (unwrap-syntax stx)
+(define (%syntax-object-expr stx)
   (if (syntax-object? stx)
       (syntax-object-expr stx)
       stx))
+
+(define (unwrap-syntax stx)
+  (cond ((syntax-pair? stx)
+	 (cons (syntax-car stx) (syntax-cdr stx)))
+	((syntax-vector? stx)
+	 (unwrap-vector stx))
+	(else
+	 stx)))
 
 ;;;;;;;;;;;;;;
 ;; Wrapping ;;
@@ -118,10 +126,10 @@
 ;;;;;;;;;;;;;;;;;;
 
 (define (syntax-null? stx)
-  (null? (unwrap-syntax stx)))
+  (null? (%syntax-object-expr stx)))
 
 (define (syntax-pair? stx)
-  (pair? (unwrap-syntax stx)))
+  (pair? (%syntax-object-expr stx)))
 
 (define (syntax-car stx)
   (if (syntax-object? stx)
@@ -142,14 +150,14 @@
       (cdr stx)))
 
 (define (syntax-length+ stx)
-  (let ((e (unwrap-syntax stx)))
+  (let ((e (%syntax-object-expr stx)))
     (let f ((e e) (lag e) (len 0))
       (if (pair? e)
-	  (let ((e (unwrap-syntax (cdr e)))
+	  (let ((e (%syntax-object-expr (cdr e)))
 		(len (+ 1 len)))
 	    (if (pair? e)
-		(let ((e (unwrap-syntax (cdr e)))
-		      (lag (unwrap-syntax (cdr lag)))
+		(let ((e (%syntax-object-expr (cdr e)))
+		      (lag (%syntax-object-expr (cdr lag)))
 		      (len (+ 1 len)))
 		  (and (not (eq? e lag))
 		       (f e lag len)))
@@ -164,13 +172,13 @@
 	  (values (cons (syntax-car stx) prefix) suffix)))))
 
 (define (syntax-circular-list? stx)
-  (let ((e (unwrap-syntax stx)))
+  (let ((e (%syntax-object-expr stx)))
     (let f ((e e) (lag e))
       (and (pair? e)
-	   (let ((e (unwrap-syntax (cdr e))))
+	   (let ((e (%syntax-object-expr (cdr e))))
 	     (and (pair? e)
-		  (let ((e (unwrap-syntax (cdr e)))
-			(lag (unwrap-syntax (cdr lag))))
+		  (let ((e (%syntax-object-expr (cdr e)))
+			(lag (%syntax-object-expr (cdr lag))))
 		    (or (eq? e lag)
 			(f e lag)))))))))
 
@@ -187,8 +195,8 @@
 		    (let ((res (cons (syntax-car stx) res))
 			  (stx (syntax-cdr stx))
 			  (lag (syntax-cdr lag)))
-		      (and (not (eq? (unwrap-syntax stx)
-				     (unwrap-syntax lag)))
+		      (and (not (eq? (%syntax-object-expr stx)
+				     (%syntax-object-expr lag)))
 			   (f stx lag res))))
 		   (else #f))))
 	  (else #f)))
@@ -215,8 +223,9 @@
 ;;;;;;;;;;;;;;;;;;;;
 
 (define (syntax-vector? stx)
-  (vector? (unwrap-syntax stx)))
+  (vector? (%syntax-object-expr stx)))
 
+#;
 (define (syntax-vector->list stx)
   (if (syntax-object? stx)
       (let ((e (syntax-object-expr stx))
@@ -227,6 +236,20 @@
 	       (syntax-object stx m* s* loc))
 	     (vector->list e)))
       (vector->list stx)))
+
+(define (unwrap-vector stx)
+  (if (syntax-object? stx)
+      (let ((e (syntax-object-expr stx))
+	    (m* (syntax-object-marks stx))
+	    (s* (syntax-object-substs stx))
+	    (loc (syntax-object-substs stx)))
+	(vector-map (lambda (stx)
+		      (syntax-object stx m* s* loc))
+		    e))
+      stx))
+
+(define (syntax-vector->list stx)
+  (vector->list (unwrap-vector stx)))
 
 ;;;;;;;;;;;;;;;;;;;
 ;; syntax->datum ;;
