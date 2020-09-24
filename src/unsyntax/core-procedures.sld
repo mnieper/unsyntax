@@ -40,6 +40,7 @@
    fold-right
    free-identifier=?
    raise-syntax-error
+   syntax-violation
    syntax-car
    syntax-cdr
    syntax->datum

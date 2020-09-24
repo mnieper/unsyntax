@@ -133,6 +133,13 @@
 (define (raise-syntax-error stx message . irritants)
   (raise (make-syntax-error (and (syntax-object? stx) stx) message irritants)))
 
+(define syntax-violation
+  (case-lambda
+    ((who message form)
+     (syntax-violation who message form #f))
+    ((who message form subform)
+     (raise-syntax-error #f message))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Global Error Handler ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;

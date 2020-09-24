@@ -25,7 +25,8 @@
 
 (import (scheme base)
         (srfi 64)
-        (srfi 188))
+        (srfi 188)
+        (srfi 211 identifier-syntax))
 
 (test-begin "Splicing binding constructs for syntactic keywords")
 
@@ -119,6 +120,12 @@
     (splicing-let-syntax ()
       (define x 'splicing-let-syntax)
       #f)
+    x))
+
+(test-equal 'inner
+  (let ((foo 'outer))
+    (splicing-let-syntax ((foo (identifier-syntax 'inner)))
+      (define x foo))
     x))
 
 (test-end)

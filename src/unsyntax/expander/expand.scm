@@ -431,7 +431,8 @@
                                          (expand-transformer
                                           (if (eq? 'let-syntax type)
                                               init
-                                              (add-substs env init))))))
+                                              (add-substs env init)))))
+	     inits)
       (expand-body body env))))
 
 (define (expand-with-ellipsis stx)

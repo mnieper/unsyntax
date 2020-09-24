@@ -38,7 +38,6 @@
           unsyntax-splicing
           syntax-violation)
   (import (scheme base)
-          (scheme case-lambda)
           (only (unsyntax $bootstrap)
                 syntax-case
                 syntax

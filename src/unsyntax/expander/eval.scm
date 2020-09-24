@@ -51,12 +51,13 @@
 
 (define (mutable-ref env id)
   (or (environment-ref env id)
-      (let ((var (genvar id))
-            (lbl (genlbl id)))
-        (environment-set! env id lbl)
-        (bind-global! lbl (make-binding 'mutable-variable var))
-        (set-global! var (box (if #f #f)))
-        lbl)))
+      (and (symbol? (identifier-name id))
+           (let ((var (genvar id))
+                 (lbl (genlbl id)))
+             (environment-set! env id lbl)
+             (bind-global! lbl (make-binding 'mutable-variable var))
+             (set-global! var (box (if #f #f)))
+             lbl))))
 
 (define (mutable-set! env id val)
   (let* ((lbl (mutable-ref env id))
@@ -97,7 +98,6 @@
           (apply values vals)
           (receive (stx type val) (syntax-type (car body) env)
             (case type
-              ;; FIXME
               ((alias)
                (let*-values (((id1 id2) (parse-alias stx))
                              ((lbl) (resolve id2)))
@@ -105,30 +105,112 @@
                  (f (cdr body) (list (if #f #f)))))
               ((begin)
                (f (append (parse-begin stx #f) (cdr body)) vals))
-              ;; FIXME
               ((define-auxiliary-syntax)
-               (error "not implemented"))
-              ;; FIXME
+               (receive (id sym) (parse-define-auxiliary-syntax stx)
+                 (environment-set! env id (auxiliary-syntax-label sym)))
+               (f (cdr body) (list (if #f #f))))
               ((define-record-type)
-               (error "not implemented"))
-              ;; FIXME
+	       (define-record-type! stx env)
+	       (f (cdr body) (list (if #f #f))))
               ((define-values)
-               (error "not implemented"))
-              ;; FIXME
-              ((define-syntax)
-               (error "not implemented"))
+               (define-values! stx env)
+               (f (cdr body) (list (if #f #f))))
+              ((define-syntax define-syntax-parameter)
+               (expand-define-syntax type stx (lambda (id lbl)
+                                                (environment-set! env id lbl)))
+               (f (cdr body) (list (if #f #f))))
               ((import)
                (environment-import* env (parse-import-declaration stx))
                (f (cdr body) (list (if #f #f))))
-              ;; FIXME
               ((let-syntax letrec-syntax)
-               (error "not implemented"))
-              ;; FIXME
+               (f (append (expand-let-syntax* type stx) (cdr body)) vals))
               ((with-ellipsis)
-               (error "not implemented"))
+               (f (append (expand-with-ellipsis* stx) (cdr body)) vals))
               (else
                (receive vals (eval-expression stx)
                  (f (cdr body) vals)))))))))
+
+;; TODO: Bind rtd...
+
+(define (define-record-type! stx env)
+  (let*-values
+      (((loc) (syntax-object-srcloc stx))
+       ((rtd cname pred cfields names accs muts)
+	(parse-define-record-type stx))
+       ((indices) (get-field-indices names cfields))
+       ((cvar) (genvar cname))
+       ((pvar) (genvar pred))
+       ((avars) (map genvar accs))
+       ((mvars) (map (lambda (mut) (and mut (genvar mut))) muts))
+       ((cref) (lambda ()
+		 (build-reference (syntax-object-srcloc cname)
+				  cvar)))
+       ((pref) (lambda ()
+		 (build-reference (syntax-object-srcloc pred)
+				  pvar)))
+       ((arefs) (lambda ()
+		  (map (lambda (acc avar)
+			 (build-reference (syntax-object-srcloc acc)
+					  avar))
+		       accs avars)))
+       ((mrefs) (lambda ()
+		  (map (lambda (mut mvar)
+			 (and mut
+			      (build-reference (syntax-object-srcloc mut)
+					       mvar)))
+		       muts mvars)))
+       ((cval pval avals mvals)
+	(execute
+	 (build-body
+	  loc
+	  (list
+	   (build-define-record-type
+	    loc (identifier-name rtd)
+	    (cref) (pref)
+	    indices (map identifier-name names)
+	    (arefs)
+	    (mrefs)))
+	  (build-primitive-call
+	   loc 'values
+	   (list (cref) (pref)
+		 (build-primitive-call loc 'list (arefs))
+		 (build-primitive-call
+		  loc 'list
+		  (map (lambda (mref)
+			 (or mref (build-literal loc #f)))
+		       (mrefs)))))))))
+    (mutable-set! env cname cval)
+    (mutable-set! env pred pval)
+    (for-each (lambda (acc aval)
+		(mutable-set! env acc aval))
+	      accs avals)
+    (for-each (lambda (mut mval)
+		(when mut
+		  (mutable-set! env mut mval)))
+	      muts mvals)
+    (let ((rlbl (genlbl rtd)))
+      (environment-set! env rtd rlbl)
+      (bind! rlbl (make-binding 'record-type-descriptor #f)))))
+
+(define (define-values! stx env)
+  (let*-values (((formals init) (parse-define-values stx))
+                ((ids variadic?) (parse-formals formals))
+                (vals (eval-expression init))
+                ((expected-arg-num)
+                 (if variadic? (- (length ids) 1) (length ids)))
+                ((actual-arg-num) (length vals)))
+    (when (< actual-arg-num expected-arg-num)
+      (syntax-violation #f "not enough values" stx init))
+    (when (and (not variadic?) (< expected-arg-num actual-arg-num))
+      (syntax-violation #f "too many values" stx init))
+    (let f ((ids ids) (vals vals))
+      (unless (null? ids)
+        (let ((id (car ids)))
+          (cond ((and variadic? (null? (cdr ids)))
+                 (mutable-set! env id vals))
+                (else
+                 (mutable-set! env id (car vals))
+                 (f (cdr ids) (cdr vals)))))))))
 
 (define (parse-import-declaration stx)
   (let ((form (syntax->list stx)))

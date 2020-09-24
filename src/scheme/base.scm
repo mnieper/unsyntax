@@ -317,14 +317,16 @@
 (define-syntax let-syntax
   (lambda (stx)
     (syntax-case stx ()
-      ((_ b . body)
-       #'(splicing-let-syntax b (letrec* () . body))))))
+      ((_ b body1 body2 ...)
+       #'(splicing-let-syntax b (letrec* () body1 body2 ...)))
+      (_ (syntax-violation #f "ill-formed let-syntax form" stx)))))
 
 (define-syntax letrec-syntax
   (lambda (stx)
     (syntax-case stx ()
-      ((_ b . body)
-       #'(splicing-letrec-syntax b (letrec* () . body))))))
+      ((_ b body1 body2 ...)
+       #'(splicing-letrec-syntax b (letrec* () body1 body2 ...)))
+      (_ (syntax-violation #f "ill-formed letrec-syntax form" stx)))))
 
 ;;;;;;;;;;;;;;;;;;
 ;; Syntax-Rules ;;

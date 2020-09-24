@@ -1,7 +1,3 @@
-* REPL
-
-Complete the REPL interface so that it allows top-level special syntax.
-
 * Language
 
 For interoperability, support the R6RS module language as well.  We use

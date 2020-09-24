@@ -396,6 +396,7 @@
 
    ;; Errors
    raise-syntax-error
+   syntax-violation
 
    ;; Syntax objects
    make-syntax-object

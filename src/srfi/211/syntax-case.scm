@@ -27,10 +27,3 @@
   (map (lambda (x)
          (add-mark (make-mark) (gensym "t")))
        lst))
-
-(define syntax-violation
-  (case-lambda
-    ((who message form)
-     (syntax-violation who message form #f))
-    ((who message form subform)
-     (raise-syntax-error (datum->syntax #f form) message))))

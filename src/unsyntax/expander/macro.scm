@@ -64,14 +64,39 @@
             (wrap (lambda (e) (datum->syntax #f e loc))))
        (when (and id (not (variable-transformer? transformer)))
          (raise-syntax-error id "not a variable transformer"))
-       (let ((marked
-              (add-mark (make-mark)
-                        (wrap
-                         (transform transformer
-                                    (add-mark (anti-mark) (wrap stx)))))))
-         (if env
-             (add-substs env marked)
-             marked))))))
+       (wrap
+	(build-output stx
+		      (transform transformer
+				 (add-mark (anti-mark) (wrap stx)))
+		      (make-mark)
+		      env))))))
+
+(define (build-output stx e m env)
+  (let f ((e e))
+    (cond
+     ((pair? e)
+      (cons (f (car e)) (f (cdr e))))
+     ((vector? e)
+      (vector-map f e))
+     ((symbol? e)
+      (raise-syntax-error stx
+			  "encountered raw symbol ‘~a’ in output of macro" e))
+     ((syntax-object? e)
+      (receive (m* s*)
+	  (let ((m* (syntax-object-marks e))
+		(s* (syntax-object-substs e)))
+	    (if (and (pair? m*) (anti-mark? (car m*)))
+		(values (cdr m*) (cdr s*))
+		(values (cons m m*)
+			(if env
+			    (cons* env (shift) s*)
+			    (cons (shift) s*)))))
+	(make-syntax-object (syntax-object-expr e)
+			    m*
+			    s*
+			    (syntax-object-srcloc e))))
+     (else
+      e))))
 
 (define transform/global-keyword
   (case-lambda

@@ -29,8 +29,10 @@
           raise-error
           raise-syntax-error
           raise-reader-error
-          reader-error?)
+          reader-error?
+          syntax-violation)
   (import (scheme base)
+          (scheme case-lambda)
           (scheme file)
           (scheme process-context)
           (srfi 2)
