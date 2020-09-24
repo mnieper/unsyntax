@@ -13,6 +13,8 @@ Support other backends besides Chibi-Scheme.
 
 * Optimization
 
+Special-case the ‘guard’ form when no ‘else’ clause is present.
+
 Do not emit ‘(define-values _... ...)’ in the library and program top-level.
 
 -----
