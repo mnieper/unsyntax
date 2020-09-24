@@ -25,7 +25,7 @@
 
 gnulib_dir = $(srcdir)/.gnulib
 
-old_NEWS_hash = f89cdd2b98849446face5b67d3d8df53
+old_NEWS_hash = 3827dc98333a530c9298b88331f974a7
 
 exclude_file_name_regexp--sc_prohibit_doubled_word = \
   ^(.*\.scm)$$
