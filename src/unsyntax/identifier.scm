@@ -43,4 +43,4 @@
     (()
      (generate-identifier (gensym "t")))
     ((sym)
-     (add-mark (make-mark) sym))))
+     (make-syntax-object sym (list (make-mark)) '() #f))))
