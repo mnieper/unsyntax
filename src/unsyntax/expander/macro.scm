@@ -23,10 +23,6 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-;; (define (make-macro loc transformer) (list loc transformer))
-;; (define (macro-location macro) (first macro))
-;; (define (macro-transformer macro) (second macro))
-
 (define (expand-transformer stx)
   (receive (expr inv-reqs)
       (parameterize ((invoke-collector (make-library-collector))
@@ -72,31 +68,37 @@
 		      env))))))
 
 (define (build-output stx e m env)
-  (let f ((e e))
-    (cond
-     ((pair? e)
-      (cons (f (car e)) (f (cdr e))))
-     ((vector? e)
-      (vector-map f e))
-     ((symbol? e)
-      (raise-syntax-error stx
-			  "encountered raw symbol ‘~a’ in output of macro" e))
-     ((syntax-object? e)
-      (receive (m* s*)
-	  (let ((m* (syntax-object-marks e))
-		(s* (syntax-object-substs e)))
-	    (if (and (pair? m*) (anti-mark? (car m*)))
-		(values (cdr m*) (cdr s*))
-		(values (cons m m*)
-			(if env
-			    (cons* env (shift) s*)
-			    (cons (shift) s*)))))
-	(make-syntax-object (syntax-object-expr e)
-			    m*
-			    s*
-			    (syntax-object-srcloc e))))
-     (else
-      e))))
+  (let g ((e e) (k #f))
+    (let f ((e e))
+      (cond
+       ((syntactic-closure? e)
+        (g (syntactic-closure-form e)
+           (syntactic-closure-environment e)))
+       ((pair? e)
+        (cons (f (car e)) (f (cdr e))))
+       ((vector? e)
+        (vector-map f e))
+       ((symbol? e)
+        (if k
+            (datum->syntax k e)
+            (raise-syntax-error
+             stx "encountered raw symbol ‘~a’ in output of macro" e)))
+       ((syntax-object? e)
+        (receive (m* s*)
+            (let ((m* (syntax-object-marks e))
+                  (s* (syntax-object-substs e)))
+              (if (and (pair? m*) (anti-mark? (car m*)))
+                  (values (cdr m*) (cdr s*))
+                  (values (cons m m*)
+                          (if env
+                              (cons* env (shift) s*)
+                              (cons (shift) s*)))))
+          (make-syntax-object (syntax-object-expr e)
+                              m*
+                              s*
+                              (syntax-object-srcloc e))))
+       (else
+        e)))))
 
 (define transform/global-keyword
   (case-lambda

@@ -382,6 +382,11 @@ The @code{er-macro-transformer} facility.
 Identifier syntax.
 
 @cindex SRFI 211
+@cindex @code{(srfi 211 ir-macro-transformer)}
+@item (srfi 211 ir-macro-transformer)
+Implicitly renaming macros.
+
+@cindex SRFI 211
 @cindex @code{(srfi 211 r4rs)}
 @item (srfi 211 r4rs)
 The low-level macro facility of the @rnrs{4}.

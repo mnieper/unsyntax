@@ -294,3 +294,16 @@
 			(syntax-object-substs id)
 			loc)
 	 (syntax-object datum '() '() loc)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Syntactic environments ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; The environment in a syntactic closure (used in the
+;;; ir-macro-transformer) is represented by an identifier.
+
+(define-record-type <syntactic-closure>
+  (close-syntax form env)
+  syntactic-closure?
+  (form syntactic-closure-form)
+  (env syntactic-closure-environment))

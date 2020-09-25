@@ -44,8 +44,10 @@ scheme_sources = %D%/scheme/base.scm %D%/scheme/base.sld		\
 %D%/srfi/211/er-macro-transformer.scm					\
 %D%/srfi/211/er-macro-transformer.sld					\
 %D%/srfi/211/identifier-syntax.scm %D%/srfi/211/identifier-syntax.sld	\
-%D%/srfi/211/r4rs.sld %D%/srfi/211/syntax-case.scm			\
-%D%/srfi/211/syntax-case.sld %D%/srfi/211/syntax-parameter.sld		\
+%D%/srfi/211/ir-macro-transformer.scm					\
+%D%/srfi/211/ir-macro-transformer.sld %D%/srfi/211/r4rs.sld		\
+%D%/srfi/211/syntax-case.scm %D%/srfi/211/syntax-case.sld		\
+%D%/srfi/211/syntax-parameter.sld					\
 %D%/srfi/211/variable-transformer.sld %D%/srfi/211/with-ellipsis.sld	\
 %D%/srfi/212.sld %D%/unsyntax/auxiliary-syntax.scm			\
 %D%/unsyntax/auxiliary-syntax.sld %D%/unsyntax/backend.scm		\

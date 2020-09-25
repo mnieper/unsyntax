@@ -1,6 +1,6 @@
 ;; Copyright © Marc Nieper-Wißkirchen (2020).
 
-;; This file is part of unsyntax.
+;; This file is part of Unsyntax.
 
 ;; Permission is hereby granted, free of charge, to any person
 ;; obtaining a copy of this software and associated documentation files
@@ -23,24 +23,22 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define (make-identifier name m*)
-  (make-syntax-object name m* '() #f))
-
-(define (identifier? stx)
-  (and (syntax-object? stx) (symbol? (syntax-object-expr stx))))
-
-(define (identifier-name stx)
-  (syntax-object-expr stx))
-
-(define (bound-identifier=? id1 id2)
-  (and (symbol=? (syntax-object-expr id1)
-                 (syntax-object-expr id2))
-       (marks=? (syntax-object-marks id1)
-                (syntax-object-marks id2))))
-
-(define generate-identifier
-  (case-lambda
-    (()
-     (generate-identifier (gensym "t")))
-    ((sym)
-     (add-mark (make-mark) sym))))
+(define-syntax ir-macro-transformer
+  (lambda (stx)
+    (syntax-case stx ()
+      ((k proc)
+       #'(let ((%proc proc)
+               (rename (lambda (id)
+                         (if (identifier? id)
+                             id
+                             (datum->syntax #'k id)))))
+           (lambda (stx)
+             (let* ((e (syntax->sexpr stx))
+                    (i (if (identifier? e) e (car e))))
+               (close-syntax
+                (%proc e
+                       (lambda (expr)
+                         (datum->syntax i expr))
+                       (lambda (id1 id2)
+                         (free-identifier=? (rename id1) (rename id2))))
+                #'k))))))))

@@ -1,6 +1,6 @@
 ;; Copyright © Marc Nieper-Wißkirchen (2020).
 
-;; This file is part of unsyntax.
+;; This file is part of Unsyntax.
 
 ;; Permission is hereby granted, free of charge, to any person
 ;; obtaining a copy of this software and associated documentation files
@@ -23,24 +23,9 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define (make-identifier name m*)
-  (make-syntax-object name m* '() #f))
-
-(define (identifier? stx)
-  (and (syntax-object? stx) (symbol? (syntax-object-expr stx))))
-
-(define (identifier-name stx)
-  (syntax-object-expr stx))
-
-(define (bound-identifier=? id1 id2)
-  (and (symbol=? (syntax-object-expr id1)
-                 (syntax-object-expr id2))
-       (marks=? (syntax-object-marks id1)
-                (syntax-object-marks id2))))
-
-(define generate-identifier
-  (case-lambda
-    (()
-     (generate-identifier (gensym "t")))
-    ((sym)
-     (add-mark (make-mark) sym))))
+(define-library (srfi 211 ir-macro-transformer)
+  (export ir-macro-transformer)
+  (import (scheme base)
+          (srfi 211 syntax-case)
+          (unsyntax syntax))
+  (include "ir-macro-transformer.scm"))

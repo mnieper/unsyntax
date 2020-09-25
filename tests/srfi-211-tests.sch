@@ -23,24 +23,21 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define (make-identifier name m*)
-  (make-syntax-object name m* '() #f))
+(import (scheme base)
+        (srfi 64)
+        (srfi 211 ir-macro-transformer))
 
-(define (identifier? stx)
-  (and (syntax-object? stx) (symbol? (syntax-object-expr stx))))
+(test-begin "SRFI 211")
 
-(define (identifier-name stx)
-  (syntax-object-expr stx))
+(test-group "IR Macros"
+  (define-syntax loop
+    (ir-macro-transformer
+     (lambda (expr inject compare)
+       (let ((body (cdr expr)))
+         `(call-with-current-continuation
+           (lambda (,(inject 'exit))
+             (let f () ,@body (f))))))))
 
-(define (bound-identifier=? id1 id2)
-  (and (symbol=? (syntax-object-expr id1)
-                 (syntax-object-expr id2))
-       (marks=? (syntax-object-marks id1)
-                (syntax-object-marks id2))))
+  (test-equal 42 (loop (exit 42))))
 
-(define generate-identifier
-  (case-lambda
-    (()
-     (generate-identifier (gensym "t")))
-    ((sym)
-     (add-mark (make-mark) sym))))
+(test-end)
