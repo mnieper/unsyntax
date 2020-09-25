@@ -23,8 +23,16 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define-library (unsyntax variable-transformer)
-  (export make-variable-transformer variable-transformer?
-          variable-transformer-procedure)
-  (import (scheme base))
-  (include "variable-transformer.scm"))
+(define-library (srfi 211 low-level)
+  (export syntax unwrap-syntax identifier?
+	  free-identifier=? bound-identifier=?
+	  identifier->symbol
+	  generate-identifier
+	  construct-identifier)
+  (import (scheme base)
+	  (scheme case-lambda)
+	  (srfi 211 syntax-case)
+	  ;; TODO: Rename identifier-name to identifier->symbol in the
+	  ;; code.
+	  (rename (unsyntax identifier) (identifier-name identifier->symbol))
+	  (rename (unsyntax syntax) (datum->syntax construct-identifier))))

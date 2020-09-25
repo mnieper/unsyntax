@@ -314,10 +314,10 @@
               (identifier-name id)))))
        ids lbls)
       (with-bindings lbls
-          (map (lambda (init)
+          (map (lambda (id init)
                  (make-transformer-binding 'define-syntax-parameter
-                                           (expand-transformer init)))
-               inits)
+                                           (expand-transformer id init)))
+               ids inits)
         (expand-body body (make-environment))))))
 
 (define (parse-syntax-parameterize stx)

@@ -1,6 +1,6 @@
 ;; Copyright © Marc Nieper-Wißkirchen (2020).
 
-;; This file is part of unsyntax.
+;; This file is part of Unsyntax.
 
 ;; Permission is hereby granted, free of charge, to any person
 ;; obtaining a copy of this software and associated documentation files
@@ -23,7 +23,6 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define-record-type <variable-transformer>
-  (make-variable-transformer proc)
-  variable-transformer?
-  (proc variable-transformer-procedure))
+(define (er-identifier? obj)
+  (or (symbol? obj)
+      (identifier? obj)))

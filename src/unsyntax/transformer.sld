@@ -1,6 +1,6 @@
 ;; Copyright © Marc Nieper-Wißkirchen (2020).
 
-;; This file is part of Unsyntax.
+;; This file is part of unsyntax.
 
 ;; Permission is hereby granted, free of charge, to any person
 ;; obtaining a copy of this software and associated documentation files
@@ -23,22 +23,14 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define-syntax er-macro-transformer
-  (lambda (stx)
-    (syntax-case stx ()
-      ((k proc)
-       #'(let ((%proc proc))
-           (lambda (stx)
-             (let* ((e (syntax->sexpr stx))
-                    (i (if (identifier? e) e (car e)))
-                    (inject (lambda (id)
-                              (if (identifier? id)
-                                  id
-                                  (datum->syntax i id)))))
-               (close-syntax
-                (%proc e
-                       (lambda (expr)
-                         (datum->syntax #'k expr))
-                       (lambda (id1 id2)
-                         free-identifier=? (inject id1) (inject id2)))
-                i))))))))
+(define-library (unsyntax transformer)
+  (export make-variable-transformer variable-transformer?
+          variable-transformer-procedure
+          sc-macro-transformer sc-macro-transformer?
+          sc-macro-transformer-procedure
+          er-macro-transformer er-macro-transformer?
+          er-macro-transformer-procedure
+          ir-macro-transformer ir-macro-transformer?
+          ir-macro-transformer-procedure)
+  (import (scheme base))
+  (include "transformer.scm"))

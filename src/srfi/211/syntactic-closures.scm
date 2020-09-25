@@ -1,6 +1,6 @@
 ;; Copyright © Marc Nieper-Wißkirchen (2020).
 
-;; This file is part of unsyntax.
+;; This file is part of Unsyntax.
 
 ;; Permission is hereby granted, free of charge, to any person
 ;; obtaining a copy of this software and associated documentation files
@@ -23,6 +23,18 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define-library (srfi 211 variable-transformer)
-  (export make-variable-transformer)
-  (import (unsyntax transformer)))
+(define (rsc-macro-transformer proc)
+  (sc-macro-transformer
+   (lambda (exp usage-env)
+     (capture-syntactic-environment
+      (lambda (env)
+        (close-syntax (proc exp env) usage-env))))))
+
+(define (sc-identifier? obj)
+  (or (symbol? obj) (identifier? obj)))
+
+(define (identifier=? env1 id1 env2 id2)
+  (free-identifier=? (close-syntax id1 env1) (close-syntax id2 env2)))
+
+(define (make-synthetic-identifier id)
+  (generate-identifier (identifier-name id)))

@@ -23,9 +23,9 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define-library (srfi 211 er-macro-transformer)
-  (export er-macro-transformer identifier?)
+(define-library (srfi 211 explicit-renaming)
+  (export er-macro-transformer (rename er-identifier? identifier?))
   (import (scheme base)
-          (srfi 211 syntax-case)
-          (unsyntax syntax))
-  (include "er-macro-transformer.scm"))
+          (unsyntax identifier)
+          (unsyntax transformer))
+  (include "explicit-renaming.scm"))

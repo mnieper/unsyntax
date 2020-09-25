@@ -1,6 +1,6 @@
 ;; Copyright © Marc Nieper-Wißkirchen (2020).
 
-;; This file is part of unsyntax.
+;; This file is part of Unsyntax.
 
 ;; Permission is hereby granted, free of charge, to any person
 ;; obtaining a copy of this software and associated documentation files
@@ -23,16 +23,6 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define-library (srfi 211 r4rs)
-  (export syntax unwrap-syntax identifier?
-	  free-identifier=? bound-identifier=?
-	  identifier->symbol
-	  generate-identifier
-	  construct-identifier)
-  (import (scheme base)
-	  (scheme case-lambda)
-	  (srfi 211 syntax-case)
-	  ;; TODO: Rename identifier-name to identifier->symbol in the
-	  ;; code.
-	  (rename (unsyntax identifier) (identifier-name identifier->symbol))
-	  (rename (unsyntax syntax) (datum->syntax construct-identifier))))
+(define-library (srfi 211 implicit-renaming)
+  (export ir-macro-transformer)
+  (import (unsyntax transformer)))

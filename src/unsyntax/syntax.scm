@@ -57,29 +57,35 @@
 	(else
 	 stx)))
 
-(define (syntax->sexpr stx)
-  (let ((table (make-hash-table eq-comparator)))
-    (let f ((stx stx))
-      (let ((e (%syntax-object-expr stx)))
-        (or (hash-table-ref/default table e #f)
-            (cond
-             ((syntax-pair? stx)
-              (let ((pair (cons #f #f)))
-                (hash-table-set! table e pair)
-                (set-car! pair (f (syntax-car stx)))
-                (set-cdr! pair (f (syntax-cdr stx)))
-                pair))
-             ((syntax-vector? stx)
-              (let ((vector (make-vector (vector-length e))))
-                (hash-table-set! table e vector)
-                (let ((v (unwrap-vector stx)))
-                  (do ((i 0 (+ i 1)))
-                      ((= i (vector-length v)) vector)
-                    (vector-set! vector i (f (vector-ref v i)))))))
-             ((symbol? e)
-              stx)
-             (else
-              e)))))))
+(define syntax->sexpr
+  (case-lambda
+    ((stx) (syntax->sexpr stx #f))
+    ((stx k)
+     (let ((table (make-hash-table eq-comparator)))
+       (let f ((stx stx))
+         (let ((e (%syntax-object-expr stx)))
+           (or (hash-table-ref/default table e #f)
+               (cond
+                ((syntax-pair? stx)
+                 (let ((pair (cons #f #f)))
+                   (hash-table-set! table e pair)
+                   (set-car! pair (f (syntax-car stx)))
+                   (set-cdr! pair (f (syntax-cdr stx)))
+                   pair))
+                ((syntax-vector? stx)
+                 (let ((vector (make-vector (vector-length e))))
+                   (hash-table-set! table e vector)
+                   (let ((v (unwrap-vector stx)))
+                     (do ((i 0 (+ i 1)))
+                         ((= i (vector-length v)) vector)
+                       (vector-set! vector i (f (vector-ref v i)))))))
+                ((symbol? e)
+                 (if (and k (marks=? (syntax-object-marks k)
+                                     (syntax-object-marks stx)))
+                     e
+                     stx))
+                (else
+                 e)))))))))
 
 ;;;;;;;;;;;;;;
 ;; Wrapping ;;
@@ -276,7 +282,7 @@
                 ((= i (vector-length datum)))
               (vector-set! vector i (loop (vector-ref datum i))))
             vector)))
-     ((simple-datum? datum)
+     (else
       datum))))
 
 ;;;;;;;;;;;;;;;;;;;
@@ -294,16 +300,3 @@
 			(syntax-object-substs id)
 			loc)
 	 (syntax-object datum '() '() loc)))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Syntactic environments ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;; The environment in a syntactic closure (used in the
-;;; ir-macro-transformer) is represented by an identifier.
-
-(define-record-type <syntactic-closure>
-  (close-syntax form env)
-  syntactic-closure?
-  (form syntactic-closure-form)
-  (env syntactic-closure-environment))

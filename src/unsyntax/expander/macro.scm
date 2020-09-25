@@ -23,7 +23,7 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define (expand-transformer stx)
+(define (expand-transformer id stx)
   (receive (expr inv-reqs)
       (parameterize ((invoke-collector (make-library-collector))
                      (visit-collector (make-library-collector)))
@@ -33,72 +33,14 @@
                 (invoke-library! lib)
                 (require-visit! lib))
               inv-reqs)
-    expr))
+    (list expr id)))
 
-(define (make-transformer-binding type expr)
-  (let ((transformer (execute expr)))
+(define (make-transformer-binding type def)
+  (let ((transformer (execute (car def))))
     (make-binding (case type
                     ((define-syntax) 'macro)
                     ((define-syntax-parameter) 'macro-parameter))
-                  transformer)))
-
-(define (transform transformer stx)
-  (cond
-   ((variable-transformer? transformer)
-    ((variable-transformer-procedure transformer) stx))
-   ((procedure? transformer)
-    (transformer stx))
-   (else
-    (raise-error #f "not a transformer"))))
-
-(define transform/macro
-  (case-lambda
-    ((transformer stx env)
-     (transform/macro transformer stx env #f))
-    ((transformer stx env id)
-     (let* ((loc (syntax-object-srcloc stx))
-            (wrap (lambda (e) (datum->syntax #f e loc))))
-       (when (and id (not (variable-transformer? transformer)))
-         (raise-syntax-error id "not a variable transformer"))
-       (wrap
-	(build-output stx
-		      (transform transformer
-				 (add-mark (anti-mark) (wrap stx)))
-		      (make-mark)
-		      env))))))
-
-(define (build-output stx e m env)
-  (let g ((e e) (k #f))
-    (let f ((e e))
-      (cond
-       ((syntactic-closure? e)
-        (g (syntactic-closure-form e)
-           (syntactic-closure-environment e)))
-       ((pair? e)
-        (cons (f (car e)) (f (cdr e))))
-       ((vector? e)
-        (vector-map f e))
-       ((symbol? e)
-        (if k
-            (f (datum->syntax k e))
-            (raise-syntax-error
-             stx "encountered raw symbol ‘~a’ in output of macro" e)))
-       ((syntax-object? e)
-        (receive (m* s*)
-            (let ((m* (syntax-object-marks e))
-                  (s* (syntax-object-substs e)))
-              (if (and (pair? m*) (anti-mark? (car m*)))
-                  (values (cdr m*) (cdr s*))
-                  (values (cons m m*)
-                          (if env
-                              (cons* env (shift) s*)
-                              (cons (shift) s*)))))
-          (make-syntax-object (syntax-object-expr e)
-                              m*
-                              s*
-                              (syntax-object-srcloc e))))
-       (else
-        e)))))
+                  (cons transformer (cdr def)))))
 
 (define transform/global-keyword
   (case-lambda
@@ -108,3 +50,165 @@
      (and-let* ((lib (car val)))
        (visit-library! lib))
      (transform/macro (caddr val) stx env id))))
+
+(define transform/macro
+  (case-lambda
+    ((def stx env)
+     (transform/macro def stx env #f))
+    ((def stx env id)
+     (let* ((maybe-variable-transformer (car def)) (transformer-stx (cadr def))
+            (transformer
+             (cond
+              ((variable-transformer? maybe-variable-transformer)
+               (variable-transformer-procedure maybe-variable-transformer))
+              (id
+               (raise-syntax-error id "not a variable transformer ‘~s’"
+                                   (identifier-name id)))
+              (else
+               maybe-variable-transformer))))
+       (cond
+        ((procedure? transformer)
+         (apply-transformer transformer stx (add-mark (anti-mark) stx) #f env))
+        ((er-macro-transformer? transformer)
+         (er-transform transformer stx (add-mark (anti-mark) stx)
+                       transformer-stx env))
+        ((ir-macro-transformer? transformer)
+         (ir-transform transformer stx (add-mark (anti-mark) stx)
+                       transformer-stx env))
+        ((sc-macro-transformer? transformer)
+         (sc-transform transformer stx transformer-stx))
+        (else
+         (raise-syntax-error transformer-stx "‘~a’ is not a transformer"
+                             (identifier-name transformer-stx))))))))
+
+(define (apply-transformer transform stx e k env)
+  (let* ((loc (syntax-object-srcloc stx))
+         (wrap (lambda (e) (datum->syntax #f e loc))))
+    (wrap (build-output stx k
+                        (transform e)
+                        (make-mark)
+                        env))))
+
+(define (build-output stx k e m env)
+  (let f ((e e))
+    (cond
+     ((pair? e)
+      (cons (f (car e)) (f (cdr e))))
+     ((vector? e)
+      (vector-map f e))
+     ((symbol? e)
+      (if k
+          (f (datum->syntax k e))
+          (raise-syntax-error
+           stx "encountered raw symbol ‘~a’ in output of macro" e)))
+     ((syntax-object? e)
+      (receive (m* s*)
+          (let ((m* (syntax-object-marks e))
+                (s* (syntax-object-substs e)))
+            (if (and (pair? m*) (anti-mark? (car m*)))
+                (values (cdr m*) (cdr s*))
+                (values (cons m m*)
+                        (if env
+                            (cons* env (shift) s*)
+                            (cons (shift) s*)))))
+        (make-syntax-object (syntax-object-expr e)
+                            m*
+                            s*
+                            (syntax-object-srcloc e))))
+     (else
+      ;; TODO: Check whether this is an allowed datum.
+      e))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ER macro transformer ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (er-transform transformer stx e k env)
+  (let* ((transform (er-macro-transformer-procedure transformer))
+         (i (if (identifier? e) e (syntax-car e)))
+         (inject (lambda (id)
+                   (if (identifier? id)
+                       id
+                       (datum->syntax i id)))))
+    (apply-transformer
+     (lambda (stx)
+       (transform (syntax->sexpr e)
+                  (lambda (exp)
+                    (datum->syntax k exp))
+                  (lambda (id1 id2)
+                    (free-identifier=? (inject id1) (inject id2)))))
+     stx e i env)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; IR macro transformer ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (ir-transform transformer stx e k env)
+  (let ((transform (ir-macro-transformer-procedure transformer))
+        (rename (lambda (id)
+                   (if (identifier? id)
+                       id
+                       (datum->syntax k id)))))
+    (apply-transformer
+     (lambda (stx)
+       (let ((i (if (identifier? e) e (syntax-car e))))
+         (transform (syntax->sexpr e)
+                    (lambda (exp)
+                      (datum->syntax i exp))
+                    (lambda (id1 id2)
+                      (free-identifier=? (rename id1) (rename id2))))))
+     stx e k env)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; SC macro transformer ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (sc-transform transformer stx k)
+  (let ((transform (sc-macro-transformer-procedure transformer))
+        (i (if (identifier? stx) stx (syntax-car stx))))
+    (sc-build-output stx (transform (syntax->sexpr stx i) i) k)))
+
+(define (sc-build-output stx e k)
+  (let* ((loc (syntax-object-srcloc stx))
+	 (wrap (lambda (e) (datum->syntax #f e loc))))
+    (wrap
+     (let g ((e e) (k k) (contexts '()))
+       (let f ((e e))
+	 (cond
+	  ((pair? e)
+	   (cons (f (car e)) (f (cdr e))))
+	  ((vector? e)
+	   (vector-map f e))
+	  ((symbol? e)
+	   (cond
+	    ((assoc (datum->syntax #f e) contexts bound-identifier=?)
+	     => (lambda (pair)
+		  (datum->syntax (cdr pair) (car pair))))
+	    (else (datum->syntax k e))))
+	  ((syntax-object? e)
+	   (cond
+	    ((and (identifier? e) (assoc e contexts bound-identifier=?))
+	     => (lambda (pair)
+		  (datum->syntax (cdr pair) (identifier-name (car pair)))))
+	    (else e)))
+	  ((syntactic-closure? e)
+	   (let ((i (syntactic-closure-environment e)))
+	     (g (syntactic-closure-form e)
+		i
+		(map (lambda (id)
+		       (let ((id (if (identifier? id)
+                                     id
+                                     (datum->syntax #f id))))
+			 (cond
+			  ((assoc id contexts bound-identifier=?))
+			  (else (cons id k)))))
+		     (syntactic-closure-free-names e)))))
+	  ((capture-syntactic-environment? e)
+	   (datum->syntax
+	    k
+	    (capture-syntactic-environment
+	     (lambda (env)
+	       (wrap (f ((capture-syntactic-environment-procedure e) env)))))
+	    loc))
+	  (else
+	   e)))))))

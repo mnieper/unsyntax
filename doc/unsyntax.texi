@@ -372,9 +372,9 @@ Coroutine generators.
 Auxiliary Syntax Keywords.
 
 @cindex SRFI 211
-@cindex @code{(srfi 211 er-macro-transformer)}
-@item (srfi 211 er-macro-transformer)
-The @code{er-macro-transformer} facility.
+@cindex @code{(srfi 211 explicit-renaming)}
+@item (srfi 211 explicit-renaming)
+Explicitly renaming macros.
 
 @cindex SRFI 211
 @cindex @code{(srfi 211 identifier-syntax)}
@@ -382,14 +382,19 @@ The @code{er-macro-transformer} facility.
 Identifier syntax.
 
 @cindex SRFI 211
-@cindex @code{(srfi 211 ir-macro-transformer)}
+@cindex @code{(srfi 211 implicit-renaming)}
 @item (srfi 211 ir-macro-transformer)
 Implicitly renaming macros.
 
 @cindex SRFI 211
-@cindex @code{(srfi 211 r4rs)}
+@cindex @code{(srfi 211 low-level)}
 @item (srfi 211 r4rs)
 The low-level macro facility of the @rnrs{4}.
+
+@cindex SRFI 211
+@cindex @code{(srfi 211 syntactic-closures)}
+@item (srfi 211 syntactic-closures)
+The syntactic-closures macro facility.
 
 @cindex SRFI 211
 @cindex @code{(srfi 211 syntax-case)}

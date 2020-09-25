@@ -150,9 +150,14 @@
          stx "unbound identifier ‘~a’" (identifier-name stx)))))
      (else
       (let ((datum (syntax->datum stx)))
-        (if (self-evaluating? datum)
-            (values stx 'literal datum)
-            (values stx 'other #f))))))))
+        (cond ((self-evaluating? datum)
+               (values stx 'literal datum))
+              ((capture-syntactic-environment? datum)
+               (syntax-type ((capture-syntactic-environment-procedure datum)
+                             (datum->syntax stx #f))
+                            env))
+              (else
+               (values stx 'other #f)))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Special Identifiers ;;
@@ -272,14 +277,15 @@
   (let*-values (((ids inits body) (parse-let-syntax stx #f))
                 ((lbls) (map genlbl ids))
                 ((env) (make-environment ids lbls)))
-    (for-each (lambda (lbl init)
+    (for-each (lambda (id lbl init)
                 (bind! lbl
                        (make-transformer-binding 'define-syntax
                                                  (expand-transformer
+                                                  id
                                                   (if (eq? 'let-syntax type)
                                                       init
                                                       (add-substs env init))))))
-              lbls inits)
+              ids lbls inits)
     (add-substs* env body)))
 
 (define (expand-with-ellipsis* stx)
@@ -347,12 +353,12 @@
 (define (expand-define-syntax type stx add!)
   (let*-values (((srcloc) (syntax-object-srcloc stx))
                 ((id init) (parse-define-syntax stx))
-                ((expr) (expand-transformer init))
+                ((def) (expand-transformer id init))
                 ((lbl) (genlbl id))
                 ((var) (genvar id)))
     (add! id lbl)
-    (bind! lbl (make-transformer-binding type expr))
-    (build srcloc (set-keyword! ',lbl ,expr))))
+    (bind! lbl (make-transformer-binding type def))
+    (build srcloc (set-keyword! ',lbl (list ,(car def) ',(cadr def))))))
 
 (define (expand-define-values stx add!)
   (let*-values (((formals init) (parse-define-values stx))
@@ -402,7 +408,7 @@
       ((with-ellipsis)
        (expand-with-ellipsis stx))
       (else
-       (raise-syntax-error stx "invalid expression type")))))
+       (raise-syntax-error stx "invalid expression type ")))))
 
 (define (expand-body stx env)
   (with-frame '() '()
@@ -426,13 +432,14 @@
                 ((lbls) (map genlbl ids))
                 ((env) (make-environment ids lbls)))
     (with-frame lbls
-        (map (lambda (init)
+        (map (lambda (id init)
                (make-transformer-binding 'define-syntax
                                          (expand-transformer
+                                          id
                                           (if (eq? 'let-syntax type)
                                               init
                                               (add-substs env init)))))
-	     inits)
+	     ids inits)
       (expand-body body env))))
 
 (define (expand-with-ellipsis stx)

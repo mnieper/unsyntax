@@ -78,9 +78,10 @@
           (unsyntax library-locator)
           (unsyntax read-syntax)
           (unsyntax store)
+          (unsyntax syntactic-closure)
           (unsyntax syntax)
-          (unsyntax variable)
-          (unsyntax variable-transformer))
+          (unsyntax transformer)
+          (unsyntax variable))
   (include "expander/expand.scm"
            "expander/macro.scm"
            "expander/library-manager.scm"

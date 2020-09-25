@@ -97,7 +97,8 @@
       (and lbl
            (auxiliary-syntax-label? lbl)
            (make-binding 'macro-parameter
-                         (auxiliary-syntax (auxiliary-syntax-name lbl))))))
+                         (list (auxiliary-syntax (auxiliary-syntax-name lbl))
+                               #f)))))
 
 (define (bind! lbl b)
   (when lbl

@@ -23,6 +23,22 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define-library (srfi 211 variable-transformer)
-  (export make-variable-transformer)
-  (import (unsyntax transformer)))
+(define-record-type <variable-transformer>
+  (make-variable-transformer proc)
+  variable-transformer?
+  (proc variable-transformer-procedure))
+
+(define-record-type <er-macro-transformer>
+  (er-macro-transformer proc)
+  er-macro-transformer?
+  (proc er-macro-transformer-procedure))
+
+(define-record-type <ir-macro-transformer>
+  (ir-macro-transformer proc)
+  ir-macro-transformer?
+  (proc ir-macro-transformer-procedure))
+
+(define-record-type <sc-macro-transformer>
+  (sc-macro-transformer proc)
+  sc-macro-transformer?
+  (proc sc-macro-transformer-procedure))

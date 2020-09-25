@@ -54,11 +54,7 @@
           add-substs*
 	  shift?
 	  shift
-          syntax->sexpr
-          close-syntax
-          syntactic-closure?
-          syntactic-closure-form
-          syntactic-closure-environment)
+          syntax->sexpr)
   (import (scheme base)
 	  (scheme case-lambda)
 	  (srfi 1)

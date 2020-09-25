@@ -23,6 +23,17 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define-library (srfi 211 variable-transformer)
-  (export make-variable-transformer)
-  (import (unsyntax transformer)))
+(define-library (unsyntax syntactic-closure)
+  (export make-syntactic-closure
+          syntactic-closure?
+          syntactic-closure-form
+          syntactic-closure-free-names
+          syntactic-closure-environment
+          close-syntax
+          capture-syntactic-environment
+          capture-syntactic-environment?
+          capture-syntactic-environment-procedure)
+  (import (scheme base)
+          (unsyntax syntax)
+          (unsyntax identifier))
+  (include "syntactic-closure.scm"))

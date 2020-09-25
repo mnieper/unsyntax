@@ -23,22 +23,41 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define-syntax ir-macro-transformer
-  (lambda (stx)
-    (syntax-case stx ()
-      ((k proc)
-       #'(let ((%proc proc)
-               (rename (lambda (id)
-                         (if (identifier? id)
-                             id
-                             (datum->syntax #'k id)))))
-           (lambda (stx)
-             (let* ((e (syntax->sexpr stx))
-                    (i (if (identifier? e) e (car e))))
-               (close-syntax
-                (%proc e
-                       (lambda (expr)
-                         (datum->syntax i expr))
-                       (lambda (id1 id2)
-                         (free-identifier=? (rename id1) (rename id2))))
-                #'k))))))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Syntactic environments ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; The environment in a syntactic closure is represented by an
+;;; identifier.
+
+(define-record-type <syntactic-closure>
+  (%make-syntactic-closure env free exp)
+  syntactic-closure?
+  (env syntactic-closure-environment)
+  (free syntactic-closure-free-names)
+  (exp syntactic-closure-form))
+
+(define (bound-id=? id1 id2)
+  (or (and (symbol? id1) (symbol? id2) (symbol=? id1 id2))
+      (and (identifier? id1) (identifier? id2) (bound-identifier=? id1 id2))))
+
+(define (make-syntactic-closure env free exp)
+  (cond
+   ((identifier? exp)
+    (if (member exp free bound-id=?)
+        exp
+        (add-mark (make-mark) exp)))
+   ((symbol? exp)
+    (if (member exp free bound-id=?)
+        exp
+        (add-mark (make-mark) (datum->syntax env exp))))
+   (else
+    (%make-syntactic-closure env free exp))))
+
+(define (close-syntax form env)
+  (make-syntactic-closure env '() form))
+
+(define-record-type <capture-syntactic-environment>
+  (capture-syntactic-environment proc)
+  capture-syntactic-environment?
+  (proc capture-syntactic-environment-procedure))

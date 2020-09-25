@@ -23,9 +23,14 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define-library (srfi 211 ir-macro-transformer)
-  (export ir-macro-transformer)
+(define-library (srfi 211 syntactic-closures)
+  (export sc-macro-transformer rsc-macro-transformer make-syntactic-closure
+          close-syntax capture-syntactic-environment
+          (rename sc-identifier? identifier?) identifier=?
+          make-synthetic-identifier)
   (import (scheme base)
-          (srfi 211 syntax-case)
-          (unsyntax syntax))
-  (include "ir-macro-transformer.scm"))
+          (unsyntax environment)
+          (unsyntax identifier)
+          (unsyntax syntactic-closure)
+          (unsyntax transformer))
+  (include "syntactic-closures.scm"))

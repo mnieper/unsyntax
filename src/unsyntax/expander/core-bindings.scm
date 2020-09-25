@@ -82,4 +82,4 @@
   (add-substs *core-environment* (datum->syntax #f e)))
 
 (define (define-core-transformer! name transformer)
-  (define-core! name (make-binding 'macro transformer)))
+  (define-core! name (make-binding 'macro (list transformer #f))))

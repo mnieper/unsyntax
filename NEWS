@@ -2,12 +2,23 @@ Unsyntax NEWS
 
 * Noteworthy changes in release ?.? (????-??-??) [?]
 
+** User interface
+
+*** When a keyword is used, to which no proper macro transformer is
+    associated, the source location of the define-syntax is now
+    reported.
+
 ** New features
 
 *** ER- and IR Macros
 
   The SRFI 211 implementation now also supports explicitly and
   implicitly renaming macro transformers.
+
+*** SC Macros
+
+  The SRFI 211 implementation now also supports MIT/GNU Scheme's
+  syntactic closures.
 
 * Noteworthy changes in release 0.0.2 (2020-09-24) [alpha]
 
