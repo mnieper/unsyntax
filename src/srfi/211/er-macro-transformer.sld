@@ -23,13 +23,9 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define-syntax er-macro-transformer
-  (lambda (stx)
-    (syntax-case stx ()
-      ((k proc)
-       #'(let ((%proc proc))
-           (lambda (stx)
-             (%proc (syntax->sexpr stx)
-                    (lambda (sym)
-                      (datum->syntax #'k sym))
-                    free-identifier=?)))))))
+(define-library (srfi 211 er-macro-transformer)
+  (export er-macro-transformer identifier?)
+  (import (scheme base)
+          (srfi 211 syntax-case)
+          (unsyntax syntax))
+  (include "er-macro-transformer.scm"))

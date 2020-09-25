@@ -53,7 +53,8 @@
 	  add-substs
           add-substs*
 	  shift?
-	  shift)
+	  shift
+          syntax->sexpr)
   (import (scheme base)
 	  (scheme case-lambda)
 	  (srfi 1)

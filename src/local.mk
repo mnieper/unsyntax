@@ -41,6 +41,8 @@ scheme_sources = %D%/scheme/base.scm %D%/scheme/base.sld		\
 %D%/srfi/111.sld %D%/srfi/125.sld %D%/srfi/128.scm %D%/srfi/128.sld	\
 %D%/srfi/139.sld %D%/srfi/158.scm %D%/srfi/158.sld %D%/srfi/188.sld	\
 %D%/srfi/190.scm %D%/srfi/190.sld %D%/srfi/206.sld			\
+%D%/srfi/211/er-macro-transformer.scm					\
+%D%/srfi/211/er-macro-transformer.sld					\
 %D%/srfi/211/identifier-syntax.scm %D%/srfi/211/identifier-syntax.sld	\
 %D%/srfi/211/r4rs.sld %D%/srfi/211/syntax-case.scm			\
 %D%/srfi/211/syntax-case.sld %D%/srfi/211/syntax-parameter.sld		\

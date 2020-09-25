@@ -1,6 +1,6 @@
 ;; Copyright © Marc Nieper-Wißkirchen (2020).
 
-;; This file is part of unsyntax.
+;; This file is part of Unsyntax.
 
 ;; Permission is hereby granted, free of charge, to any person
 ;; obtaining a copy of this software and associated documentation files
@@ -53,6 +53,7 @@
 (srfi 188)
 (srfi 190)
 (srfi 206)
+(srfi 211 er-macro-transformer)
 (srfi 211 identifier-syntax)
 (srfi 211 syntax-case)
 (srfi 211 syntax-parameter)

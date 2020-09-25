@@ -372,6 +372,11 @@ Coroutine generators.
 Auxiliary Syntax Keywords.
 
 @cindex SRFI 211
+@cindex @code{(srfi 211 er-macro-transformer)}
+@item (srfi 211 er-macro-transformer)
+The @code{er-macro-transformer} facility.
+
+@cindex SRFI 211
 @cindex @code{(srfi 211 identifier-syntax)}
 @item (srfi 211 identifier-syntax)
 Identifier syntax.

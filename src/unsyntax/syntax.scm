@@ -57,6 +57,30 @@
 	(else
 	 stx)))
 
+(define (syntax->sexpr stx)
+  (let ((table (make-hash-table eq-comparator)))
+    (let f ((stx stx))
+      (let ((e (%syntax-object-expr stx)))
+        (or (hash-table-ref/default table e #f)
+            (cond
+             ((syntax-pair? stx)
+              (let ((pair (cons #f #f)))
+                (hash-table-set! table e pair)
+                (set-car! pair (f (syntax-car stx)))
+                (set-cdr! pair (f (syntax-cdr stx)))
+                pair))
+             ((syntax-vector? stx)
+              (let ((vector (make-vector (vector-length e))))
+                (hash-table-set! table e vector)
+                (let ((v (unwrap-vector stx)))
+                  (do ((i 0 (+ i 1)))
+                      ((= i (vector-length v)) vector)
+                    (vector-set! vector i (f (vector-ref v i)))))))
+             ((symbol? e)
+              stx)
+             (else
+              e)))))))
+
 ;;;;;;;;;;;;;;
 ;; Wrapping ;;
 ;;;;;;;;;;;;;;
@@ -183,26 +207,6 @@
 			(f e lag)))))))))
 
 (define (syntax->list stx)
-
-  #;
-  (let f ((stx stx) (lag stx) (res '()))
-    (cond ((syntax-null? stx) (reverse! res))
-	  ((syntax-pair? stx)
-	   (let ((res (cons (syntax-car stx) res))
-		 (stx (syntax-cdr stx)))
-	     (cond ((syntax-null? stx) (reverse! res))
-		   ((syntax-pair? stx)
-		    (let ((res (cons (syntax-car stx) res))
-			  (stx (syntax-cdr stx))
-			  (lag (syntax-cdr lag)))
-		      (and (not (eq? (%syntax-object-expr stx)
-				     (%syntax-object-expr lag)))
-			   (f stx lag res))))
-		   (else #f))))
-	  (else #f)))
-
-
-
   (and (not (syntax-circular-list? stx))
        (let f ((stx stx) (res '()))
 	 (cond ((syntax-null? stx)
@@ -224,18 +228,6 @@
 
 (define (syntax-vector? stx)
   (vector? (%syntax-object-expr stx)))
-
-#;
-(define (syntax-vector->list stx)
-  (if (syntax-object? stx)
-      (let ((e (syntax-object-expr stx))
-	    (m* (syntax-object-marks stx))
-	    (s* (syntax-object-substs stx))
-	    (loc (syntax-object-substs stx)))
-	(map (lambda (stx)
-	       (syntax-object stx m* s* loc))
-	     (vector->list e)))
-      (vector->list stx)))
 
 (define (unwrap-vector stx)
   (if (syntax-object? stx)
