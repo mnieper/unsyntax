@@ -80,7 +80,7 @@
         (vector-map f e))
        ((symbol? e)
         (if k
-            (datum->syntax k e)
+            (f (datum->syntax k e))
             (raise-syntax-error
              stx "encountered raw symbol ‘~a’ in output of macro" e)))
        ((syntax-object? e)

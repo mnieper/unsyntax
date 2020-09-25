@@ -29,7 +29,16 @@
       ((k proc)
        #'(let ((%proc proc))
            (lambda (stx)
-             (%proc (syntax->sexpr stx)
-                    (lambda (sym)
-                      (datum->syntax #'k sym))
-                    free-identifier=?)))))))
+             (let* ((e (syntax->sexpr stx))
+                    (i (if (identifier? e) e (car e)))
+                    (inject (lambda (id)
+                              (if (identifier? id)
+                                  id
+                                  (datum->syntax i id)))))
+               (close-syntax
+                (%proc e
+                       (lambda (expr)
+                         (datum->syntax #'k expr))
+                       (lambda (id1 id2)
+                         free-identifier=? (inject id1) (inject id2)))
+                i))))))))

@@ -25,9 +25,22 @@
 
 (import (scheme base)
         (srfi 64)
+        (srfi 211 syntax-case)
+        (srfi 211 er-macro-transformer)
         (srfi 211 ir-macro-transformer))
 
 (test-begin "SRFI 211")
+
+(test-group "ER Macros"
+  (define-syntax loop
+    (er-macro-transformer
+      (lambda (x r c)
+        (let ((body (cdr x)))
+          `(,(r 'call-with-current-continuation)
+            (,(r 'lambda) (exit)
+             (,(r 'let) ,(r 'f) () ,@body (,(r 'f)))))))))
+
+  (test-equal 42 (loop (exit 42))))
 
 (test-group "IR Macros"
   (define-syntax loop
