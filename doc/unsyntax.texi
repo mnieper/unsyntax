@@ -9,11 +9,15 @@
 @c Combine everything into one index (arbitrarily chosen to be the
 @c concept index).
 @syncodeindex op cp
+
+@macro rnrs {n}
+R@sup{\n\}RS
+@end macro
 @c %**end of header
 
 @copying
 This manual is for Unsyntax (version @value{VERSION}, @value{UPDATED}),
-an R7RS implementation with extensions.
+an @rnrs{7} implementation with extensions.
 
 Copyright @copyright{} 2020 Marc Nieper-Wißkirchen
 
@@ -42,7 +46,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 
 @dircategory Software development
 @direntry
-* Unsyntax: (unsyntax).         R7RS implementation with extensions.
+* Unsyntax: (unsyntax).         @rnrs{7} implementation with extensions.
 * unsyntax-scheme(unsyntax): (unsyntax).        Unsyntax interpreter.
 * compile-unsyntax(unsyntax): (unsyntax).       Unsyntax compiler.
 * expand-unsyntax(unsyntax): (unsyntax).        Unsyntax expander.
@@ -64,7 +68,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 @top Unsyntax
 
 This manual is for Unsyntax (version @value{VERSION}, @value{UPDATED}),
-an R7RS implementation with extensions.
+an @rnrs{7} implementation with extensions.
 @end ifnottex
 
 @menu
@@ -89,11 +93,11 @@ an R7RS implementation with extensions.
 
 @cindex overview
 @cindex Scheme
-@cindex R7RS
+@cindex @rnrs{7}
 @cindex Scheme Request for Implementation
 @cindex SRFI
 Unsyntax is an implementation of the Scheme programming language,
-specifically of its R7RS standard, and includes a number of extensions.
+specifically of its @rnrs{7} standard, and includes a number of extensions.
 Scheme itself is a dialect of the Lisp family of programming languages,
 amongst whose distinguishing features are its minimalism, lexical scope,
 proper tail recursion, first-class continuations, a unified namespace
@@ -104,26 +108,26 @@ Requests for Implementation (SRFI).
 @cindex compile
 @cindex run
 Unsyntax evaluates Scheme expressions and compiles and runs Scheme
-programs by first expanding them into a minimal dialect of R7RS (small)
+programs by first expanding them into a minimal dialect of @rnrs{7} (small)
 without any syntactic extensions.  The resulting expression or program
 is then evaluated by an existing Scheme implementation.
 
 @cindex extensions
 @cindex syntax-case
-@cindex R6RS
-@cindex R7RS (large)
-As said, Unsyntax implements the R7RS standard with a number of
+@cindex @rnrs{6}
+@cindex @rnrs{7} (large)
+As said, Unsyntax implements the @rnrs{7} standard with a number of
 extensions.  Besides implementing a number of SRFIs that do not possess
 a portable implementation otherwise, Unsyntax notably fully implements
-the syntax-case system of R6RS.  It can be used as a test-bed for
-further additions to R7RS, which may become part of the future R7RS
+the syntax-case system of @rnrs{6}.  It can be used as a test-bed for
+further additions to @rnrs{7}, which may become part of the future @rnrs{7}
 (large) standard.
 
 @cindex Alex Shinn
 @cindex bootstrap
 @cindex Chibi-Scheme
 Unsyntax is implemented in Scheme itself.  To bootstrap Unsyntax, a
-fairly standard-conforming implementation of R7RS (small) is needed.
+fairly standard-conforming implementation of @rnrs{7} (small) is needed.
 Currently, the build system presupposes the installation Alex Shinn's
 Chibi-Scheme implementation; see the Chibi-Scheme development page at
 @url{https://github.com/ashinn/chibi-scheme}.
@@ -152,7 +156,7 @@ This is an example session of Unsyntax's REPL:
 @cindex interpreter
 @example
 $ unsyntax-scheme
-Unsyntax 0.0.1
+Unsyntax 0.0.2
 Copyright (C) 2020 Marc Nieper-Wißkirchen
 
 This is free software: you are free to change and redistribute it.
@@ -195,7 +199,7 @@ Hello, World!
 
 @section The Base language
 Unsyntax implements the Scheme programming language as described in the
-R7RS standard.
+@rnrs{7} standard.
 
 @section Standard libraries
 
@@ -373,6 +377,11 @@ Auxiliary Syntax Keywords.
 Identifier syntax.
 
 @cindex SRFI 211
+@cindex @code{(srfi 211 r4rs)}
+@item (srfi 211 r4rs)
+The low-level macro facility of the @rnrs{4}.
+
+@cindex SRFI 211
 @cindex @code{(srfi 211 syntax-case)}
 @item (srfi 211 syntax-case)
 @code{Syntax-case}
@@ -404,11 +413,11 @@ The @command{compile-unsyntax} command implements SRFI 138.
 
 @section Implementation notes
 
-In implementing the R7RS standard, a few choices had to be made:
+In implementing the @rnrs{7} standard, a few choices had to be made:
 
 @itemize
 @item
-The R7RS grammar for a program is ambigious when there is more than one
+The @rnrs{7} grammar for a program is ambigious when there is more than one
 import declaration at the beginning as it is unclear whether any
 subsequent form is already an expression or definition.  Unsyntax
 therefore only allows exactly one import declaration at the beginning of
@@ -443,7 +452,7 @@ those libraries are evaluated, whose bindings are referenced, directly
 or indirectly, in the program.
 
 @item
-In evaluating bodies, libraries, and programs, Unsyntax follows the R6RS
+In evaluating bodies, libraries, and programs, Unsyntax follows the @rnrs{6}
 semantics.  In particular, for the definition of a variable, expansion
 is deferred until after all of the definitions have been seen.  A use of
 a syntax form can therefore appear before its definition.
@@ -584,7 +593,7 @@ expand-unsyntax @var{option} @dots{} @var{file}
 @end example
 
 @command{expand-unsyntax} expand the Scheme program @var{file} into a
-minimal dialect of R7RS.
+minimal dialect of @rnrs{7}.
 
 @command{unsyntax-scheme} supports the following options:
 
