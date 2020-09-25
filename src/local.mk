@@ -88,9 +88,11 @@ scheme_sources = %D%/scheme/base.scm %D%/scheme/base.sld		\
 %D%/unsyntax/symbol.sld %D%/unsyntax/syntax.scm				\
 %D%/unsyntax/syntax.sld %D%/unsyntax/syntax-case.scm			\
 %D%/unsyntax/syntax-case.sld %D%/unsyntax/syntax-object.scm		\
-%D%/unsyntax/syntax-object.sld %D%/unsyntax/unicode.scm			\
-%D%/unsyntax/unicode.sld %D%/unsyntax/variable.scm			\
-%D%/unsyntax/variable.sld %D%/unsyntax/variable-transformer.scm		\
+%D%/unsyntax/syntax-object.sld						\
+%D%/unsyntax/syntax-object/chibi-declarations.scm			\
+%D%/unsyntax/unicode.scm %D%/unsyntax/unicode.sld			\
+%D%/unsyntax/variable.scm %D%/unsyntax/variable.sld			\
+%D%/unsyntax/variable-transformer.scm					\
 %D%/unsyntax/variable-transformer.sld %D%/unsyntax/version-etc.scm	\
 %D%/unsyntax/version-etc.sld
 
@@ -99,6 +101,11 @@ dist_unsyntaxpkgdata_DATA = %D%/unsyntax/define-record-type.scm	\
 %D%/unsyntax/define-record-type.sld %D%/unsyntax/gensym.scm	\
 %D%/unsyntax/gensym.sld %D%/unsyntax/syntax-object.scm		\
 %D%/unsyntax/syntax-object.sld
+
+syntax_objectpkgdatadir = $(pkgdatadir)/unsyntax/syntax-object
+dist_syntax_objectpkgdata_DATA =			\
+%D%/unsyntax/syntax-object/chibi-declarations.scm
+
 
 stdlibspkgdatadir = $(pkgdatadir)/unsyntax/stdlibs
 dist_stdlibspkgdata_DATA = %D%/unsyntax/stdlibs/runtime.scm	\

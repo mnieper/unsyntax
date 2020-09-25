@@ -35,4 +35,9 @@
      (import (unsyntax $bootstrap)))
     (else
      (import (scheme base))
-     (include "syntax-object.scm"))))
+     (include "syntax-object.scm")
+     (cond-expand
+       (chibi
+        (include-library-declarations
+         "syntax-object/chibi-declarations.scm"))
+       (else)))))
