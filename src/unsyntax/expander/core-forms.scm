@@ -241,7 +241,7 @@
     (let*-values (((srcloc) (syntax-object-srcloc stx))
                   ((id expr) (parse-assignment stx))
                   ((binding) (lookup (resolve id)))
-                  ((val) (binding-value binding)))
+                  ((val) (and binding (binding-value binding))))
       (case (binding-type binding)
         ((macro macro-parameter)
          (expand (transform/macro val stx #f id)))
@@ -258,7 +258,7 @@
                            (build-reference (syntax-object-srcloc id) val)
                            (expand expr)))
         ((#f)
-         (raise-syntax-error stx "unbound variable ‘~a’" (identifier-name stx)))
+         (raise-syntax-error stx "unbound variable ‘~a’" (identifier-name id)))
         (else
          (raise-syntax-error stx "not a variable"))))))
 
