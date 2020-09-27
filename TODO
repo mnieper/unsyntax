@@ -1,17 +1,29 @@
 * Language
 
-For interoperability, support the R6RS module language as well.  We use
-implicit phasing and ignore library versions.
+** R6RS compatibility
+
+  For interoperability, support the R6RS module language as well.  We use
+  implicit phasing and ignore library versions.
+
+** Phasing
+
+  Allow a transformer to reference earlier expand-time bindings in the same library.
+
+** Add Chez-style identifier properties.
+
+  Documented in section 10.4 of its User's Guide.  May be documented in a SRFI.
 
 * Backends
 
-Support other backends besides Chibi-Scheme.
+  Support other backends besides Chibi-Scheme.
 
 * Optimization
 
-Special-case the ‘guard’ form when no ‘else’ clause is present.
+** Special-case the ‘guard’ form when no ‘else’ clause is present.
 
-Do not emit ‘(define-values _... ...)’ in the library and program top-level.
+** Integrate some procedures for performance.
+
+** Do not emit ‘(define-values _... ...)’ in the library and program top-level.
 
 -----
 
