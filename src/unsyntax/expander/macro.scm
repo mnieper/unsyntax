@@ -27,7 +27,7 @@
   (receive (expr inv-reqs)
       (parameterize ((invoke-collector (make-library-collector))
                      (visit-collector (make-library-collector)))
-        (let ((expr (with-global-store (expand stx))))
+        (let ((expr (with-meta-store (expand stx))))
           (values expr (invoke-requirements))))
     (for-each (lambda (lib)
                 (invoke-library! lib)

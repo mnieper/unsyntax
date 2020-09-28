@@ -130,8 +130,6 @@
                (receive vals (eval-expression stx)
                  (f (cdr body) vals)))))))))
 
-;; TODO: Bind rtd...
-
 (define (define-record-type! stx env)
   (let*-values
       (((loc) (syntax-object-srcloc stx))

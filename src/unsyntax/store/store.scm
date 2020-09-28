@@ -73,7 +73,21 @@
     ((with-frame lbl* b* body1 body2 ...)
      (parameterize ((current-store (extend-store (current-store)
                                                  lbl*
-                                                 b*)))
+                                                 b*))
+                    (current-meta-store (extend-store (current-meta-store)
+                                                      '()
+                                                      '())))
+       body1 body2 ...))))
+
+(define-syntax with-meta-frame
+  (syntax-rules ()
+    ((with-frame lbl* b* body1 body2 ...)
+     (parameterize ((current-store (extend-store (current-store)
+                                                 lbl*
+                                                 b*))
+                    (current-meta-store (extend-store (current-meta-store)
+                                                      lbl*
+                                                      b*)))
        body1 body2 ...))))
 
 (define-syntax with-bindings
@@ -85,6 +99,7 @@
              (lambda ()
                (let ((tmps (map lookup labels)))
                  (for-each bind! labels bindings)
+                 (for-each bind-meta! labels bindings)
                  (set! bindings tmps)))))
        (dynamic-wind
          swap!
@@ -104,6 +119,10 @@
   (when lbl
     (store-set! (current-store) lbl b)))
 
+(define (bind-meta! lbl b)
+  (when lbl
+    (store-set! (current-meta-store) lbl b)))
+
 (define (bind-core! lbl b)
   (store-set! *core-store* lbl b))
 
@@ -111,10 +130,10 @@
 ;; The Current Global Store ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define-syntax with-global-store
+(define-syntax with-meta-store
   (syntax-rules ()
-    ((with-global-store body1 body2 ...)
-     (parameterize ((current-store (current-global-store)))
+    ((with-meta-store body1 body2 ...)
+     (parameterize ((current-store (current-meta-store)))
        body1 body2 ...))))
 
 (define (bind-global! lbl b)

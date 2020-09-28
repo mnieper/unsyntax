@@ -48,11 +48,13 @@
 
 (define (current-locations) (context-locations (current-context)))
 
-(define current-store (make-parameter (current-global-store)))
+(define current-meta-store (make-parameter (current-global-store)))
+(define current-store (make-parameter (current-meta-store)))
 
 (define-syntax with-new-context
   (syntax-rules ()
     ((with-new-context body1 body2 ...)
      (parameterize ((current-context (new-context)))
-       (parameterize ((current-store (current-global-store)))
-         body1 body2 ...)))))
+       (parameterize ((current-meta-store (current-global-store)))
+         (parameterize ((current-store (current-meta-store)))
+           body1 body2 ...))))))

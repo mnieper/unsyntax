@@ -31,11 +31,13 @@
           library-table-intern!
           current-libraries
           with-frame
+          with-meta-frame
           with-bindings
           lookup
           bind!
+          bind-meta!
           bind-core!
-	  with-global-store
+	  with-meta-store
           bind-global!
           current-globals
           ref-global

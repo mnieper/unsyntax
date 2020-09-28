@@ -44,10 +44,10 @@
                 quasisyntax
                 unsyntax
                 unsyntax-splicing)
+          (unsyntax derived-forms)
           (unsyntax error)
           (unsyntax gensym)
           (unsyntax environment)
           (unsyntax identifier)
-          (unsyntax syntax)
-          (unsyntax syntax-case))
+          (unsyntax syntax))
   (include "syntax-case.scm"))

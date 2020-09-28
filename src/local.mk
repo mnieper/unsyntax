@@ -41,8 +41,7 @@ scheme_sources = %D%/scheme/base.scm %D%/scheme/base.sld		\
 %D%/srfi/111.sld %D%/srfi/125.sld %D%/srfi/128.scm %D%/srfi/128.sld	\
 %D%/srfi/139.sld %D%/srfi/158.scm %D%/srfi/158.sld %D%/srfi/188.sld	\
 %D%/srfi/190.scm %D%/srfi/190.sld %D%/srfi/206.sld			\
-%D%/srfi/211/explicit-renaming.scm					\
-%D%/srfi/211/explicit-renaming.sld					\
+%D%/srfi/211/explicit-renaming.scm %D%/srfi/211/explicit-renaming.sld	\
 %D%/srfi/211/identifier-syntax.scm %D%/srfi/211/identifier-syntax.sld	\
 %D%/srfi/211/implicit-renaming.sld %D%/srfi/211/low-level.sld		\
 %D%/srfi/211/syntactic-closures.scm					\
@@ -55,7 +54,6 @@ scheme_sources = %D%/scheme/base.scm %D%/scheme/base.sld		\
 %D%/unsyntax/bootstrap.sld %D%/unsyntax/builder.scm			\
 %D%/unsyntax/builder.sld %D%/unsyntax/command-line.scm			\
 %D%/unsyntax/command-line.sld %D%/unsyntax/core-procedures.sld		\
-%D%/unsyntax/define.scm %D%/unsyntax/define.sld				\
 %D%/unsyntax/derived-forms.scm %D%/unsyntax/derived-forms.sld		\
 %D%/unsyntax/define-record-type.scm					\
 %D%/unsyntax/define-record-type.sld %D%/unsyntax/environment.scm	\
@@ -75,25 +73,22 @@ scheme_sources = %D%/scheme/base.scm %D%/scheme/base.sld		\
 %D%/unsyntax/expander/syntax-case.scm %D%/unsyntax/features.scm		\
 %D%/unsyntax/features.sld %D%/unsyntax/gensym.scm			\
 %D%/unsyntax/gensym.sld %D%/unsyntax/identifier.scm			\
-%D%/unsyntax/identifier.sld %D%/unsyntax/lambda.scm			\
-%D%/unsyntax/lambda.sld %D%/unsyntax/let.scm %D%/unsyntax/let.sld	\
-%D%/unsyntax/library.sld %D%/unsyntax/library.scm			\
-%D%/unsyntax/library-locator.scm %D%/unsyntax/library-locator.sld	\
-%D%/unsyntax/position.scm %D%/unsyntax/position.sld			\
-%D%/unsyntax/program.scm %D%/unsyntax/program.sld			\
-%D%/unsyntax/program-name.scm %D%/unsyntax/program-name.sld		\
-%D%/unsyntax/read-syntax.scm %D%/unsyntax/read-syntax.sld		\
-%D%/unsyntax/runtime.sld %D%/unsyntax/scheme.scm			\
-%D%/unsyntax/scheme.sld %D%/unsyntax/source-location.scm		\
-%D%/unsyntax/source-location.sld %D%/unsyntax/source-port.scm		\
-%D%/unsyntax/source-port.sld %D%/unsyntax/store.sld			\
-%D%/unsyntax/store/context.scm %D%/unsyntax/store/library-table.scm	\
-%D%/unsyntax/store/store.scm %D%/unsyntax/symbol.scm			\
-%D%/unsyntax/symbol.sld %D%/unsyntax/syntactic-closure.scm		\
-%D%/unsyntax/syntactic-closure.sld %D%/unsyntax/syntax.scm		\
-%D%/unsyntax/syntax.sld %D%/unsyntax/syntax-case.scm			\
-%D%/unsyntax/syntax-case.sld %D%/unsyntax/syntax-object.scm		\
-%D%/unsyntax/syntax-object.sld						\
+%D%/unsyntax/identifier.sld %D%/unsyntax/library.sld			\
+%D%/unsyntax/library.scm %D%/unsyntax/library-locator.scm		\
+%D%/unsyntax/library-locator.sld %D%/unsyntax/position.scm		\
+%D%/unsyntax/position.sld %D%/unsyntax/program.scm			\
+%D%/unsyntax/program.sld %D%/unsyntax/program-name.scm			\
+%D%/unsyntax/program-name.sld %D%/unsyntax/read-syntax.scm		\
+%D%/unsyntax/read-syntax.sld %D%/unsyntax/runtime.sld			\
+%D%/unsyntax/scheme.scm %D%/unsyntax/scheme.sld				\
+%D%/unsyntax/source-location.scm %D%/unsyntax/source-location.sld	\
+%D%/unsyntax/source-port.scm %D%/unsyntax/source-port.sld		\
+%D%/unsyntax/store.sld %D%/unsyntax/store/context.scm			\
+%D%/unsyntax/store/library-table.scm %D%/unsyntax/store/store.scm	\
+%D%/unsyntax/symbol.scm %D%/unsyntax/symbol.sld				\
+%D%/unsyntax/syntactic-closure.scm %D%/unsyntax/syntactic-closure.sld	\
+%D%/unsyntax/syntax.scm %D%/unsyntax/syntax.sld				\
+%D%/unsyntax/syntax-object.scm %D%/unsyntax/syntax-object.sld		\
 %D%/unsyntax/syntax-object/chibi-declarations.scm			\
 %D%/unsyntax/transformer.scm %D%/unsyntax/transformer.sld		\
 %D%/unsyntax/unicode.scm %D%/unsyntax/unicode.sld			\

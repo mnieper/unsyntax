@@ -24,8 +24,6 @@
 ;; SOFTWARE.
 
 (define-library (unsyntax derived-forms)
-  (export and or)
-  (import (unsyntax $bootstrap)
-          (unsyntax lambda)
-          (unsyntax let))
+  (export and define lambda let or with-syntax)
+  (import (unsyntax $bootstrap))
   (include "derived-forms.scm"))

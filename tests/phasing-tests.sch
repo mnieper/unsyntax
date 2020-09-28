@@ -23,9 +23,20 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define-library (unsyntax syntax-case)
-  (export syntax-case
-          with-syntax)
-  (import (unsyntax $bootstrap)
-          (unsyntax lambda))
-  (include "syntax-case.scm"))
+(import (scheme base)
+        (srfi 211 syntax-case)
+        (srfi 64))
+
+(test-begin "Phasing")
+
+(define-syntax foo
+  (syntax-rules ()
+    ((foo) 42)))
+
+(define-syntax bar
+  (lambda (stx)
+    (foo)))
+
+(test-equal 42 (bar))
+
+(test-end)

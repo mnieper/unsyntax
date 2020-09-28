@@ -261,9 +261,5 @@
 	  write-u8
 	  zero?)
   (import (unsyntax $bootstrap)
-          (unsyntax derived-forms)
-          (unsyntax define)
-          (unsyntax lambda)
-          (unsyntax let)
-          (unsyntax syntax-case))
+          (unsyntax derived-forms))
   (include "base.scm"))

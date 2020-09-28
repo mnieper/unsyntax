@@ -23,6 +23,35 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
+(define-syntax lambda
+  (case-lambda
+    ((stx)
+     (syntax-case stx ()
+       ((_ formals . body)
+        #'(case-lambda (formals . body)))))))
+
+(define-syntax define
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ var expr)
+       (identifier? #'var)
+       #'(define-values (var) expr))
+      ((_ (var . formals) . body)
+       (identifier? #'var)
+       #'(define var (lambda formals . body))))))
+
+(define-syntax let
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ ((name* val*) ...) . body)
+       #'((lambda (name* ...) . body) val* ...))
+      ((_ tag ((name* val*) ...) . body)
+       (identifier? #'tag)
+       #'(letrec* ((tag (lambda (name* ...) . body)))
+	   (tag val* ...)))
+      (_
+       (raise-syntax-error stx "ill-formed let form")))))
+
 (define-syntax and
   (lambda (stx)
     (syntax-case stx ()
@@ -49,3 +78,10 @@
 	   (if t t (or test* ...))))
       (_
        (raise-syntax-error stx "ill-formed or form")))))
+
+(define-syntax with-syntax
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ ((p* e*) ...) body1 body2 ...)
+       #'(syntax-case (list e* ...) ()
+           ((p* ...) (letrec* () body1 body2 ...)))))))

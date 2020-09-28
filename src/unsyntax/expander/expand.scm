@@ -278,13 +278,15 @@
                 ((lbls) (map genlbl ids))
                 ((env) (make-environment ids lbls)))
     (for-each (lambda (id lbl init)
-                (bind! lbl
-                       (make-transformer-binding 'define-syntax
-                                                 (expand-transformer
-                                                  id
-                                                  (if (eq? 'let-syntax type)
-                                                      init
-                                                      (add-substs env init))))))
+                (let ((b (make-transformer-binding
+                          'define-syntax
+                          (expand-transformer
+                           id
+                           (if (eq? 'let-syntax type)
+                               init
+                               (add-substs env init))))))
+                  (bind! lbl b)
+                  (bind-meta! lbl b)))
               ids lbls inits)
     (add-substs* env body)))
 
@@ -292,6 +294,7 @@
   (let*-values (((id body) (parse-with-ellipsis stx #f))
                 ((lbl) (genlbl id)))
     (bind! lbl id)
+    (bind-meta! lbl id)
     (add-substs* (make-environment (list (ellipsis-identifier id))
                                    (list lbl))
                  body)))
@@ -355,9 +358,11 @@
                 ((id init) (parse-define-syntax stx))
                 ((def) (expand-transformer id init))
                 ((lbl) (genlbl id))
-                ((var) (genvar id)))
+                ((var) (genvar id))
+                ((b) (make-transformer-binding type def)))
     (add! id lbl)
-    (bind! lbl (make-transformer-binding type def))
+    (bind! lbl b)
+    (bind-meta! lbl b)
     (build srcloc (set-keyword! ',lbl (list ,(car def) ',(cadr def))))))
 
 (define (expand-define-values stx add!)
@@ -431,7 +436,7 @@
   (let*-values (((ids inits body) (parse-let-syntax stx #t))
                 ((lbls) (map genlbl ids))
                 ((env) (make-environment ids lbls)))
-    (with-frame lbls
+    (with-meta-frame lbls
         (map (lambda (id init)
                (make-transformer-binding 'define-syntax
                                          (expand-transformer
@@ -445,7 +450,7 @@
 (define (expand-with-ellipsis stx)
   (let*-values (((id body) (parse-with-ellipsis stx #t))
                 ((lbl) (genlbl id)))
-    (with-frame (list lbl) (list id)
+    (with-meta-frame (list lbl) (list id)
       (expand-body body (make-environment (list (ellipsis-identifier id))
                                           (list lbl))))))
 
