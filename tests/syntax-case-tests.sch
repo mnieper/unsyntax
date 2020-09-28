@@ -27,7 +27,8 @@
 	(srfi 64)
         (srfi 211 identifier-syntax)
 	(srfi 211 syntax-case)
-        (srfi 211 variable-transformer))
+        (srfi 211 variable-transformer)
+        (srfi 211 with-ellipsis))
 
 (test-begin "syntax-case")
 
@@ -64,6 +65,23 @@
   (set! p.car 15)
   (test-equal 15 p.car)
   (test-equal '(15 . 5) p))
+
+(test-group "with-ellipsis"
+  (define-syntax define-quotation-macros
+      (lambda (x)
+        (syntax-case x ()
+          ((_ (macro-name head-symbol) ...)
+           #'(begin (define-syntax macro-name
+                      (lambda (x)
+                        (with-ellipsis :::
+                          (syntax-case x ()
+                            ((_ x :::)
+                             #'(quote (head-symbol x :::)))))))
+                    ...)))))
+
+  (define-quotation-macros (quote-a a) (quote-b b) (quote-c c))
+
+  (test-equal '(a 1 2 3) (quote-a 1 2 3)))
 
 (test-end "syntax-case")
 
