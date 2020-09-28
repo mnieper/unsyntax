@@ -119,9 +119,10 @@ Bootstrap Unsyntax and build its standard library.
   (library-invoke-code lib))
 
 (define (build-symbol-defs core-lib)
-  (exports-map->list (lambda (name lbl)
-                       `(define ,name ,(cadr (binding-value (lookup lbl)))))
-                     (library-exports core-lib)))
+  (exports-map->list
+   (lambda (name l/p)
+     `(define ,name ,(cadr (binding-value (lookup (label/props-label l/p))))))
+   (library-exports core-lib)))
 
 (define (build-auxlibs auxlibs)
   (map (lambda (auxlib)

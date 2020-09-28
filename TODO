@@ -5,10 +5,6 @@
   For interoperability, support the R6RS module language as well.  We use
   implicit phasing and ignore library versions.
 
-** Phasing
-
-  Allow a transformer to reference earlier expand-time bindings in the same library.
-
 ** Add Chez-style identifier properties.
 
   Documented in section 10.4 of its User's Guide.  May be documented in a SRFI.
@@ -24,6 +20,10 @@
 ** Integrate some procedures for performance.
 
 ** Do not emit ‘(define-values _... ...)’ in the library and program top-level.
+
+* Code
+
+** Rename the environment type from (unsyntax environment) into rib.
 
 -----
 

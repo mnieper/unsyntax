@@ -105,7 +105,8 @@
                (b (lookup lbl)))
           (kwd-table-add! (current-keywords) h lbl)
           (case (binding-type b)
-            ((alias begin define-auxiliary-syntax define-record-type
+            ((alias begin define-auxiliary-syntax define-property
+              define-record-type
               define-values define-syntax define-syntax-parameter import
               let-syntax letrec-syntax with-ellipsis)
              => (lambda (type)
@@ -200,10 +201,28 @@
  already been used"
                       name))
                    (when id
-                     (environment-set! env id lbl))))))
+                     (environment-set! env id lbl)
+                     (unless (label=? lbl (resolve id))
+                       (raise-syntax-error
+                        id "trying to redefine the local keyword ‘~a’"
+                        (identifier-name id)))))))
+         (add-prop! (lambda (id l/p)
+                      (let ((name (identifier-name id)))
+                        (when (and import-env (environment-ref import-env id))
+                          (raise-syntax-error
+                           id
+                           "trying to redefine imported identifier ‘~a’"
+                           name))
+                        (when id
+                          (environment-set!/props env id l/p)
+                          (unless (label=? (label/props-label l/p) (resolve id))
+                            (raise-syntax-error
+                             id "trying to define property on the local keyword
+ ‘~a’"
+                             (identifier-name id))))))))
       (receive (stxdefs defs expr)
           (parameterize ((current-keywords (make-kwd-table)))
-            (expand-form* body '() '() env add!))
+            (expand-form* body '() '() env add! add-prop!))
         (unless stxdefs (raise-syntax-error stx "no expressions in body"))
         (values stxdefs defs expr env)))))
 
@@ -211,14 +230,14 @@
   (map (lambda (def) (if (procedure? def) (def) def))
        (reverse! rdefs)))
 
-(define (expand-form* stx* stxdef* rdef* env add!)
+(define (expand-form* stx* stxdef* rdef* env add! add-prop!)
   (if (null? stx*)
       (if (current-top-level?)
           (values (reverse! stxdef*) (expand-definitions rdef*) #f)
           (values #f #f #f))
-      (expand-form (car stx*) (cdr stx*) stxdef* rdef* env add!)))
+      (expand-form (car stx*) (cdr stx*) stxdef* rdef* env add! add-prop!)))
 
-(define (expand-form stx stx* stxdef* rdef* env add!)
+(define (expand-form stx stx* stxdef* rdef* env add! add-prop!)
   (let ((loc (syntax-object-srcloc stx)))
     (receive (stx type val) (syntax-type stx env)
       (case type
@@ -227,38 +246,42 @@
                        ((lbl) (resolve id2)))
            (kwd-table-add! (current-keywords) id2 lbl)
            (add! id1 lbl)
-           (expand-form* stx* stxdef* rdef* env add!)))
+           (expand-form* stx* stxdef* rdef* env add! add-prop!)))
         ((begin)
          (expand-form* (append (parse-begin stx #f) stx*)
-                       stxdef* rdef* env add!))
+                       stxdef* rdef* env add! add-prop!))
         ((define-auxiliary-syntax)
          (receive (id sym) (parse-define-auxiliary-syntax stx)
            (add! id (auxiliary-syntax-label sym))
-           (expand-form* stx* stxdef* rdef* env add!)))
+           (expand-form* stx* stxdef* rdef* env add! add-prop!)))
+        ((define-property)
+         (expand-form* stx*
+                       (cons (expand-define-property stx add-prop!) stxdef*)
+                       rdef* env add! add-prop!))
         ((define-record-type)
          (expand-form* stx*
                        stxdef*
                        (cons (expand-define-record-type stx add!) rdef*)
-                       env add!))
+                       env add! add-prop!))
         ((define-syntax define-syntax-parameter)
          (expand-form* stx*
                        (cons (expand-define-syntax type stx add!) stxdef*)
-                       rdef* env add!))
+                       rdef* env add! add-prop!))
         ((define-values)
          (expand-form* stx*
                        stxdef*
                        (cons (expand-define-values stx add!) rdef*)
-                       env add!))
+                       env add! add-prop!))
         ((let-syntax letrec-syntax)
          (expand-form* (append (expand-let-syntax* type stx) stx*)
                        stxdef*
                        rdef*
-                       env add!))
+                       env add! add-prop!))
         ((with-ellipsis)
          (expand-form* (append (expand-with-ellipsis* stx) stx*)
                        stxdef*
                        rdef*
-                       env add!))
+                       env add! add-prop!))
         (else
          (if (current-top-level?)
              (expand-form* stx*
@@ -266,7 +289,7 @@
                            (cons (lambda ()
                                    (build-command loc (expand stx)))
                                  rdef*)
-                           env add!)
+                           env add! add-prop!)
              (values (reverse! stxdef*)
                      (expand-definitions rdef*)
                      (build-begin loc
@@ -352,6 +375,25 @@
                 "unknown constructor field name ‘~a’"
                 (identifier-name cfield)))))
        cfields))
+
+(define (expand-define-property stx add-prop!)
+  (let*-values (((id key expr) (parse-define-property stx))
+                ((def) (expand-property id expr))
+                ((il/p)
+                 (or (resolve/props id)
+                     (raise-syntax-error id "identifier ‘~a’ unbound"
+                                         (identifier-name id))))
+                ((klbl)
+                 (or (resolve key)
+                     (raise-syntax-error key "identifier ‘~a’ unbound"
+                                         (identifier-name key))))
+                ((plbl) (genlbl key))
+                ((b) (make-property-binding def)))
+    (add-prop! id (label/props-add il/p klbl plbl))
+    (bind! plbl b)
+    (bind-meta! plbl b)
+    (build (syntax-object-srcloc stx)
+           (set-property! ',plbl (list ,(car def) ',(cadr def))))))
 
 (define (expand-define-syntax type stx add!)
   (let*-values (((srcloc) (syntax-object-srcloc stx))
@@ -491,6 +533,15 @@
     (let ((id (cadr form)) (sym (caddr form)))
       (unless (and (identifier? id) (identifier? sym)) (fail))
       (values id (identifier-name sym)))))
+
+(define (parse-define-property stx)
+  (let ((form (syntax->list stx)))
+    (unless (and form
+                 (= 4 (length form))
+                 (identifier? (cadr form))
+                 (identifier? (caddr form)))
+      (raise-syntax-error stx "ill-formed define-property definition"))
+    (values (cadr form) (caddr form) (cadddr form))))
 
 (define (parse-define-record-type stx)
   (let ((fail

@@ -36,8 +36,12 @@
 (define (build-code defs implibs invreqs)
   `((import (unsyntax stdlibs))
     (current-features ',(current-features))
-    ,@(compile* (append (build-libs implibs invreqs)
-                        defs))))
+    ,@(compile* `((with-error-handler
+                   (lambda ()
+                     (begin
+                       ,@(append (build-libs implibs invreqs)
+                                 defs)
+                       (if #f #f))))))))
 
 (define (build-libs implibs invreqs)
   (let* ((libvars (make-hash-table eq-comparator))
@@ -59,7 +63,8 @@
          (append (library-invoke-code lib)
                  (map (lambda (var)
                         (let ((loc (cdr var)))
-                          `(set-global! ',loc ,loc)))
+                          `(define-values ,(generate-variable "_")
+                             (set-global! ',loc ,loc))))
                       (library-variables lib)))))
     (hash-table-set! libnames lib var)
     `((define ,var
@@ -78,14 +83,16 @@
                        '() (library-invoke-requirements lib)))
          ;; Visiter
          (lambda ()
-           ,@(library-visit-code lib)
-           (if #f #f))
+           (begin
+             ,@(library-visit-code lib)
+             (if #f #f)))
          ;; Invoker
          ,(if (invreq? lib)
               #f
               `(lambda ()
-                 ,@invoker
-                 (if #f #f)))
+                 (begin
+                   ,@invoker
+                   (if #f #f))))
          ;; Exports
          ',(exports->alist (library-exports lib))
          ;; Keywords

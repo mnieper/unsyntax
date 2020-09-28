@@ -49,14 +49,14 @@ scheme_sources = %D%/scheme/base.scm %D%/scheme/base.sld		\
 %D%/srfi/211/syntactic-closures.sld %D%/srfi/211/syntax-case.scm	\
 %D%/srfi/211/syntax-case.sld %D%/srfi/211/syntax-parameter.sld		\
 %D%/srfi/211/variable-transformer.sld %D%/srfi/211/with-ellipsis.sld	\
-%D%/srfi/212.sld %D%/unsyntax/auxiliary-syntax.scm			\
-%D%/unsyntax/auxiliary-syntax.sld %D%/unsyntax/backend.scm		\
-%D%/unsyntax/backend.sld %D%/unsyntax/bootstrap.scm			\
-%D%/unsyntax/bootstrap.sld %D%/unsyntax/builder.scm			\
-%D%/unsyntax/builder.sld %D%/unsyntax/command-line.scm			\
-%D%/unsyntax/command-line.sld %D%/unsyntax/core-procedures.sld		\
-%D%/unsyntax/derived-forms.scm %D%/unsyntax/derived-forms.sld		\
-%D%/unsyntax/define-record-type.scm					\
+%D%/srfi/212.sld %D%/srfi/213.sld %D%/unsyntax/assert.sld		\
+%D%/unsyntax/auxiliary-syntax.scm %D%/unsyntax/auxiliary-syntax.sld	\
+%D%/unsyntax/backend.scm %D%/unsyntax/backend.sld			\
+%D%/unsyntax/bootstrap.scm %D%/unsyntax/bootstrap.sld			\
+%D%/unsyntax/builder.scm %D%/unsyntax/builder.sld			\
+%D%/unsyntax/command-line.scm %D%/unsyntax/command-line.sld		\
+%D%/unsyntax/core-procedures.sld %D%/unsyntax/derived-forms.scm		\
+%D%/unsyntax/derived-forms.sld %D%/unsyntax/define-record-type.scm	\
 %D%/unsyntax/define-record-type.sld %D%/unsyntax/environment.scm	\
 %D%/unsyntax/environment.sld %D%/unsyntax/error.scm			\
 %D%/unsyntax/error.sld %D%/unsyntax/eval.sld %D%/unsyntax/expand.scm	\

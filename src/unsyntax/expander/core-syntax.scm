@@ -26,6 +26,7 @@
 (define-core-syntax! 'alias)
 (define-core-syntax! 'begin)
 (define-core-syntax! 'define-auxiliary-syntax)
+(define-core-syntax! 'define-property)
 (define-core-syntax! 'define-record-type)
 (define-core-syntax! 'define-syntax)
 (define-core-syntax! 'define-syntax-parameter)

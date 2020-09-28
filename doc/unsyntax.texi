@@ -426,6 +426,11 @@ Custom ellipsis identifiers for @code{syntax-case} macros.
 @item (srfi 212)
 Aliases.
 
+@cindex SRFI 213
+@cindex @code{(srfi 213)}
+@item (srfi 213)
+Identifier properties.
+
 @end table
 
 @cindex SRFI 138

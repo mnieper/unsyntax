@@ -25,9 +25,11 @@
 
 (define-library (example library)
   (export foo bar)
-  (import (scheme base))
+  (import (scheme base)
+          (srfi 213))
   (begin
     (define foo 42)
     (define-syntax bar
       (syntax-rules ()
-        ((bar) 'bar)))))
+        ((bar) 'bar)))
+    (define-property foo * "the-answer")))

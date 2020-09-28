@@ -24,8 +24,8 @@
 ;; SOFTWARE.
 
 (include-library-declarations "stdlibs/runtime-exports.scm")
-(export current-features expand-unsyntax unsyntax-scheme install-library
-        environment syntax-object)
+(export current-features with-error-handler expand-unsyntax unsyntax-scheme
+        install-library environment syntax-object)
 (import (rename (except (scheme base) define-record-type)
                 (features host-features))
         (scheme case-lambda)

@@ -49,15 +49,20 @@
                  "trying to define ‘~a’ in immutable environment" name))
   (mutable-set! env (datum->syntax #f name) val))
 
-(define (mutable-ref env id)
-  (or (environment-ref env id)
+(define (mutable-ref/props env id)
+  (or (environment-ref/props env id)
       (and (symbol? (identifier-name id))
-           (let ((var (genvar id))
-                 (lbl (genlbl id)))
-             (environment-set! env id lbl)
+           (let* ((var (genvar id))
+                 (lbl (genlbl id))
+                 (l/p (make-label/props lbl '())))
+             (environment-set!/props env id l/p)
              (bind-global! lbl (make-binding 'mutable-variable var))
              (set-global! var (box (if #f #f)))
-             lbl))))
+             l/p))))
+
+(define (mutable-ref env id)
+  (and-let* ((l/p (mutable-ref/props env id)))
+    (label/props-label l/p)))
 
 (define (mutable-set! env id val)
   (let* ((lbl (mutable-ref env id))
@@ -92,7 +97,8 @@
       (values expr (invoke-requirements)))))
 
 (define (eval-repl stx env)
-  (parameterize ((current-global-resolver (lambda (id) (mutable-ref env id))))
+  (parameterize ((current-global-resolver
+                  (lambda (id) (mutable-ref/props env id))))
     (let f ((body (list stx)) (vals (list (if #f #f))))
       (if (null? body)
           (apply values vals)
@@ -108,6 +114,11 @@
               ((define-auxiliary-syntax)
                (receive (id sym) (parse-define-auxiliary-syntax stx)
                  (environment-set! env id (auxiliary-syntax-label sym)))
+               (f (cdr body) (list (if #f #f))))
+              ((define-property)
+               (expand-define-property stx
+                                       (lambda (id l/p)
+                                         (environment-set!/props env id l/p)))
                (f (cdr body) (list (if #f #f))))
               ((define-record-type)
 	       (define-record-type! stx env)

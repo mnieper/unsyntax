@@ -43,6 +43,7 @@
           ref-global
           set-global!
           set-keyword!
+          set-property!
           current-locations)
   (import (scheme base)
 	  (scheme case-lambda)

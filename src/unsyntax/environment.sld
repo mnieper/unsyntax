@@ -25,19 +25,29 @@
 
 (define-library (unsyntax environment)
   (export make-label
+          label?
+          make-label/props
+          label/props-label
+          label/props-props
+          label/props-add
           label=?
           label-comparator
           make-environment
           make-mutable-environment
           environment-mutable?
           environment-ref
+          environment-ref/props
           environment-update!
           environment-set!
+          environment-set!/props
           environment-for-each
           environment-fold
+          environment-fold/props
           environment->alist
           current-global-resolver
           resolve
+          resolve/props
+          resolve-prop
           free-identifier=?)
   (import (scheme base)
           (scheme case-lambda)

@@ -99,6 +99,8 @@
                      reverse
                      quote
                      set-global!
+                     set-keyword!
+                     set-property!
                      syntax-car
                      syntax-cdr
                      syntax->datum
@@ -191,6 +193,9 @@
     ((_ loc (set-keyword! x y))
      (build-primitive-call loc 'set-keyword! (list (%build loc x)
                                                    (%build loc y))))
+    ((_ loc (set-property! x y))
+     (build-primitive-call loc 'set-property! (list (%build loc x)
+                                                    (%build loc y))))
     ((_ loc (syntax->datum x))
      (build-primitive-call loc 'syntax->datum (list (%build loc x))))
     ((_ loc (syntax->list x))

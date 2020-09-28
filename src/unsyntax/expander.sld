@@ -67,6 +67,7 @@
           (srfi 111)
           (srfi 125)
           (srfi 128)
+          (unsyntax assert)
           (unsyntax auxiliary-syntax)
           (unsyntax backend)
           (unsyntax builder)

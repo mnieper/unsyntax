@@ -353,6 +353,7 @@
 
  ;; Store
  set-keyword!
+ set-property!
 
  ;; SRFI 111
  set-box!

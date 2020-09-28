@@ -25,10 +25,18 @@
 
 (define (lisp-transformer proc)
   (lambda (stx)
-    (datum->syntax (syntax-case stx ()
-                     ((k . _) #'k)
-                     (k #'k))
-                   (proc (syntax->datum stx)))))
+    (let* ((k (syntax-case stx ()
+                ((k . _) #'k)
+                (k #'k)))
+           (inject (lambda (sym)
+                     (datum->syntax k sym)))
+           (res (proc (syntax->datum stx))))
+      (if (procedure? res)
+          (lambda (lookup)
+            (inject (res (lambda (sym)
+                           (assert (symbol? sym))
+                           (lookup (inject sym))))))
+          (inject res)))))
 
 (define-syntax define-macro
   (lambda (stx)

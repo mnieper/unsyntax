@@ -32,8 +32,9 @@
 (define (core-exports) *core-exports*)
 
 (define (define-export! name lbl)
+  ;; TODO: Use a commom prefix for these labels.
   (environment-set! *core-environment* (datum->syntax #f name) lbl)
-  (exports-set! *core-exports* name lbl))
+  (exports-set! *core-exports* name (make-label/props lbl '())))
 
 (define (define-core! name b)
   (define-export! name name)

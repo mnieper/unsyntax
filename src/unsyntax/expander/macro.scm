@@ -23,7 +23,7 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define (expand-transformer id stx)
+(define (expand-meta stx)
   (receive (expr inv-reqs)
       (parameterize ((invoke-collector (make-library-collector))
                      (visit-collector (make-library-collector)))
@@ -33,7 +33,76 @@
                 (invoke-library! lib)
                 (require-visit! lib))
               inv-reqs)
-    (list expr id)))
+    expr))
+
+;;;;;;;;;;;;;;;;
+;; Properties ;;
+;;;;;;;;;;;;;;;;
+
+(define (expand-property id stx)
+  (list (expand-meta stx) id))
+
+(define (make-property-binding def)
+  (make-binding 'property (cons (execute (car def)) (cdr def))))
+
+(define (property-lookup id key)
+  (assert (identifier? id))
+  (assert (identifier? key))
+  (let ((klbl (or (resolve key)
+                  (raise-syntax-error key "identifier ‘~a’ unbound"
+                                      (identifier-name key)))))
+    (and-let* ((ilbl (resolve id))
+               (plbl (resolve-prop id ilbl klbl))
+               (b (lookup plbl))
+               (type (binding-type b))
+               (val (binding-value b)))
+      (case type
+        ((property)
+         (car val))
+        ((global-property)
+         (and-let* ((lib (car val)))
+           (visit-library! lib))
+         (caadr val))
+        (else (error "compiler error"))))))
+
+(define (property-aware transformer)
+  (lambda (stx)
+    (let ((res (transformer stx)))
+      (if (procedure? res)
+          (res property-lookup)
+          res))))
+
+(define (er-property-aware transformer inject)
+  (lambda (expr rename compare)
+    (let ((res (transformer expr rename compare)))
+      (if (procedure? res)
+          (res (lambda (id key)
+                 (property-lookup (inject id) (inject key))))
+          res))))
+
+(define (ir-property-aware transformer rename)
+  (lambda (expr inject compare)
+    (let ((res (transformer expr inject compare)))
+      (if (procedure? res)
+          (res (lambda (id key)
+                 (property-lookup (rename id) (rename key))))
+          res))))
+
+(define (sc-property-aware transformer)
+  (lambda (exp env)
+    (let ((res (transformer exp env)))
+      (if (procedure? res)
+          (res (lambda (id-env id key-env key)
+                 (property-lookup (close-syntax id id-env)
+                                  (close-syntax key key-env))))
+          res))))
+
+;;;;;;;;;;;;;;;;;;
+;; Transformers ;;
+;;;;;;;;;;;;;;;;;;
+
+(define (expand-transformer id stx)
+  (list (expand-meta stx) id))
 
 (define (make-transformer-binding type def)
   (let ((transformer (execute (car def))))
@@ -68,7 +137,8 @@
                maybe-variable-transformer))))
        (cond
         ((procedure? transformer)
-         (apply-transformer transformer stx (add-mark (anti-mark) stx) #f env))
+         (apply-transformer (property-aware transformer)
+                            stx (add-mark (anti-mark) stx) #f env))
         ((er-macro-transformer? transformer)
          (er-transform transformer stx (add-mark (anti-mark) stx)
                        transformer-stx env))
@@ -124,19 +194,22 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (er-transform transformer stx e k env)
-  (let* ((transform (er-macro-transformer-procedure transformer))
-         (i (if (identifier? e) e (syntax-car e)))
+  (let* ((i (if (identifier? e) e (syntax-car e)))
          (inject (lambda (id)
                    (if (identifier? id)
                        id
-                       (datum->syntax i id)))))
+                       (datum->syntax i id))))
+         (transform
+          (er-property-aware (er-macro-transformer-procedure transformer)
+                             inject)))
     (apply-transformer
      (lambda (stx)
-       (transform (syntax->sexpr e)
-                  (lambda (exp)
-                    (datum->syntax k exp))
-                  (lambda (id1 id2)
-                    (free-identifier=? (inject id1) (inject id2)))))
+       (transform
+        (syntax->sexpr e)
+        (lambda (exp)
+          (datum->syntax k exp))
+        (lambda (id1 id2)
+          (free-identifier=? (inject id1) (inject id2)))))
      stx e i env)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -144,11 +217,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (ir-transform transformer stx e k env)
-  (let ((transform (ir-macro-transformer-procedure transformer))
-        (rename (lambda (id)
+  (let* ((rename (lambda (id)
                    (if (identifier? id)
                        id
-                       (datum->syntax k id)))))
+                       (datum->syntax k id))))
+         (transform
+          (ir-property-aware (ir-macro-transformer-procedure transformer)
+                             rename)))
     (apply-transformer
      (lambda (stx)
        (let ((i (if (identifier? e) e (syntax-car e))))

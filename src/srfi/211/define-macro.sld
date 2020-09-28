@@ -26,6 +26,7 @@
 (define-library (srfi 211 define-macro)
   (export define-macro lisp-transformer)
   (import (scheme base)
+          (unsyntax assert)
           (srfi 8)
           (srfi 211 syntax-case))
   (include "define-macro.scm"))

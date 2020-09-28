@@ -150,3 +150,6 @@
 
 (define (set-keyword! lbl val)
   (list-set! (binding-value (lookup lbl)) 2 val))
+
+(define (set-property! lbl val)
+  (list-set! (binding-value (lookup lbl)) 1 val))

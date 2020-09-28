@@ -86,7 +86,12 @@
     ((lbl type)
      (bind-global-keyword! lbl type #f))
     ((lbl type lib)
-     (bind-global! lbl (make-binding 'global-keyword (list lib type #f))))))
+     (bind-global! lbl
+                   (case type
+                     ((property)
+                      (make-binding 'global-property (list lib #f)))
+                     ((macro macro-parameter)
+                      (make-binding 'global-keyword (list lib type #f))))))))
 
 (define (library-bind-globals! lib)
   (for-each (lambda (entry)
@@ -184,14 +189,23 @@
 ;; Library Expander ;;
 ;;;;;;;;;;;;;;;;;;;;;;
 
+(define (get-props l/p)
+  (map (lambda (a)
+         (cons (cdr a) 'property))
+       (label/props-props l/p)))
+
 (define (get-kwds env)
-  (environment-fold
-   (lambda (id lbl kwds)
-     (let ((b (lookup lbl)))
+  (environment-fold/props
+   (lambda (id l/p kwds)
+     (let* ((lbl (label/props-label l/p))
+            (b (lookup lbl)))
        (case (binding-type b)
          ((macro macro-parameter)
           => (lambda (type)
-               (alist-cons lbl type kwds)))
+               (append (get-props l/p)
+                       (alist-cons lbl type kwds))))
+         ((lexical)
+          (append (get-props l/p) kwds))
          (else kwds))))
    '() env))
 
@@ -224,7 +238,7 @@
       (expand-top-level (datum->syntax #f body loc)
                         import-env
                         (lambda (stxdefs defs env)
-			  (let-values (((vars) (get-vars env))
+                          (let-values (((vars) (get-vars env))
                                        ((kwds) (get-kwds env)))
 			    (make-library name
 					  imported-libs
@@ -232,8 +246,7 @@
 					  (invoke-requirements)
                                           stxdefs
                                           defs
-                                          (make-visiter loc stxdefs
-                                                            (map car kwds))
+                                          (make-visiter loc stxdefs)
 					  (make-initializer loc defs
                                                             (map cdr vars))
 					  (get-exports export-specs
@@ -241,7 +254,7 @@
                                           kwds
                                           vars)))))))
 
-(define (make-visiter srcloc stxdefs locs)
+(define (make-visiter srcloc stxdefs)
   (let ((body (build-begin srcloc stxdefs)))
     (lambda ()
      (execute body))))
@@ -331,8 +344,8 @@
 (define (exports-ref exports name)
   (hash-table-ref/default exports name #f))
 
-(define (exports-set! exports name lbl)
-  (hash-table-set! exports name lbl))
+(define (exports-set! exports name l/p)
+  (hash-table-set! exports name l/p))
 
 (define (exports-for-each proc exports)
   (hash-table-for-each proc exports))
@@ -408,8 +421,8 @@
   (for-each (lambda (id)
 	      (unless (identifier? id)
 		(raise-syntax-error id "identifier expected"))
-	      (let ((lbl (environment-ref orig-env id)))
-		(environment-set! env id lbl)))
+	      (let ((l/p (environment-ref/props orig-env id)))
+		(environment-set!/props env id l/p)))
 	    stx*))
 
 (define (map-environment-except! stx stx* orig-env env)
@@ -434,9 +447,9 @@
                                 name)))))
      stx*)
     (environment-for-each
-     (lambda (id lbl)
+     (lambda (id l/p)
        (unless (hash-table-ref/default excepted (identifier-name id) #f)
-         (environment-set! env id lbl)))
+         (environment-set!/props env id l/p)))
      orig-env)))
 
 (define (map-environment-prefix! stx orig-env env)
@@ -444,13 +457,14 @@
     (raise-syntax-error stx "identifier expected"))
   (let ((prefix (symbol->string (identifier-name stx))))
     (environment-for-each
-     (lambda (orig-id lbl)
+     (lambda (orig-id l/p)
        (let*
            ((orig-name (identifier-name orig-id))
             (name (string->symbol (string-append prefix
                                                  (symbol->string orig-name)))))
-         (environment-set! env
-                           (datum->syntax orig-id name))))
+         (environment-set!/props env
+                                 (datum->syntax orig-id name)
+                                 l/p)))
      orig-env)))
 
 (define (map-environment-rename! stx stx* orig-env env)
@@ -481,17 +495,17 @@
                                   to))))))
      stx*)
     (environment-for-each
-     (lambda (orig-id lbl)
+     (lambda (orig-id l/p)
        (let* ((orig-name (identifier-name orig-id))
               (name (hash-table-ref/default renames orig-name orig-name)))
-         (environment-set! env (datum->syntax orig-id name) lbl)))
+         (environment-set!/props env (datum->syntax orig-id name) l/p)))
      orig-env)))
 
 (define (environment-add-library-exports! env lib stx)
   (let ((srcloc (syntax-object-srcloc stx)))
     (exports-for-each
-     (lambda (name lbl)
-       (environment-set! env (datum->syntax #f name srcloc) lbl))
+     (lambda (name l/p)
+       (environment-set!/props env (datum->syntax #f name srcloc) l/p))
      (library-exports lib))))
 
 ;;;;;;;;;;;;;;;;;;
@@ -510,9 +524,9 @@
                                 "trying to export unbound identifier ‘~a’"
                                 from-name)
             (cond
-             ((environment-ref (car envs) from)
-              => (lambda (lbl)
-                   (exports-set! exports to-name lbl)))
+             ((environment-ref/props (car envs) from)
+              => (lambda (l/p)
+                   (exports-set! exports to-name l/p)))
              (else
               (f (cdr envs)))))))))
 

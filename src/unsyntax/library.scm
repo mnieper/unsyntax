@@ -48,10 +48,9 @@
   (visiter library-visiter library-set-visiter!)
   ;; Thunk that invokes the library when called.
   (invoker library-invoker library-set-invoker!)
-  ;; The library exports as a finite mapping from names to labels.
+  ;; The library exports as a finite mapping from names to labels with props.
   (exports library-exports)
-  ;; The library keywords are an association list from labels to a
-  ;; lists of the form (LOCATION TYPE).
+  ;; The library keywords are an association list from labels to types.
   (keywords library-keywords)
   ;; The library variables are an association list from labels to
   ;; locations.

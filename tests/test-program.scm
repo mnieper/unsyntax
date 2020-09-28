@@ -24,8 +24,10 @@
 ;; SOFTWARE.
 
 (import (scheme base)
-        (scheme eval) (scheme write)
+        (scheme eval)
         (srfi 64)
+        (srfi 211 syntax-case)
+        (srfi 213)
         (example library))
 
 (test-begin "Compiler Test")
@@ -37,5 +39,21 @@
 
 (test-equal 42 (eval 'foo (environment '(example library))))
 (test-equal 'bar (eval '(bar) (environment '(example library))))
+
+(test-equal "the-answer"
+  (let-syntax ((get-the-answer
+                (lambda (stx)
+                  (lambda (lookup)
+                    #`'#,(datum->syntax #'* (lookup #'foo #'*))))))
+    (get-the-answer)))
+(test-equal "the-answer"
+  (eval '(let-syntax ((get-the-answer
+                       (lambda (stx)
+                         (lambda (lookup)
+                           #`'#,(datum->syntax #'* (lookup #'foo #'*))))))
+           (get-the-answer))
+        (environment '(scheme base) '(example library)
+                     '(srfi 211 syntax-case))))
+
 
 (test-end)

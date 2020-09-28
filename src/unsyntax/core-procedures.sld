@@ -34,6 +34,7 @@
    bind-global-keyword!
    set-global!
    set-keyword!
+   set-property!
 
    ;; Syntax-case
    cons*
@@ -72,6 +73,9 @@
 
    ;; Base Library
    command-line
+
+   ;; Error reporting in programs
+   with-error-handler
 
    ;; Features for cond-expand and the -D command-line flag.
    current-features

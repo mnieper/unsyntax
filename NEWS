@@ -10,15 +10,17 @@ Unsyntax NEWS
 
 ** New features
 
-*** ER- and IR Macros
+*** SRFI 211
 
-  The SRFI 211 implementation now also supports explicitly and
-  implicitly renaming macro transformers.
+  All procedures and syntax of SRFI 211 is now supported.  This
+  includes support for explicit and implicit renaming macros, the
+  syntactic closure macro facility, and old-style Lisp macros.
 
-*** SC Macros
+*** SRFI 213
 
-  The SRFI 211 implementation now also supports MIT/GNU Scheme's
-  syntactic closures.
+  Identifier properties from SRFI 213 are now supported.
+
+** Various bug fixes
 
 * Noteworthy changes in release 0.0.2 (2020-09-24) [alpha]
 

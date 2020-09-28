@@ -1,6 +1,6 @@
 ;; Copyright © Marc Nieper-Wißkirchen (2020).
 
-;; This file is part of Unsyntax.
+;; This file is part of unsyntax.
 
 ;; Permission is hereby granted, free of charge, to any person
 ;; obtaining a copy of this software and associated documentation files
@@ -23,49 +23,32 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(scheme base)
-(scheme case-lambda)
-(scheme char)
-(scheme complex)
-(scheme cxr)
-(scheme eval)
-(scheme file)
-(scheme inexact)
-(scheme lazy)
-(scheme load)
-(scheme process-context)
-(scheme read)
-(scheme repl)
-(scheme r5rs)
-(scheme time)
-(scheme write)
-(srfi 1)
-(srfi 2)
-(srfi 8)
-(srfi 28)
-(srfi 37)
-(srfi 59)
-(srfi 64)
-(srfi 125)
-(srfi 128)
-(srfi 139)
-(srfi 158)
-(srfi 188)
-(srfi 190)
-(srfi 206)
-(srfi 211 define-macro)
-(srfi 211 explicit-renaming)
-(srfi 211 identifier-syntax)
-(srfi 211 implicit-renaming)
-(srfi 211 low-level)
-(srfi 211 syntactic-closures)
-(srfi 211 syntax-case)
-(srfi 211 syntax-parameter)
-(srfi 211 variable-transformer)
-(srfi 211 with-ellipsis)
-(srfi 212)
-(srfi 213)
-(alias (srfi 1) (scheme list))
-(alias (srfi 125) (scheme hash-table))
-(alias (srfi 128) (scheme comparator))
-(auxiliary-syntax (srfi 206 all))
+(import (scheme base)
+        (srfi 64)
+        (srfi 211 syntax-case)
+        (srfi 213))
+
+(define-syntax get-property
+  (lambda (stx)
+    (lambda (lookup)
+      (syntax-case stx ()
+        ((_ id key)
+         #`'#,(datum->syntax #'* (lookup #'id #'key)))))))
+
+(test-begin "SRFI 213")
+
+(define info)
+(define x "x-value")
+(define-property x info "x-info")
+
+(test-equal "x-value" x)
+(test-equal "x-info" (get-property x info))
+
+(test-equal #f (let ((x 0))
+                 (get-property x info)))
+
+(test-equal "x-new-info" (let* ()
+                           (define-property x info "x-new-info")
+                           (get-property x info)))
+
+(test-end)
