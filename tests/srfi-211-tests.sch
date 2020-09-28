@@ -26,6 +26,7 @@
 (import (scheme base)
         (scheme cxr)
         (srfi 64)
+        (srfi 211 define-macro)
         (rename (srfi 211 explicit-renaming)
                 (identifier? er-identifier?))
         (srfi 211 implicit-renaming)
@@ -163,5 +164,14 @@
                                 env (cadr form))))))))
         (list (foo foo)
               (foo bar))))))
+
+(test-group "define-macro"
+  (define-macro (when cond exp . rest)
+    `(if ,cond
+         (begin ,exp . ,rest)))
+
+  (test-equal 1 (let ((x 0))
+                  (when #t (set! x 1))
+                  x)))
 
 (test-end)

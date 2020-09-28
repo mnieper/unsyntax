@@ -372,6 +372,11 @@ Coroutine generators.
 Auxiliary Syntax Keywords.
 
 @cindex SRFI 211
+@cindex @code{(srfi 211 define-macro)}
+@item (srfi 211 define-macro)
+Old-style Lisp macros.
+
+@cindex SRFI 211
 @cindex @code{(srfi 211 explicit-renaming)}
 @item (srfi 211 explicit-renaming)
 Explicitly renaming macros.

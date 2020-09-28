@@ -41,6 +41,7 @@ scheme_sources = %D%/scheme/base.scm %D%/scheme/base.sld		\
 %D%/srfi/111.sld %D%/srfi/125.sld %D%/srfi/128.scm %D%/srfi/128.sld	\
 %D%/srfi/139.sld %D%/srfi/158.scm %D%/srfi/158.sld %D%/srfi/188.sld	\
 %D%/srfi/190.scm %D%/srfi/190.sld %D%/srfi/206.sld			\
+%D%/srfi/211/define-macro.scm %D%/srfi/211/define-macro.sld		\
 %D%/srfi/211/explicit-renaming.scm %D%/srfi/211/explicit-renaming.sld	\
 %D%/srfi/211/identifier-syntax.scm %D%/srfi/211/identifier-syntax.sld	\
 %D%/srfi/211/implicit-renaming.sld %D%/srfi/211/low-level.sld		\
