@@ -46,7 +46,7 @@
    ((identifier? exp)
     (if (member exp free bound-id=?)
         exp
-        (add-mark (make-mark) exp)))
+        (add-mark (make-mark) (datum->syntax env exp))))
    ((symbol? exp)
     (if (member exp free bound-id=?)
         exp

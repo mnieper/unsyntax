@@ -189,8 +189,8 @@
 	   (cond
 	    ((and (identifier? e) (assoc e contexts bound-identifier=?))
 	     => (lambda (pair)
-		  (datum->syntax (cdr pair) (identifier-name (car pair)))))
-	    (else e)))
+		  (datum->syntax (cdr pair) (car pair))))
+	    (else (datum->syntax k e))))
 	  ((syntactic-closure? e)
 	   (let ((i (syntactic-closure-environment e)))
 	     (g (syntactic-closure-form e)
