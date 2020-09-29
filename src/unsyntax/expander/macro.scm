@@ -138,7 +138,7 @@
        (cond
         ((procedure? transformer)
          (apply-transformer (property-aware transformer)
-                            stx (add-mark (anti-mark) stx) #f env))
+                            stx (add-mark (anti-mark) stx) env))
         ((er-macro-transformer? transformer)
          (er-transform transformer stx (add-mark (anti-mark) stx)
                        transformer-stx env))
@@ -151,15 +151,23 @@
          (raise-syntax-error transformer-stx "‘~a’ is not a transformer"
                              (identifier-name transformer-stx))))))))
 
-(define (apply-transformer transform stx e k env)
+(define (apply-transformer transform stx e env)
   (let* ((loc (syntax-object-srcloc stx))
          (wrap (lambda (e) (datum->syntax #f e loc))))
-    (wrap (build-output stx k
+    (wrap (build-output stx
                         (transform e)
                         (make-mark)
                         env))))
 
-(define (build-output stx k e m env)
+(define (apply-transformer/closure transform stx e k env)
+  (let* ((loc (syntax-object-srcloc stx))
+         (wrap (lambda (e) (datum->syntax #f e loc))))
+    (wrap (build-output/closure stx k
+                                (transform e)
+                                (make-mark)
+                                env))))
+
+(define (build-output stx e m env)
   (let f ((e e))
     (cond
      ((pair? e)
@@ -167,10 +175,8 @@
      ((vector? e)
       (vector-map f e))
      ((symbol? e)
-      (if k
-          (f (datum->syntax k e))
-          (raise-syntax-error
-           stx "encountered raw symbol ‘~a’ in output of macro" e)))
+      (raise-syntax-error
+       stx "encountered raw symbol ‘~a’ in output of macro" e))
      ((syntax-object? e)
       (receive (m* s*)
           (let ((m* (syntax-object-marks e))
@@ -189,6 +195,43 @@
       ;; TODO: Check whether this is an allowed datum.
       e))))
 
+(define (build-output/closure stx k e m env)
+  (let ((table (make-hash-table eq-comparator)))
+    (let f ((e e))
+      (cond
+       ((hash-table-ref/default table e #f))
+       ((pair? e)
+        (let ((v (cons #f #f)))
+          (hash-table-set! table e v)
+          (set-car! v (f (car e)))
+          (set-cdr! v (f (cdr e)))
+          v))
+       ((vector? e)
+        (let ((v (make-vector (vector-length e))))
+          (hash-table-set! table e v)
+          (do ((i 0 (+ i 1)))
+              ((= i (vector-length v)) v)
+            (vector-set! v i (f (vector-ref e i))))))
+       ((symbol? e)
+        (f (datum->syntax k e)))
+       ((syntax-object? e)
+        (receive (m* s*)
+            (let ((m* (syntax-object-marks e))
+                  (s* (syntax-object-substs e)))
+              (if (and (pair? m*) (anti-mark? (car m*)))
+                  (values (cdr m*) (cdr s*))
+                  (values (cons m m*)
+                          (if env
+                              (cons* env (shift) s*)
+                              (cons (shift) s*)))))
+          (make-syntax-object (syntax-object-expr e)
+                              m*
+                              s*
+                              (syntax-object-srcloc e))))
+       (else
+        ;; TODO: Check whether this is an allowed datum.
+        e)))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ER macro transformer ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -202,7 +245,7 @@
          (transform
           (er-property-aware (er-macro-transformer-procedure transformer)
                              inject)))
-    (apply-transformer
+    (apply-transformer/closure
      (lambda (stx)
        (transform
         (syntax->sexpr e)
@@ -224,7 +267,7 @@
          (transform
           (ir-property-aware (ir-macro-transformer-procedure transformer)
                              rename)))
-    (apply-transformer
+    (apply-transformer/closure
      (lambda (stx)
        (let ((i (if (identifier? e) e (syntax-car e))))
          (transform (syntax->sexpr e)
@@ -245,15 +288,25 @@
 
 (define (sc-build-output stx e k)
   (let* ((loc (syntax-object-srcloc stx))
-	 (wrap (lambda (e) (datum->syntax #f e loc))))
+	 (wrap (lambda (e) (datum->syntax #f e loc)))
+         (table (make-hash-table eq-comparator)))
     (wrap
      (let g ((e e) (k k) (contexts '()))
        (let f ((e e))
 	 (cond
+          ((hash-table-ref/default table e #f))
 	  ((pair? e)
-	   (cons (f (car e)) (f (cdr e))))
+           (let ((v (cons #f #f)))
+             (hash-table-set! table e v)
+             (set-car! v (f (car e)))
+             (set-cdr! v (f (cdr e)))
+             v))
 	  ((vector? e)
-	   (vector-map f e))
+           (let ((v (make-vector (vector-length e))))
+             (hash-table-set! table e v)
+             (do ((i 0 (+ i 1)))
+                 ((= i (vector-length v)) v)
+               (vector-set! v i (f (vector-ref e i))))))
 	  ((symbol? e)
 	   (cond
 	    ((assoc (datum->syntax #f e) contexts bound-identifier=?)
