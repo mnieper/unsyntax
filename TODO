@@ -2,7 +2,7 @@
 
 ** R6RS compatibility
 
-   Ignore phasing in import-specs and handle library versioning.
+   Handle library versioning.
 
 * Backends
 

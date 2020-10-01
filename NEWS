@@ -23,7 +23,7 @@ Unsyntax NEWS
 *** R6RS compatibility
 
   Unsyntax now supports R6RS library declarations (currently, it does not
-  handle versioning and phasing information).
+  handle versioning).
 
   Library names of the form (srfi nnn) are totally equivalent to those
   of the form (srfi :nnn).
