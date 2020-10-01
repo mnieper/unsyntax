@@ -20,6 +20,17 @@ Unsyntax NEWS
 
   Identifier properties from SRFI 213 are now supported.
 
+*** R6RS compatibility
+
+  Unsyntax now supports R6RS library declarations (currently, it does not
+  handle versioning and phasing information).
+
+  Library names of the form (srfi nnn) are totally equivalent to those
+  of the form (srfi :nnn).
+
+  Recognized extensions for library files are ‘.unsyntax.sls’, ‘.sls’,
+  and ‘.sld’.
+
 ** Various bug fixes
 
 * Noteworthy changes in release 0.0.2 (2020-09-24) [alpha]

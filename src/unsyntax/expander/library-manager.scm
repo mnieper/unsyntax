@@ -43,7 +43,7 @@
 (define pending-libraries (make-parameter '()))
 
 (define (%import-library stx magic?)
-  (let ((name (parse-library-name stx)))
+  (let ((name (library-name-normalize (parse-library-name stx))))
     (cond ((auxiliary-syntax-library? name)
            (or magic?
                (raise-syntax-error stx "invalid import of library ‘~a’" name)))
@@ -276,14 +276,37 @@
 				locs))))
 
 (define (parse-library-definition stx)
-  (let ((form (syntax->list stx)))
-    (unless (and form
-                 (>= (length form) 2)
-                 (identifier? (car form))
-                 (eq? 'define-library (identifier-name (car form))))
-      (raise-syntax-error stx "invalid library declaration"))
-    (values (parse-library-name (cadr form))
-            (cddr form))))
+  (let ((fail (lambda ()
+                (raise-syntax-error stx "invalid library definition")))
+        (form (syntax->list stx)))
+    (case (and form
+               (<= 2 (length form))
+               (identifier? (car form))
+               (identifier-name (car form)))
+      ((define-library)
+       (values (parse-library-name (cadr form))
+               (cddr form)))
+      ((library)
+       (let ((name (parse-library-name (cadr form))))
+         (unless (and-let*
+                     (((<= 4 (length form)))
+                      (export-decl (syntax->list (caddr form)))
+                      ((pair? export-decl))
+                      ((identifier? (car export-decl)))
+                      ((eq? 'export (identifier-name (car export-decl))))
+                      (import-decl (syntax->list (cadddr form)))
+                      ((pair? import-decl))
+                      ((identifier? (car import-decl)))
+                      ((eq? 'import (identifier-name (car import-decl))))))
+           (fail))
+         (values name
+                 `(,(caddr form)
+                   ,(cadddr form)
+                   ,(datum->syntax #f
+                                   `(begin . ,(cddddr form))
+                                   (syntax-object-srcloc stx))))))
+      (else
+       (fail)))))
 
 (define (parse-library-name stx)
   (let ((form (syntax->list stx)))

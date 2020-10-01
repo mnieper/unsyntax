@@ -2,12 +2,7 @@
 
 ** R6RS compatibility
 
-  For interoperability, support the R6RS module language as well.  We use
-  implicit phasing and ignore library versions.
-
-** Add Chez-style identifier properties.
-
-  Documented in section 10.4 of its User's Guide.  May be documented in a SRFI.
+   Ignore phasing in import-specs and handle library versioning.
 
 * Backends
 

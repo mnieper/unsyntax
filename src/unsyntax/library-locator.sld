@@ -25,12 +25,15 @@
 
 (define-library (unsyntax library-locator)
   (export current-library-path
-          locate-library)
+          current-library-extensions
+          locate-library
+          library-name-normalize)
   (import (scheme base)
           (scheme case-lambda)
           (scheme file)
           (scheme lazy)
           (scheme process-context)
+          (srfi 1)
           (srfi 2)
           (srfi 8)
           (srfi 59)
@@ -38,5 +41,6 @@
           (unsyntax error)
           (unsyntax read-syntax)
           (unsyntax source-port)
+          (unsyntax symbol)
           (unsyntax syntax))
   (include "library-locator.scm"))

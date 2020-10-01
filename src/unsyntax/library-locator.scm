@@ -57,6 +57,45 @@
     (() (force *library-path*))
     ((path) (set! *library-path* (make-promise path)))))
 
+(define *library-extensions* '(".unsyntax.sls" ".sls" ".sld"))
+
+(define current-library-extensions
+  (case-lambda
+    (() *library-extensions*)
+    ((lib-exts) (set! *library-extensions* lib-exts))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Library Name Normalization ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (library-name-normalize name)
+  (or (and-let* ((#f)
+                 ((pair? name))
+                 ((eqv? 'srfi (car name)))
+                 ((pair? (cdr name)))
+                 ((symbol? (cadr name)))
+                 ((symbol-prefix? ': (cadr name)))
+                 (number
+                  (string->number (symbol->string (symbol-drop (cadr name) 1))))
+                 ((exact-integer? number))
+                 ((not (negative? number)))
+                 ((cons* 'srfi number (cddr name)))))
+      name))
+
+(define (library-name-unnormalize name)
+  (or (and-let*
+          (((pair? name))
+           ((eqv? 'srfi (car name)))
+           ((pair? (cdr name)))
+           ((exact-integer? (cadr name)))
+           ((not (negative? (cadr name))))
+           ((list name
+                  (cons* 'srfi
+                         (string->symbol
+                          (string-append ":" (number->string (cadr name))))
+                         (cddr name))))))
+      (list name)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; Library Filenames ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
@@ -64,18 +103,24 @@
 (define (library-name-part->string part)
   ((if (number? part) number->string symbol->string) part))
 
-(define (library-name->filename vic name)
+(define (library-name->filename vic name ext)
   (let f ((vic vic) (name name))
     (if (null? (cdr name))
         (in-vicinity vic (string-append (library-name-part->string (car name))
-                                        ".sld"))
+                                        ext))
         (f (sub-vicinity vic (library-name-part->string (car name)))
            (cdr name)))))
 
 (define (library-filenames name)
-  (gmap (lambda (vic)
-          (library-name->filename vic name))
-        (list->generator (current-library-path))))
+  (let ((lib-exts (current-library-extensions)))
+    (gflatten
+     (gmap (lambda (vic)
+             (append-map (lambda (ext)
+                           (map (lambda (name)
+                                  (library-name->filename vic name ext))
+                                (library-name-unnormalize name)))
+                         lib-exts))
+           (list->generator (current-library-path))))))
 
 ;;;;;;;;;;;;;;;;;;;;;
 ;; Library Locator ;;
@@ -102,8 +147,12 @@
       ((datum (syntax->datum stx))
        ((list? datum))
        ((>= (length datum) 2))
-       ((eq? 'define-library (car datum)))
-       ((equal? name (cadr datum))))))
+       ((memq (car datum) '(library define-library)))
+       ((library-references? name (cadr datum))))))
+
+(define (library-references? ref name)
+  ;; TODO: Add library versioning.
+  (list= eqv? ref (library-name-normalize name)))
 
 (define (locate-library name)
   (generator-find (lambda (stx)
