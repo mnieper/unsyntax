@@ -27,9 +27,15 @@
   (export current-library-path
           current-library-extensions
           locate-library
-          library-name-normalize)
+          library-name-normalize
+          ;; Parsers
+          parse-library-definition
+          parse-library-name
+          parse-version-reference
+          parse-library-name-part)
   (import (scheme base)
           (scheme case-lambda)
+          (scheme cxr)
           (scheme file)
           (scheme lazy)
           (scheme process-context)
@@ -39,6 +45,7 @@
           (srfi 59)
           (srfi 158)
           (unsyntax error)
+          (unsyntax identifier)
           (unsyntax read-syntax)
           (unsyntax source-port)
           (unsyntax symbol)

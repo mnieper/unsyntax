@@ -126,7 +126,7 @@
 ;; Library Locator ;;
 ;;;;;;;;;;;;;;;;;;;;;
 
-(define (library-declarations name)
+(define (library-definitions name)
   (make-coroutine-generator
    (lambda (yield)
      (generator-for-each
@@ -138,23 +138,171 @@
 	    (call-with-input-file filename
 	      (lambda (in)
                 (let ((p (make-source-port in #f filename)))
-                  (generator-for-each yield (lambda ()
-                                              (read-syntax p)))))))))
+                  (generator-for-each
+                   yield
+                   (lambda ()
+                     (let ((stx (read-syntax p)))
+                       (if (eof-object? stx)
+                           stx
+                           (receive (name version decls)
+                               (parse-library-definition stx)
+                             (list stx name version decls))))))))))))
       (library-filenames name)))))
 
-(define (library-declaration? name stx)
-  (and-let*
-      ((datum (syntax->datum stx))
-       ((list? datum))
-       ((>= (length datum) 2))
-       ((memq (car datum) '(library define-library)))
-       ((library-references? name (cadr datum))))))
+(define (library-definition? name pred def)
+  (and (list= eqv? name (cadr def))
+       (pred (caddr def))))
 
-(define (library-references? ref name)
-  ;; TODO: Add library versioning.
-  (list= eqv? ref (library-name-normalize name)))
+(define (locate-library name pred)
+  (generator-find (lambda (def)
+                    (library-definition? name pred def))
+                  (library-definitions name)))
 
-(define (locate-library name)
-  (generator-find (lambda (stx)
-                    (library-declaration? name stx))
-                  (library-declarations name)))
+;;;;;;;;;;;;;
+;; Parsers ;;
+;;;;;;;;;;;;;
+
+(define (parse-library-definition stx)
+  (let ((fail (lambda ()
+                (raise-syntax-error stx "invalid library definition")))
+        (form (syntax->list stx)))
+    (case (and form
+               (<= 2 (length form))
+               (identifier? (car form))
+               (identifier-name (car form)))
+      ((define-library)
+       (receive (name version) (parse-library-name (cadr form))
+         (values name version (cddr form))))
+      ((library)
+       (receive (name version) (parse-library-name (cadr form))
+         (unless (and-let*
+                     (((<= 4 (length form)))
+                      (export-decl (syntax->list (caddr form)))
+                      ((pair? export-decl))
+                      ((identifier? (car export-decl)))
+                      ((eq? 'export (identifier-name (car export-decl))))
+                      (import-decl (syntax->list (cadddr form)))
+                      ((pair? import-decl))
+                      ((identifier? (car import-decl)))
+                      ((eq? 'import (identifier-name (car import-decl))))))
+           (fail))
+         (values name version
+                 `(,(caddr form)
+                   ,(cadddr form)
+                   ,(datum->syntax #f
+                                   `(begin . ,(cddddr form))
+                                   (syntax-object-srcloc stx))))))
+      (else
+       (fail)))))
+
+(define (parse-library-name stx)
+  (let ((form (syntax->list stx)))
+    (unless form
+      (raise-syntax-error stx "ill-formed library name"))
+    (let ((parts (reverse form)))
+      (receive (parts version)
+          (if (and (pair? parts)
+                   (syntax-pair? (car parts)))
+              (values (reverse (cdr parts)) (car parts))
+              (values form '()))
+        (values (library-name-normalize
+                 (map-in-order parse-library-name-part parts))
+                (parse-library-version version))))))
+
+(define (parse-library-name-part part)
+  (let ((e (syntax-object-expr part)))
+    (unless (library-name-part? e)
+      (raise-syntax-error part "invalid library name part"))
+    e))
+
+(define (library-name-part? obj)
+  (or (symbol? obj)
+      (and (exact-integer? obj)
+           (not (negative? obj)))))
+
+(define (parse-library-version stx)
+  (let ((form (syntax->list stx)))
+    (unless form
+      (raise-syntax-error stx "ill-formed library version"))
+    (map-in-order parse-sub-version form)))
+
+(define (parse-version-reference stx)
+  (let ((form (syntax->list stx))
+        (fail
+         (lambda ()
+           (raise-syntax-error stx "ill-formed version reference"))))
+    (unless form (fail))
+    (let ((op (and (pair? form)
+                   (identifier? (car form))
+                   (identifier-name (car form)))))
+      (case op
+        ((and)
+         (let ((preds
+                (map-in-order parse-version-reference (cdr form))))
+           (lambda (ver)
+             (every (lambda (pred) (pred ver)) preds))))
+        ((or)
+         (let ((preds
+                (map-in-order parse-version-reference (cdr form))))
+           (lambda (ver)
+             (any (lambda (pred) (pred ver)) preds))))
+        ((not)
+         (unless (= 2 (length form)) (fail))
+         (let ((pred (parse-version-reference (cadr form))))
+           (lambda (ver)
+             (not (pred ver)))))
+        (else
+         (let* ((preds (map-in-order parse-sub-version-reference form))
+                (n (length preds)))
+           (lambda (ver)
+             (and (<= n (length ver))
+                  (every (lambda (pred sub-ver)
+                           (pred sub-ver))
+                         preds ver)))))))))
+
+(define (parse-sub-version-reference stx)
+  (let ((e (syntax-object-expr stx)))
+    (if (and (exact-integer? e) (not (negative? e)))
+        (lambda (sub-ver)
+          (= e sub-ver))
+        (let ((form (syntax->list stx))
+              (fail
+               (lambda ()
+                 (raise-syntax-error stx "ill-formed sub-version reference"))))
+          (unless form (fail))
+          (let ((op (and (pair? form)
+                         (identifier? (car form))
+                         (identifier-name (car form)))))
+            (case op
+              ((>=)
+               (unless (= 2 (length form)) (fail))
+               (let ((e (parse-sub-version (cadr form))))
+                 (lambda (sub-ver)
+                   (>= sub-ver e))))
+              ((<=)
+               (unless (= 2 (length form)) (fail))
+               (let ((e (parse-sub-version (cadr form))))
+                 (lambda (sub-ver)
+                   (<= sub-ver e))))
+              ((and)
+               (let ((preds
+                      (map-in-order parse-sub-version-reference (cdr form))))
+                 (lambda (sub-ver)
+                   (every (lambda (pred) (pred sub-ver)) preds))))
+              ((or)
+               (let ((preds
+                      (map-in-order parse-sub-version-reference (cdr form))))
+                 (lambda (sub-ver)
+                   (any (lambda (pred) (pred sub-ver)) preds))))
+              ((not)
+               (unless (= 2 (length form)) (fail))
+               (let ((pred (parse-sub-version-reference (cadr form))))
+                 (lambda (sub-ver)
+                   (not (pred sub-ver)))))
+              (else (fail))))))))
+
+(define (parse-sub-version stx)
+  (let ((e (syntax-object-expr stx)))
+    (unless (and (exact-integer? e) (not (negative? e)))
+      (raise-syntax-error stx "invalid library sub-version" stx))
+    e))

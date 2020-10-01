@@ -26,6 +26,7 @@
 (define-library (unsyntax library)
   (export make-library library?
           library-name
+          library-version
           library-imports
           library-visit-requirements
 	  library-invoke-requirements

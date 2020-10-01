@@ -23,7 +23,7 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(library (example r6rs-library)
+(library (example r6rs-library (6))
   (export baz)
   (import (scheme base))
   (define baz 'baz))

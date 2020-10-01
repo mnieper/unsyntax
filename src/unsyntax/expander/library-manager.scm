@@ -43,7 +43,7 @@
 (define pending-libraries (make-parameter '()))
 
 (define (%import-library stx magic?)
-  (let ((name (library-name-normalize (parse-library-name stx))))
+  (receive (name pred) (parse-library-reference stx)
     (cond ((auxiliary-syntax-library? name)
            (or magic?
                (raise-syntax-error stx "invalid import of library ‘~a’" name)))
@@ -51,7 +51,7 @@
            (raise-syntax-error stx "circular import of library"))
           (else
            (parameterize ((pending-libraries (cons name (pending-libraries))))
-             (find-library name))))))
+             (find-library stx name pred))))))
 
 (define (library-present? stx)
   (and (%import-library stx #t) #t))
@@ -60,17 +60,22 @@
   (or (%import-library stx #f)
       (raise-syntax-error stx "library ‘~a’ not found" (syntax->datum stx))))
 
-(define (find-library name)
-  (call/cc
-   (lambda (k)
-     (library-table-intern! name
-                            (lambda ()
-                              (or (load-library name)
-                                  (k #f)))))))
+(define (find-library stx name pred)
+  (let ((lib
+         (call/cc
+          (lambda (k)
+            (library-table-intern! name
+                                   (lambda ()
+                                     (or (load-library name pred)
+                                         (k #f))))))))
+    (when lib
+      (unless (pred (library-version lib))
+        (raise-syntax-error stx "library ‘~s’ version mismatch" name)))
+    lib))
 
-(define (load-library name)
-  (and-let* ((stx (locate-library name)))
-    (let ((lib (expand-library stx)))
+(define (load-library name pred)
+  (and-let* ((def (locate-library name pred)))
+    (let ((lib (apply expand-library def)))
       (library-bind-globals! lib)
       lib)))
 
@@ -105,22 +110,21 @@
 ;; Library Installer ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (install-stdlib name exports keywords vars)
+(define (install-stdlib name version exports keywords vars)
   (library-table-intern!
    name
    (lambda ()
-     (make-library name '() '() '() '() '() #f #f
+     (make-library name version '() '() '() '() '() #f #f
                    (alist->exports exports)
                    keywords vars))))
 
-(define (install-library name visreqs invreqs visiter invoker exports keywords
-                         vars)
+(define (install-library name version visreqs invreqs visiter invoker exports
+                         keywords vars)
   (library-table-intern!
    name
    (lambda ()
-     (let ((lib (make-library name '() visreqs invreqs '() '() visiter invoker
-                              (alist->exports exports)
-                              keywords vars)))
+     (let ((lib (make-library name version '() visreqs invreqs '() '() visiter
+                              invoker (alist->exports exports) keywords vars)))
        (library-bind-globals! lib)
        lib))))
 
@@ -226,10 +230,9 @@
               export-specs)
     exports))
 
-(define (expand-library stx)
+(define (expand-library stx name version decls)
   (let*-values
       (((loc) (syntax-object-srcloc stx))
-       ((name decls) (parse-library-definition stx))
        ((export-specs import-sets body) (parse-library-declarations decls))
        ((import-env) (make-environment))
        ((imported-libs) (environment-import* import-env import-sets)))
@@ -241,6 +244,7 @@
                           (let-values (((vars) (get-vars env))
                                        ((kwds) (get-kwds env)))
 			    (make-library name
+                                          version
 					  imported-libs
                                           (visit-requirements)
 					  (invoke-requirements)
@@ -275,54 +279,19 @@
 					 (build-reference srcloc loc))))
 				locs))))
 
-(define (parse-library-definition stx)
-  (let ((fail (lambda ()
-                (raise-syntax-error stx "invalid library definition")))
-        (form (syntax->list stx)))
-    (case (and form
-               (<= 2 (length form))
-               (identifier? (car form))
-               (identifier-name (car form)))
-      ((define-library)
-       (values (parse-library-name (cadr form))
-               (cddr form)))
-      ((library)
-       (let ((name (parse-library-name (cadr form))))
-         (unless (and-let*
-                     (((<= 4 (length form)))
-                      (export-decl (syntax->list (caddr form)))
-                      ((pair? export-decl))
-                      ((identifier? (car export-decl)))
-                      ((eq? 'export (identifier-name (car export-decl))))
-                      (import-decl (syntax->list (cadddr form)))
-                      ((pair? import-decl))
-                      ((identifier? (car import-decl)))
-                      ((eq? 'import (identifier-name (car import-decl))))))
-           (fail))
-         (values name
-                 `(,(caddr form)
-                   ,(cadddr form)
-                   ,(datum->syntax #f
-                                   `(begin . ,(cddddr form))
-                                   (syntax-object-srcloc stx))))))
-      (else
-       (fail)))))
-
-(define (parse-library-name stx)
+(define (parse-library-reference stx)
   (let ((form (syntax->list stx)))
     (unless form
-      (raise-syntax-error stx "ill-formed library name"))
-    (map-in-order (lambda (part)
-                    (let ((e (syntax-object-expr part)))
-                      (unless (library-name-part? e)
-                        (raise-syntax-error stx "invalid library name"))
-                      e))
-                  form)))
-
-(define (library-name-part? obj)
-  (or (symbol? obj)
-      (and (exact-integer? obj)
-           (not (negative? obj)))))
+      (raise-syntax-error stx "ill-formed library reference"))
+    (let ((parts (reverse form)))
+      (receive (parts ver-ref)
+          (if (and (pair? parts)
+                   (syntax-pair? (car parts)))
+              (values (reverse (cdr parts)) (car parts))
+              (values form '()))
+        (values (library-name-normalize
+                 (map-in-order parse-library-name-part parts))
+                (parse-version-reference ver-ref))))))
 
 (define (parse-library-declarations stx*)
   (let f ((stx* stx*))
@@ -398,14 +367,15 @@
          (form (syntax->list import-set)))
     (when (or (not form) (null? form))
       (fail))
-    (cond ((or (null? (cdr form)) (not (syntax-pair? (cadr form))))
-           (let ((lib (import-library import-set)))
-             (unless lib
-               (raise-syntax-error import-set
-                                   "library not found ‘~a’"
-                                   (syntax->datum import-set)))
-             (environment-add-library-exports! env lib import-set)
-             lib))
+    (cond ((library-reference import-set)
+           => (lambda (ref)
+                (let ((lib (import-library ref)))
+                  (unless lib
+                    (raise-syntax-error import-set
+                                        "library not found ‘~a’"
+                                        (syntax->datum import-set)))
+                  (environment-add-library-exports! env lib import-set)
+                  lib)))
           ((not (identifier? (car form)))
            (fail))
           ;; Magic auxiliary syntax library
@@ -433,12 +403,25 @@
                   (fail)))
                lib))))))
 
+(define (library-reference stx)
+  (and-let* ((form (syntax->list stx)))
+    (or (and (or (null? form)
+                 (null? (cdr form))
+                 (not (syntax-pair? (cadr form))))
+             stx)
+        (and (= 2 (length form))
+             (identifier? (car form))
+             (eq? 'library (identifier-name (car form)))
+             (cadr form)))))
+
 (define (parse-import-spec import-spec)
   (let ((form (syntax->list import-spec))
         (fail (lambda ()
                 (raise-syntax-error import-spec "invalid import spec"))))
     (unless form (fail))
     (if (and (pair? form)
+             (pair? (cdr form))
+             (syntax-pair? (cadr form))
              (identifier? (car form))
              (eq? 'for (identifier-name (car form))))
         (begin

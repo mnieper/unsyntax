@@ -71,6 +71,8 @@
         (install-library
          ;; Library name
          ',(library-name lib)
+         ;; Library version
+         ',(library-version lib)
          ;; Visit requirements
          (list ,@(fold (lambda (visreq vars)
                          (let ((var (hash-table-ref libnames visreq)))

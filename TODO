@@ -1,9 +1,5 @@
 * Language
 
-** R6RS compatibility
-
-   Handle library versioning.
-
 * Backends
 
   Support other backends besides Chibi-Scheme.

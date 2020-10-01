@@ -29,7 +29,7 @@
         (srfi 211 syntax-case)
         (srfi 213)
         (example library)
-        (for (example r6rs-library)
+        (for (example r6rs-library ((<= 6)))
           run expand (meta -1)))
 
 (test-begin "Compiler Test")

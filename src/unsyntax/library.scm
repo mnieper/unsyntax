@@ -28,11 +28,13 @@
 ;;;;;;;;;;;;;;;
 
 (define-record-type <library>
-  (make-library name imports visreqs invreqs vis-code inv-code visiter invoker
-                exports keywords vars)
+  (make-library name version imports visreqs invreqs vis-code inv-code visiter
+                invoker exports keywords vars)
   library?
-  ;; The library name as a list of symbols and non-negative numbers.
+  ;; The library name as a list of symbols and non-negative exact integers.
   (name library-name)
+  ;; The library version as a list of non-negative exact integers.
+  (version library-version)
   ;; The list of directly imported libraries.
   (imports library-imports)
   ;; The list of libraries that have to be invoked [sic!] before

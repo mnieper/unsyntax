@@ -160,12 +160,14 @@ Bootstrap Unsyntax and build its standard library.
 (define (build-installer lib var)
   `(define ,var
      (install-stdlib ',(library-name lib)
+                     ',(library-version lib)
                      ',(exports->alist (library-exports lib))
                      ',(library-keywords lib)
                      ',(library-variables lib))))
 
 (define (find-library/die name)
-  (or (find-library name) (raise-error #f "library ‘~a’ not found" name)))
+  (or (find-library #f name (lambda (ver) #t))
+      (raise-error #f "library ‘~a’ not found" name)))
 
 (define (parse-stdlibs decls)
   (let f ((decls decls) (stdlibs '()) (aliases '()) (auxlibs '()))

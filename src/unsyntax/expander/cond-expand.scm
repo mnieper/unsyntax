@@ -54,7 +54,8 @@
         (let ((form (syntax->list req)))
           (unless (and form
                        (<= 1 (length form))
-                       (identifier? (car form))) (fail))
+                       (identifier? (car form)))
+            (fail))
           (case (identifier-name (car form))
             ((and)
              (every values (map f (cdr form))))
