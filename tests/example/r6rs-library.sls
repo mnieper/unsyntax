@@ -25,5 +25,6 @@
 
 (library (example r6rs-library (6))
   (export baz)
-  (import (scheme base))
+  (import (scheme base)
+          (srfi :1))
   (define baz 'baz))

@@ -69,8 +69,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (library-name-normalize name)
-  (or (and-let* ((#f)
-                 ((pair? name))
+  (or (and-let* (((pair? name))
                  ((eqv? 'srfi (car name)))
                  ((pair? (cdr name)))
                  ((symbol? (cadr name)))
