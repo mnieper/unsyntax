@@ -30,6 +30,11 @@ Unsyntax NEWS
   Recognized extensions for library files are ‘.unsyntax.sls’, ‘.sls’,
   and ‘.sld’.
 
+*** R7RS conformance
+
+  Unsyntax now supports multiple import declarations at the beginning
+  of a program.
+
 ** Various bug fixes
 
 * Noteworthy changes in release 0.0.2 (2020-09-24) [alpha]
