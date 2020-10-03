@@ -352,13 +352,20 @@
 ;; Library Imports ;;
 ;;;;;;;;;;;;;;;;;;;;;
 
-(define (environment-import* env import-specs)
-  (let ((libs (make-hash-table eq-comparator)))
-    (for-each (lambda (import-spec)
-                (and-let* ((imported-lib (environment-import env import-spec)))
-                  (hash-table-set! libs imported-lib #t)))
-              import-specs)
-    (hash-table-keys libs)))
+(define environment-import*
+  (case-lambda
+    ((env import-specs)
+     (environment-import* env import-specs '()))
+    ((env import-specs imported-libs)
+     (let ((libs (hash-table-unfold null? (lambda (libs)
+                                            (values (car libs) #t))
+                                    cdr imported-libs eq-comparator)))
+       (for-each (lambda (import-spec)
+                   (and-let* ((imported-lib
+                               (environment-import env import-spec)))
+                     (hash-table-set! libs imported-lib #t)))
+                 import-specs)
+       (hash-table-keys libs)))))
 
 (define (environment-import env import-spec)
   (let* ((import-set (parse-import-spec import-spec))

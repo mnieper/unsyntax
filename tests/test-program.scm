@@ -31,8 +31,13 @@
         (example library)
         (for (example r6rs-library ((<= 6)))
           run expand (meta -1)))
+(import (rename (scheme base) (define import)))
+
+(import quux 'import)
 
 (test-begin "Compiler Test")
+
+(test-equal 'import quux)
 
 (test-assert (memq 'test (features)))
 

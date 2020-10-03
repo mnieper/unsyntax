@@ -442,12 +442,18 @@ In implementing the @rnrs{7} standard, a few choices had to be made:
 
 @itemize
 @item
-The @rnrs{7} grammar for a program is ambigious when there is more than one
-import declaration at the beginning as it is unclear whether any
-subsequent form is already an expression or definition.  Unsyntax
-therefore only allows exactly one import declaration at the beginning of
-a program, which is enough because an import declaration can take more
-than import set.
+The @rnrs{7} grammar for a program is ambigious when there is more
+than one import declaration at the beginning as it is unclear whether
+any subsequent form is already an expression or definition.  The use
+of more than one import declaration is therefore deprecated because
+one import declaration is enough as an import declaration can take
+more than import set.
+
+For legacy code, the ambiguity is resolved as follows: The line
+between the import declarations and the body of a program is drawn
+either before at the first form that is not a pair whose car is the
+identifier @code{import} or whenever the identifier @code{import} is
+imported by the previous import declaration, whatever comes earler.
 
 @item
 Inclusion expressions in Unsyntax search for files relative to the
