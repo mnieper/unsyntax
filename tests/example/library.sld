@@ -26,8 +26,11 @@
 (define-library (example library)
   (export foo bar)
   (import (scheme base)
-          (srfi 213))
+          (srfi 213)
+          (example test))
   (begin
+    test-export
+
     (define foo 42)
     (define-syntax bar
       (syntax-rules ()

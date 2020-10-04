@@ -37,7 +37,8 @@
           library-exports
           library-keywords
           library-variables
-          get-dependencies)
+          get-dependencies
+          get-invoke-dependencies)
   (import (scheme base)
           (srfi 1)
           (srfi 125)

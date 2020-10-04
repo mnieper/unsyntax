@@ -41,12 +41,7 @@
 
 (define (expand-program stx)
   (let*-values (((import-env) (make-environment))
-                ((imported-libs body) (parse-program stx import-env))
-
-                #;
-                ((import-sets) (parse-import-declaration import-decl))
-                #;
-                ((imported-libs) (environment-import* import-env import-sets)))
+                ((imported-libs body) (parse-program stx import-env)))
     (parameterize ((visit-collector (make-library-collector))
 		   (invoke-collector (make-library-collector)))
       (expand-top-level body
@@ -54,7 +49,8 @@
 			(lambda (stxdefs defs env)
 			  (values defs
 				  imported-libs
-				  (invoke-requirements)))))))
+				  (get-invoke-dependencies
+                                   (invoke-requirements))))))))
 
 (define (parse-program stx env)
   (let ((body (syntax->list stx)))

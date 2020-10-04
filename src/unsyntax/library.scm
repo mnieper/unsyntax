@@ -74,3 +74,16 @@
                  (begin
                    (hash-table-set! seen (car libs) #t)
                    (f (cdr libs) (cons (car libs) deps))))))))))
+
+(define (get-invoke-dependencies libs)
+  (reverse!
+   (let ((seen (make-hash-table eq-comparator)))
+     (let f ((libs libs) (deps '()))
+       (if (null? libs)
+           deps
+           (let ((deps (f (library-invoke-requirements (car libs)) deps)))
+             (if (hash-table-ref/default seen (car libs) #f)
+                 (f (cdr libs) deps)
+                 (begin
+                   (hash-table-set! seen (car libs) #t)
+                   (f (cdr libs) (cons (car libs) deps))))))))))

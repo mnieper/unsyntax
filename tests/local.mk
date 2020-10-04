@@ -35,7 +35,8 @@ expand_unsyntax = $(top_builddir)/src/expand-unsyntax
 
 TESTS += $(compiler_tests) $(scheme_tests)
 EXTRA_DIST += $(scheme_tests) %D%/test-program.scm	\
-%D%/example/library.sld %D%/example/r6rs-library.sls
+%D%/example/library.sld %D%/example/test.sls		\
+%D%/example/r6rs-library.sls
 
 TEST_EXTENSIONS = .test .sch
 LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL)	\

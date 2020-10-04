@@ -23,19 +23,7 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define-library (unsyntax program)
-  (export run
-	  expand-program
-	  read-program)
-  (import (scheme base)
-	  (unsyntax backend)
-	  (unsyntax builder)
-	  (unsyntax environment)
-	  (unsyntax error)
-	  (unsyntax expander)
-	  (unsyntax identifier)
-          (unsyntax library)
-	  (unsyntax read-syntax)
-	  (unsyntax source-location)
-	  (unsyntax syntax))
-  (include "program.scm"))
+(library (example test)
+  (export test-export)
+  (import (scheme base))
+  (define test-export 'test-export))
