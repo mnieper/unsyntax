@@ -156,7 +156,7 @@
               (else
                (flush-output-port (current-output-port))
                (write-string (format "~a: internal error~%"
-                                     (prefix)))
+                                     (prefix)) (current-error-port))
                (raise e))))
     thunk))
 
