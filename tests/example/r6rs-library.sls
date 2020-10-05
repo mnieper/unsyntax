@@ -24,7 +24,7 @@
 ;; SOFTWARE.
 
 (library (example r6rs-library (6))
-  (export baz)
+  (export baz (rename (+ plus) (* times)))
   (import (scheme base)
           (srfi :1))
   (define baz 'baz))

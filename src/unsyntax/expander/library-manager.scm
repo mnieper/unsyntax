@@ -552,30 +552,48 @@
 ;;;;;;;;;;;;;;;;;;
 
 (define (export-spec-export! export-spec envs exports)
-  (receive (from to) (parse-export-spec export-spec)
-    (let ((from-name (identifier-name from))
-          (to-name (identifier-name to)))
-      (when (exports-ref exports to-name)
-        (raise-syntax-error to "identifier exported twice ‘~a’" to-name))
-      (let f ((envs envs))
-        (if (null? envs)
-            (raise-syntax-error from
-                                "trying to export unbound identifier ‘~a’"
-                                from-name)
-            (cond
-             ((environment-ref/props (car envs) from)
-              => (lambda (l/p)
-                   (exports-set! exports to-name l/p)))
-             (else
-              (f (cdr envs)))))))))
+  (receive (from* to*) (parse-export-spec export-spec)
+    (for-each
+     (lambda (from to)
+       (let ((from-name (identifier-name from))
+             (to-name (identifier-name to)))
+         (when (exports-ref exports to-name)
+           (raise-syntax-error to "identifier exported twice ‘~a’" to-name))
+         (let f ((envs envs))
+           (if (null? envs)
+               (raise-syntax-error from
+                                   "trying to export unbound identifier ‘~a’"
+                                   from-name)
+               (cond
+                ((environment-ref/props (car envs) from)
+                 => (lambda (l/p)
+                      (exports-set! exports to-name l/p)))
+                (else
+                 (f (cdr envs))))))))
+     from* to*)))
 
 (define (parse-export-spec spec)
   (if (identifier? spec)
-      (values spec spec)
-      (let ((form (syntax->list spec)))
-        (unless (and (= 3 (length form))
-                     (eq? 'rename (syntax->datum (car form)))
-                     (identifier? (cadr form))
-                     (identifier? (caddr form)))
-          (raise-syntax-error spec "invalid export spec"))
-        (values (cadr form) (caddr form)))))
+      (values (list spec) (list spec))
+      (let ((form (syntax->list spec))
+            (fail (lambda ()
+                    (raise-syntax-error spec "invalid export spec"))))
+        (unless (and form
+                     (pair? form)
+                     (eq? 'rename (syntax->datum (car form))))
+          (fail))
+        (if (and (= 3 (length form))
+                 (identifier? (cadr form))
+                 (identifier? (caddr form)))
+            (values (list (cadr form)) (list (caddr form)))
+            (let f ((form (cdr form)) (from* '()) (to* '()))
+              (if (null? form)
+                  (values (reverse! from*) (reverse! to*))
+                  (let ((e (syntax->list (car form))))
+                    (unless (and e (= 2 (length e))
+                                 (identifier? (car e))
+                                 (identifier? (cadr e)))
+                      (fail))
+                    (f (cdr form)
+                       (cons (car e) from*)
+                       (cons (cadr e) to*)))))))))
