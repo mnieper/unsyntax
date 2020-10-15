@@ -46,6 +46,7 @@
 (srfi 37)
 (srfi 59)
 (srfi 64)
+(srfi 111)
 (srfi 125)
 (srfi 128)
 (srfi 139)

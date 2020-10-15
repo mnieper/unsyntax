@@ -10,6 +10,10 @@ Unsyntax NEWS
 
 ** New features
 
+*** SRFI 111
+
+  SRFI 111 has been made available.
+
 *** SRFI 211
 
   All procedures and syntax of SRFI 211 is now supported.  This
