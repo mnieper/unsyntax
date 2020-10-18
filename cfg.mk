@@ -25,7 +25,7 @@
 
 gnulib_dir = $(srcdir)/.gnulib
 
-old_NEWS_hash = 3827dc98333a530c9298b88331f974a7
+old_NEWS_hash = fea8275b65567eb635926e5bf5a123ac
 
 exclude_file_name_regexp--sc_prohibit_doubled_word = \
   ^(.*\.scm)$$
@@ -33,3 +33,5 @@ exclude_file_name_regexp--sc_prohibit_gnu_make_extensions = \
   ^lib/Makefile$$
 exclude_file_name_regexp--sc_unmarked_diagnostics = \
   ^(.*\.(scm|sch))$$
+exclude_file_name_regexp--sc_prohibit_test_minus_ao = \
+  ^(.*\.in)$$
