@@ -358,6 +358,13 @@ Vicinity.
 @item (srfi 64)
 A Scheme API for test suites.
 
+@cindex SRFI 111
+@cindex @code{(srfi 111)}
+@cindex @code{(scheme box)}
+@item (srfi 111)
+@itemx (scheme box)
+Boxes.
+
 @cindex SRFI 125
 @cindex @code{(srfi 125)}
 @cindex @code{(scheme hash-table)}

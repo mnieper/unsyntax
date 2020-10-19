@@ -13,6 +13,13 @@ Unsyntax NEWS
   The whole R6RS record library has been implemented on top of R7RS
   records.
 
+** Libraries
+
+*** SRFI 111
+
+  SRFI 111 can now also be imported under its R7RS (large) name
+  (scheme box).
+
 ** Bug fixes
 
 *** Reader

@@ -71,6 +71,7 @@
 (srfi 212)
 (srfi 213)
 (alias (srfi 1) (scheme list))
+(alias (srfi 111) (scheme box))
 (alias (srfi 125) (scheme hash-table))
 (alias (srfi 128) (scheme comparator))
 (auxiliary-syntax (srfi 206 all))
