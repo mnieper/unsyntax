@@ -220,6 +220,8 @@
  textual-port?
  truncate
  truncate-quotient
+ truncate-remainder
+ truncate/
  u8-ready?
  utf8->string
  values
@@ -418,4 +420,17 @@
  char-comparator char-ci-comparator
  string-comparator string-ci-comparator
  list-comparator vector-comparator
- eq-comparator eqv-comparator equal-comparator)
+ eq-comparator eqv-comparator equal-comparator
+
+ ;; SRFI 27
+ random-integer
+ random-real
+ default-random-source
+ make-random-source
+ random-source?
+ random-source-state-ref
+ random-source-state-set!
+ random-source-randomize!
+ random-source-pseudo-randomize!
+ random-source-make-integers
+ random-source-make-reals)

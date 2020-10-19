@@ -234,6 +234,8 @@
 	  textual-port?
 	  truncate
 	  truncate-quotient
+          truncate-remainder
+          truncate/
 	  u8-ready?
 	  unless
 	  unquote

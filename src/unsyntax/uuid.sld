@@ -23,7 +23,12 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define-record-type <box>
-  (box val)
-  box?
-  (val unbox set-box!))
+(define-library (unsyntax uuid)
+  (export random-uuid
+          random-source-make-uuids
+          uuid->string)
+  (import (scheme base)
+          (srfi 1)
+          (srfi 27)
+          (srfi 28))
+  (include "uuid.scm"))

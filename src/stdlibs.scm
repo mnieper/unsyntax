@@ -23,6 +23,9 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
+(rnrs records syntactic)
+(rnrs records procedural)
+(rnrs records inspection)
 (scheme base)
 (scheme case-lambda)
 (scheme char)
@@ -42,6 +45,7 @@
 (srfi 1)
 (srfi 2)
 (srfi 8)
+(srfi 27)
 (srfi 28)
 (srfi 37)
 (srfi 59)

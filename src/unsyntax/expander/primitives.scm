@@ -1,6 +1,6 @@
 ;; Copyright © Marc Nieper-Wißkirchen (2020).
 
-;; This file is part of unsyntax.
+;; This file is part of Unsyntax.
 
 ;; Permission is hereby granted, free of charge, to any person
 ;; obtaining a copy of this software and associated documentation files
@@ -229,6 +229,8 @@
    textual-port?
    truncate
    truncate-quotient
+   truncate-remainder
+   truncate/
    u8-ready?
    utf8->string
    values
@@ -389,6 +391,19 @@
    string-comparator string-ci-comparator
    list-comparator vector-comparator
    eq-comparator eqv-comparator equal-comparator
+
+   ;; SRFI 27
+   random-integer
+   random-real
+   default-random-source
+   make-random-source
+   random-source?
+   random-source-state-ref
+   random-source-state-set!
+   random-source-randomize!
+   random-source-pseudo-randomize!
+   random-source-make-integers
+   random-source-make-reals
 
    ;; Gensyms
    gensym

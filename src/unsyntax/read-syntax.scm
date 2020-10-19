@@ -164,7 +164,8 @@
       (define (code-point->character val)
 	(unless (or (<= 0 val #xD7FF)
 		    (<= #xE000 val #x10FFFF))
-	  (reader-error "invalid unicode code point ‘#x~s’" (number->string val 16) ))
+	  (reader-error "invalid unicode code point ‘#x~s’"
+                        (number->string val 16)))
 	(integer->char val))
       (define (read-abbreviation name)
 	(define id (make-syntax name))
@@ -213,6 +214,34 @@
 			    (<= 0 val 255))
 		 (reader-error "invalid byte"))
 	       (f (cons val byte*)))))))
+      (define (read-string q)
+        (define symbol? (char=? q #\|))
+        (let f ((ch* '()))
+          (case (read-char)
+            ((#\\)
+             (case (read-char)
+               ((#\")
+                (f (cons #\" ch*)))
+               ((#\\)
+                (f (cons #\\ ch*)))
+               ((#\n)
+                (f (cons #\newline ch*)))
+               ;; TODO: More escapes.
+               (else
+                => (lambda (ch)
+                     (reader-error "invalid escape `\\~a' in string" ch)))))
+            (else
+             => (lambda (ch)
+                  (cond
+                   ((eof-object? ch)
+                    (reader-error (if symbol? "incomplete symbol"
+                                      "incomplete string")))
+                   ((char=? ch q)
+                    (make-syntax ((if symbol? string->symbol
+                                      values)
+                                  (list->string (reverse! ch*)))))
+                   (else
+                    (f (cons ch ch*)))))))))
       (let ((ch (read-char)))
 	(case ch
 	  ((#\()
@@ -255,26 +284,10 @@
 	      (read-abbreviation 'unquote))))
 	  ;; Strings
 	  ((#\")
-	   (let f ((ch* '()))
-	     (case (read-char)
-	       ((#\") (make-syntax (list->string (reverse! ch*))))
-	       ((#\\)
-		(case (read-char)
-		  ((#\")
-		   (f (cons #\" ch*)))
-		  ((#\\)
-		   (f (cons #\\ ch*)))
-		  ((#\n)
-		   (f (cons #\newline ch*)))
-		  ;; TODO: More escapes.
-		  (else
-		   => (lambda (ch)
-			(reader-error "invalid escape `\\~a' in string" ch)))))
-	       (else
-		=> (lambda (ch)
-		     (if (eof-object? ch)
-			 (reader-error "incomplete string")
-			 (f (cons ch ch*))))))))
+           (read-string #\"))
+          ;; Symbols
+          ((#\|)
+           (read-string #\|))
 	  ;; Sharp syntax
 	  ((#\#)
 	   (case (read-char)

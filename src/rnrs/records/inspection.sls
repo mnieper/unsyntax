@@ -1,6 +1,6 @@
 ;; Copyright © Marc Nieper-Wißkirchen (2020).
 
-;; This file is part of Unsyntax.
+;; This file is part of unsyntax.
 
 ;; Permission is hereby granted, free of charge, to any person
 ;; obtaining a copy of this software and associated documentation files
@@ -23,7 +23,15 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define-record-type <box>
-  (box val)
-  box?
-  (val unbox set-box!))
+(library (rnrs records inspection (6))
+  (export record?
+          record-rtd
+          record-type-name
+          record-type-parent
+          record-type-uid
+          record-type-generative?
+          record-type-sealed?
+          record-type-opaque?
+          record-type-field-names
+          record-type-mutable?)
+  (import (rnrs records)))

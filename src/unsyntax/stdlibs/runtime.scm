@@ -42,6 +42,7 @@
         (rename (scheme process-context)
 		(command-line host-command-line))
         (scheme write)
+        (srfi 27)
         (srfi 125)
         (srfi 128)
         (unsyntax define-record-type)

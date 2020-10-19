@@ -23,7 +23,16 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define-record-type <box>
-  (box val)
-  box?
-  (val unbox set-box!))
+(define-library (srfi 27)
+  (export random-integer
+          random-real
+          default-random-source
+          make-random-source
+          random-source?
+          random-source-state-ref
+          random-source-state-set!
+          random-source-randomize!
+          random-source-pseudo-randomize!
+          random-source-make-integers
+          random-source-make-reals)
+  (import (unsyntax $bootstrap)))

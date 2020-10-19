@@ -23,7 +23,34 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define-record-type <box>
-  (box val)
-  box?
-  (val unbox set-box!))
+(define (random-source-make-uuids s)
+  (define random-integer (random-source-make-integers s))
+  (lambda ()
+    (define uuid (make-bytevector 16))
+    (do ((i 0 (+ i 1)))
+        ((= i 16) uuid)
+      (bytevector-u8-set! uuid
+                          i
+                          (case i
+                            ((6)
+                             (+ #x40 (random-integer #x10)))
+                            ((8)
+                             (+ #x80 (random-integer #x40)))
+                            (else
+                             (random-integer #x100)))))))
+
+(define random-uuid
+  (random-source-make-uuids default-random-source))
+
+(define (uuid->string uuid)
+  (apply format "~a~a~a~a-~a~a-~a~a-~a~a-~a~a~a~a~a~a"
+         (unfold (lambda (i) (= i 16))
+                 (lambda (i)
+                   (define u8 (bytevector-u8-ref uuid i))
+                   (define-values (high low) (truncate/ u8 16))
+                   (string (hex-digit high) (hex-digit low)))
+                 (lambda (i) (+ i 1))
+                 0)))
+
+(define (hex-digit n)
+  (integer->char (+ n (if (<= 0 n 9) #x30 #x57))))

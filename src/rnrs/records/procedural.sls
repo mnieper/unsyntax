@@ -1,6 +1,6 @@
 ;; Copyright © Marc Nieper-Wißkirchen (2020).
 
-;; This file is part of Unsyntax.
+;; This file is part of unsyntax.
 
 ;; Permission is hereby granted, free of charge, to any person
 ;; obtaining a copy of this software and associated documentation files
@@ -23,7 +23,13 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define-record-type <box>
-  (box val)
-  box?
-  (val unbox set-box!))
+(library (rnrs records procedural (6))
+  (export make-record-type-descriptor
+          record-type-descriptor?
+          make-record-constructor-descriptor
+          record-constructor-descriptor?
+          record-constructor
+          record-predicate
+          record-accessor
+          record-mutator)
+  (import (rnrs records)))

@@ -2,6 +2,22 @@ Unsyntax NEWS
 
 * Noteworthy changes in release ?.? (????-??-??) [?]
 
+** New features
+
+*** SRFI 27
+
+  SRFI 27 is now supported.
+
+*** Records
+
+  The whole R6RS record library has been implemented on top of R7RS
+  records.
+
+** Bug fixes
+
+*** Reader
+
+  The reader now reads symbols enclosed in ‘|’.
 
 * Noteworthy changes in release 0.0.3 (2020-10-18) [alpha]
 

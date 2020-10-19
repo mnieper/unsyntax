@@ -25,9 +25,11 @@
 
 scheme_tests = %D%/r7rs-tests.sch %D%/cond-expand-tests.sch		\
 %D%/phasing-tests.sch %D%/syntax-case-tests.sch %D%/repl-tests.sch	\
-%D%/srfi-1-tests.sch %D%/srfi-2-tests.sch %D%/srfi-46-tests.sch		\
-%D%/srfi-188-tests.sch %D%/srfi-190-tests.sch %D%/srfi-206-tests.sch	\
-%D%/srfi-211-tests.sch %D%/srfi-212-tests.sch %D%/srfi-213-tests.sch
+%D%/rnrs-records-procedural-tests.sch					\
+%D%/rnrs-records-syntactic-tests.sch %D%/srfi-1-tests.sch		\
+%D%/srfi-2-tests.sch %D%/srfi-46-tests.sch %D%/srfi-188-tests.sch	\
+%D%/srfi-190-tests.sch %D%/srfi-206-tests.sch %D%/srfi-211-tests.sch	\
+%D%/srfi-212-tests.sch %D%/srfi-213-tests.sch
 compiler_tests = %D%/test-program.test
 
 unsyntax_scheme = $(top_builddir)/src/unsyntax-scheme

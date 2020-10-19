@@ -27,15 +27,17 @@
 # Standard Libraries #
 ######################
 
-scheme_sources = %D%/scheme/base.scm %D%/scheme/base.sld		\
-%D%/scheme/case-lambda.sld %D%/scheme/char.sld %D%/scheme/complex.sld	\
-%D%/scheme/cxr.sld %D%/scheme/eval.sld %D%/scheme/file.sld		\
-%D%/scheme/inexact.sld %D%/scheme/lazy.sld %D%/scheme/load.scm		\
-%D%/scheme/load.sld %D%/scheme/process-context.sld			\
-%D%/scheme/r5rs.scm %D%/scheme/r5rs.sld %D%/scheme/read.sld		\
-%D%/scheme/repl.scm %D%/scheme/repl.sld %D%/scheme/time.sld		\
-%D%/scheme/write.sld %D%/srfi/1.scm %D%/srfi/1.sld %D%/srfi/2.scm	\
-%D%/srfi/2.sld %D%/srfi/8.scm %D%/srfi/8.sld %D%/srfi/28.scm		\
+scheme_sources = %D%/rnrs/records.sls %D%/rnrs/records/inspection.sls	\
+%D%/rnrs/records/procedural.sls %D%/rnrs/records/syntactic.sls		\
+%D%/scheme/base.scm %D%/scheme/base.sld %D%/scheme/case-lambda.sld	\
+%D%/scheme/char.sld %D%/scheme/complex.sld %D%/scheme/cxr.sld		\
+%D%/scheme/eval.sld %D%/scheme/file.sld %D%/scheme/inexact.sld		\
+%D%/scheme/lazy.sld %D%/scheme/load.scm %D%/scheme/load.sld		\
+%D%/scheme/process-context.sld %D%/scheme/r5rs.scm			\
+%D%/scheme/r5rs.sld %D%/scheme/read.sld %D%/scheme/repl.scm		\
+%D%/scheme/repl.sld %D%/scheme/time.sld %D%/scheme/write.sld		\
+%D%/srfi/1.scm %D%/srfi/1.sld %D%/srfi/2.scm %D%/srfi/2.sld		\
+%D%/srfi/8.scm %D%/srfi/8.sld %D%/srfi/27.sld %D%/srfi/28.scm		\
 %D%/srfi/28.sld %D%/srfi/37.scm %D%/srfi/37.sld %D%/srfi/59.scm		\
 %D%/srfi/59.sld %D%/srfi/64.scm %D%/srfi/64.sld %D%/srfi/111.scm	\
 %D%/srfi/111.sld %D%/srfi/125.sld %D%/srfi/128.scm %D%/srfi/128.sld	\
@@ -93,8 +95,9 @@ scheme_sources = %D%/scheme/base.scm %D%/scheme/base.sld		\
 %D%/unsyntax/syntax-object/chibi-declarations.scm			\
 %D%/unsyntax/transformer.scm %D%/unsyntax/transformer.sld		\
 %D%/unsyntax/unicode.scm %D%/unsyntax/unicode.sld			\
-%D%/unsyntax/variable.scm %D%/unsyntax/variable.sld			\
-%D%/unsyntax/version-etc.scm %D%/unsyntax/version-etc.sld
+%D%/unsyntax/uuid.scm %D%/unsyntax/uuid.sld %D%/unsyntax/variable.scm	\
+%D%/unsyntax/variable.sld %D%/unsyntax/version-etc.scm			\
+%D%/unsyntax/version-etc.sld
 
 unsyntaxpkgdatadir = $(pkgdatadir)/unsyntax
 dist_unsyntaxpkgdata_DATA = %D%/unsyntax/define-record-type.scm	\

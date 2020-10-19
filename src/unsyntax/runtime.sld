@@ -40,6 +40,7 @@
 	  (scheme time)
 	  (scheme write)
           (srfi 1)
+          (srfi 27)
           (srfi 111)
           (srfi 125)
           (srfi 128)
