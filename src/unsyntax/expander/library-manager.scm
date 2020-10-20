@@ -84,7 +84,8 @@
     ((lbl loc)
      (bind-global-variable! lbl loc #f))
     ((lbl loc lib)
-     (bind-global! lbl (make-binding 'global-variable (list lib loc))))))
+     (bind-global! lbl
+                   (make-binding 'global-variable (list lib loc))))))
 
 (define bind-global-keyword!
   (case-lambda
@@ -92,11 +93,16 @@
      (bind-global-keyword! lbl type #f))
     ((lbl type lib)
      (bind-global! lbl
-                   (case type
-                     ((property)
-                      (make-binding 'global-property (list lib #f)))
-                     ((macro macro-parameter)
-                      (make-binding 'global-keyword (list lib type #f))))))))
+                   (if (pair? type)
+                       (case (car type)
+                         ((meta-variable)
+                          (make-meta-binding 'meta-variable (cdr type))))
+                       (case type
+                         ((property)
+                          (make-binding 'global-property (list lib #f)))
+                         ((macro macro-parameter)
+                          (make-binding 'global-keyword
+                                        (list lib type #f)))))))))
 
 (define (library-bind-globals! lib)
   (for-each (lambda (entry)
@@ -203,20 +209,24 @@
    (lambda (id l/p kwds)
      (let ((lbl (label/props-label l/p)))
        (if (auxiliary-syntax-label? lbl) kwds
-	   (let ((b (lookup lbl)))
-	     (case (binding-type b)
-	       ((macro macro-parameter)
-		=> (lambda (type)
-		     (append (get-props l/p)
-			     (alist-cons lbl type kwds))))
-	       ((lexical)
-		(append (get-props l/p) kwds))
-	       (else kwds))))))
+           (let ((b (current-store-ref lbl)))
+             (case (binding-type b)
+               ((macro macro-parameter property)
+                => (lambda (type)
+                     (append (get-props l/p)
+                             (alist-cons lbl type kwds))))
+               ((meta-variable)
+                (append (get-props l/p)
+                        (alist-cons lbl (cons 'meta-variable (binding-value b))
+                                    kwds)))
+               ((lexical)
+                (append (get-props l/p) kwds))
+               (else kwds))))))
    '() env))
 
 (define (get-vars env)
   (environment-fold (lambda (id lbl vars)
-                      (let ((b (lookup lbl)))
+                      (let ((b (current-store-ref lbl)))
                         (case (binding-type b)
                           ((lexical)
                            (alist-cons lbl (binding-value b) vars))

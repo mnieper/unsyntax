@@ -24,33 +24,41 @@
 ;; SOFTWARE.
 
 (define-library (unsyntax store)
-  (export make-binding
+  (export make-runtime-binding
+          make-binding
+          make-meta-binding
           binding?
           binding-type
           binding-value
           library-table-intern!
           current-libraries
           with-frame
-          with-meta-frame
           with-bindings
+          current-store-ref
           lookup
           bind!
-          bind-meta!
           bind-core!
-	  with-meta-store
           bind-global!
           current-globals
           ref-global
           set-global!
           set-keyword!
           set-property!
-          current-locations)
+          arguments->vector
+          current-locations
+          current-meta-level
+          in-meta)
   (import (scheme base)
 	  (scheme case-lambda)
+          (srfi 1)
+          (srfi 2)
+          (srfi 8)
+          (srfi 111)
           (srfi 125)
           (srfi 128)
           (unsyntax auxiliary-syntax)
           (unsyntax environment)
+          (unsyntax error)
           (unsyntax library)
           (unsyntax variable))
   (include "store/store.scm"

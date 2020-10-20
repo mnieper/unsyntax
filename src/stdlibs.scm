@@ -70,6 +70,7 @@
 (srfi 211 with-ellipsis)
 (srfi 212)
 (srfi 213)
+(unsyntax)
 (alias (srfi 1) (scheme list))
 (alias (srfi 111) (scheme box))
 (alias (srfi 125) (scheme hash-table))

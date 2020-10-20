@@ -63,7 +63,7 @@
 (define (ellipsis? id)
   ((current-ellipsis?) id))
 
-(define (make-syntax-binding pvar)
+(define (make-pvar-binding pvar)
   (make-binding 'syntax pvar))
 
 (define-core-form! 'syntax-case
@@ -99,7 +99,7 @@
     (matcher (lambda ()
                (with-frame lbls
                    (map (lambda (pvar)
-                          (make-syntax-binding (cdr pvar)))
+                          (make-pvar-binding (cdr pvar)))
                         pvars)
                  (let ((expanded-output (expand (add-substs env output))))
                    (if fender

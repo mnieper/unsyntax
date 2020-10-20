@@ -23,51 +23,10 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define-library (unsyntax builder)
-  (export
-   ;; Core builders (re-exported)
-   build-assignment
-   build-begin
-   build-body
-   build-call
-   build-case-lambda
-   build-conditional
-   build-define-values
-   build-delay
-   build-delay-force
-   build-formals
-   build-let-values
-   build-letrec
-   build-literal
-   build-parameterize
-   build-primitive
-   build-reference
+(library (unsyntax)
+  (export meta)
+  (import (only (unsyntax $bootstrap) meta)))
 
-   ;; Derived builders
-   build-command
-   build-define
-   build-global-assignment
-   build-global-reference
-   build-lambda
-   build-let
-   build-letrec*
-   build-meta-assignment
-   build-meta-reference
-   build-named-let
-   build-primitive-call
-   build-thunk
-
-   ;; Builder macro
-   build)
-  (import (scheme base)
-          (scheme case-lambda)
-          (srfi 1)
-          (srfi 8)
-          (srfi 111)
-          (unsyntax backend)
-          (unsyntax environment)
-          (unsyntax error)
-          (unsyntax store)
-          (unsyntax syntax)
-          (unsyntax variable))
-  (include "builder.scm"))
+;; Local Variables:
+;; mode: scheme
+;; End:

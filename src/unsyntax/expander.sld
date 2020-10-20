@@ -52,6 +52,9 @@
    invoke-requirements
    visit-library!
    invoke-library!
+   ;; meta forms
+   meta-unbox
+   meta-set-box!
    ;; expansion
    expand-top-level
    ;; core-bindings

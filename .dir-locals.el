@@ -1,6 +1,6 @@
 ;; Copyright © Marc Nieper-Wißkirchen (2020).
 
-;; This file is part of unsyntax.
+;; This file is part of Unsyntax.
 
 ;; Permission is hereby granted, free of charge, to any person
 ;; obtaining a copy of this software and associated documentation files
@@ -23,51 +23,14 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define-library (unsyntax builder)
-  (export
-   ;; Core builders (re-exported)
-   build-assignment
-   build-begin
-   build-body
-   build-call
-   build-case-lambda
-   build-conditional
-   build-define-values
-   build-delay
-   build-delay-force
-   build-formals
-   build-let-values
-   build-letrec
-   build-literal
-   build-parameterize
-   build-primitive
-   build-reference
-
-   ;; Derived builders
-   build-command
-   build-define
-   build-global-assignment
-   build-global-reference
-   build-lambda
-   build-let
-   build-letrec*
-   build-meta-assignment
-   build-meta-reference
-   build-named-let
-   build-primitive-call
-   build-thunk
-
-   ;; Builder macro
-   build)
-  (import (scheme base)
-          (scheme case-lambda)
-          (srfi 1)
-          (srfi 8)
-          (srfi 111)
-          (unsyntax backend)
-          (unsyntax environment)
-          (unsyntax error)
-          (unsyntax store)
-          (unsyntax syntax)
-          (unsyntax variable))
-  (include "builder.scm"))
+((scheme-mode
+  . ((eval
+      . (progn
+          (put 'meta 'scheme-indent-function 'defun)
+          (put 'test-group 'scheme-indent-function 1)
+          (put 'in-meta 'scheme-indent-function 0)
+	  (font-lock-add-keywords
+	   nil
+	   '(("\\<define\\>" . font-lock-keyword-face)
+             ("\\<define-values\\>" . font-lock-keyword-face)
+             ("\\<meta\\>" . font-lock-keyword-face))))))))

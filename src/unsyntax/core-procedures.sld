@@ -71,6 +71,11 @@
    unbox
    set-box!
 
+   ;; Meta definitions
+   arguments->vector
+   meta-unbox
+   meta-set-box!
+
    ;; Base Library
    command-line
 

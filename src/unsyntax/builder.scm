@@ -55,6 +55,17 @@
                    refs inits)
               expr))
 
+(define (build-meta-assignment loc id val expr)
+  (build-primitive-call loc 'meta-set-box! (list (build-literal loc id)
+						 (build-literal loc (car val))
+                                                 (build-literal loc (cadr val))
+                                                 expr)))
+
+(define (build-meta-reference loc id val)
+  (build-primitive-call loc 'meta-unbox (list (build-literal loc id)
+					      (build-literal loc (car val))
+                                              (build-literal loc (cadr val)))))
+
 (define (build-named-let loc name refs inits expr)
   (build-body loc
 	      (list (build-define loc
@@ -81,6 +92,8 @@
                      >=
                      -
                      append
+                     arguments->vector
+                     box
                      car
                      case-lambda
                      cdr
@@ -159,8 +172,13 @@
      (build-primitive-call loc '>= (list (%build loc x*) :::)))
     ((_ loc (- x* :::))
      (build-primitive-call loc '- (list (%build loc x*) :::)))
+    ((_ loc (arguments->vector x y z))
+     (build-primitive-call loc 'arguments->vector
+                           (list (%build loc x) (%build loc y) (%build loc z))))
     ((_ loc (append x y))
      (build-primitive-call loc 'append (list (%build loc x) (%build loc y))))
+    ((_ loc (box x))
+     (build-primitive-call loc 'box (list (%build loc x))))
     ((_ loc (car x))
      (build-primitive-call loc 'car (list (%build loc x))))
     ((_ loc (cdr x))

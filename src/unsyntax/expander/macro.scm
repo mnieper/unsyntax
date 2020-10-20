@@ -27,7 +27,7 @@
   (receive (expr inv-reqs)
       (parameterize ((invoke-collector (make-library-collector))
                      (visit-collector (make-library-collector)))
-        (let ((expr (with-meta-store (expand stx))))
+        (let ((expr (in-meta (expand stx))))
           (values expr (invoke-requirements))))
     (for-each (lambda (lib)
                 (invoke-library! lib)
@@ -96,6 +96,43 @@
                  (property-lookup (close-syntax id id-env)
                                   (close-syntax key key-env))))
           res))))
+
+;;;;;;;;;;;;;;;;;;;;;;
+;; Meta Definitions ;;
+;;;;;;;;;;;;;;;;;;;;;;
+
+(define (expand-meta-definition id stx n)
+  (list (build (syntax-object-srcloc stx)
+               (arguments->vector ',id ',n (lambda () ,(expand-meta stx))))
+        id))
+
+(define (eval-meta stx)
+  (execute (expand-meta stx)))
+
+(define (make-meta-variable-binding plbl i)
+  (make-meta-binding 'meta-variable (list plbl i)))
+
+(define (meta-lookup id lbl)
+  (define b (lookup lbl))
+  (unless b
+    (raise-syntax-error id "circular reference of meta variabie ‘~a’"
+			(identifier-name id)))
+  (let ((val (binding-value b)))
+    (case (binding-type b)
+      ((property)
+       (car val))
+      ((global-property)
+       (and-let* ((lib (car val)))
+         (visit-library! lib))
+       (caadr val)))))
+
+(define (meta-unbox id plbl i)
+  (define vals (meta-lookup id plbl))
+  (vector-ref vals i))
+
+(define (meta-set-box! id plbl i obj)
+  (define vals (meta-lookup id plbl))
+  (vector-set! vals i obj))
 
 ;;;;;;;;;;;;;;;;;;
 ;; Transformers ;;

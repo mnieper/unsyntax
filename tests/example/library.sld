@@ -24,9 +24,11 @@
 ;; SOFTWARE.
 
 (define-library (example library)
-  (export foo bar)
+  (export foo bar meta-foo)
   (import (scheme base)
+          (srfi :211 syntax-case)
           (srfi 213)
+          (unsyntax)
           (example test))
   (begin
     test-export
@@ -35,4 +37,6 @@
     (define-syntax bar
       (syntax-rules ()
         ((bar) 'bar)))
-    (define-property foo * "the-answer")))
+    (define-property foo * "the-answer")
+
+    (meta define meta-foo #'42)))

@@ -240,7 +240,7 @@
         (intern-env!
          (lambda (env)
            (if (shift? env)
-               env
+               `(quote ,(shift))
                (and-let*
                    ((res
                      (hash-table-intern!

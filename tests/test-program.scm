@@ -62,5 +62,9 @@
         (environment '(scheme base) '(example library)
                      '(srfi 211 syntax-case))))
 
+(test-equal 42
+  (let-syntax ((foo (lambda (stx)
+                      meta-foo)))
+    foo))
 
 (test-end)

@@ -1,6 +1,6 @@
 # Copyright © Marc Nieper-Wißkirchen (2020).
 
-# This file is part of unsyntax.
+# This file is part of Unsyntax.
 
 # Permission is hereby granted, free of charge, to any person
 # obtaining a copy of this software and associated documentation files
@@ -23,8 +23,9 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-scheme_tests = %D%/r7rs-tests.sch %D%/cond-expand-tests.sch		\
-%D%/phasing-tests.sch %D%/syntax-case-tests.sch %D%/repl-tests.sch	\
+scheme_tests = %D%/r7rs-tests.sch %D%/unsyntax-tests.sch		\
+%D%/cond-expand-tests.sch %D%/phasing-tests.sch				\
+%D%/syntax-case-tests.sch %D%/repl-tests.sch				\
 %D%/rnrs-records-procedural-tests.sch					\
 %D%/rnrs-records-syntactic-tests.sch %D%/srfi-1-tests.sch		\
 %D%/srfi-2-tests.sch %D%/srfi-46-tests.sch %D%/srfi-188-tests.sch	\

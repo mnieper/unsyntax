@@ -13,6 +13,13 @@ Unsyntax NEWS
   The whole R6RS record library has been implemented on top of R7RS
   records.
 
+*** Meta Definitions
+
+  The new library (unsyntax) exports the ‘meta’ keyword that turns
+  forms into meta definitions.  A meta definition is evaluated at
+  expand-time and available to the right-hand sides of syntax and
+  property definitions.
+
 ** Libraries
 
 *** SRFI 111

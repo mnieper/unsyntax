@@ -357,6 +357,11 @@
  set-keyword!
  set-property!
 
+ ;; Meta definitions
+ arguments->vector
+ meta-unbox
+ meta-set-box!
+
  ;; SRFI 111
  set-box!
  unbox
@@ -433,4 +438,5 @@
  random-source-randomize!
  random-source-pseudo-randomize!
  random-source-make-integers
- random-source-make-reals)
+ random-source-make-reals
+ )

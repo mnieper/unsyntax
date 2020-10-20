@@ -250,6 +250,8 @@
         ((primitive global-variable)
          (raise-syntax-error stx "trying to modify imported identifier ‘~a’"
                              (identifier-name stx)))
+        ((meta-variable)
+         (build-meta-assignment srcloc id val (expand expr)))
         ((mutable-variable)
          (build-global-assignment
           srcloc (build-reference (syntax-object-srcloc id) val) (expand expr)))

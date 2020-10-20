@@ -469,6 +469,48 @@ Identifier properties.
 @cindex SRFI 138
 The @command{compile-unsyntax} command implements SRFI 138.
 
+@section Extensions
+
+@cindex @code{(unsyntax)}
+The @code{(unsyntax)} library exports a number of useful bindings,
+including not yet standardized variables and keywords.
+
+@defspec meta . form
+The @code{meta} keyword is a prefix that turns any form in a @dfn{meta
+definition}, which can be used where other definitions are allowed.
+The @var{form} is evaluated at expand-time and defined values become
+available at expand-time in the meta definition itself and in
+subsequent forms.
+@end defspec
+
+Meta definitions are useful for defining expand-time helper procedures
+and other variables for use by transformer expressions in the same
+module as in the following example:
+
+@lisp
+(meta define (construct-name key . args)
+  (datum->syntax key
+                 (string->symbol
+                  (apply string-append
+                         (map (lambda (x)
+                                (cond ((string? x) x)
+                                      ((identifier? x)
+                                       (symbol->string (syntax->datum x)))))
+                              args)))))
+
+(define-syntax define-zoo
+  (lambda (stx)
+    (syntax-case stx ()
+      ((k prefix)
+       #`(begin
+           (define #,(construct-name #'k #'prefix "-lion") 'lion)
+           (define #,(construct-name #'k #'prefix "-tiger") 'tiger))))))
+
+(define-zoo local)
+local-lion @result{} lion
+local-tiger @result{} tiger
+@end lisp
+
 @section Implementation notes
 
 In implementing the @rnrs{7} standard, a few choices had to be made:

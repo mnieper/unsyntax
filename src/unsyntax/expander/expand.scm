@@ -34,7 +34,10 @@
 (define (genref id)
   (and id (build-reference (syntax-object-srcloc id) (genvar))))
 
-(define (make-lexical-binding var) (make-binding 'lexical var))
+(define (make-lexical-binding var) (make-runtime-binding 'lexical var))
+
+(define (bind-lexical! lbl var)
+  (bind! lbl (make-lexical-binding var)))
 
 (define (valid-bound-identifiers? stx*)
   (let ((env (make-environment)))
@@ -108,7 +111,7 @@
             ((alias begin define-auxiliary-syntax define-property
               define-record-type
               define-values define-syntax define-syntax-parameter import
-              let-syntax letrec-syntax with-ellipsis)
+	      meta-form let-syntax letrec-syntax with-ellipsis)
              => (lambda (type)
                   (values stx type #f)))
             ((core)
@@ -167,6 +170,20 @@
 (define the-ellipsis-identifier-name #f)
 (define (ellipsis-identifier id)
   (datum->syntax id the-ellipsis-identifier-name))
+
+;;;;;;;;;;;;;;;;
+;; Meta Forms ;;
+;;;;;;;;;;;;;;;;
+
+(define-record-type :meta-form
+  (make-meta-form syntax)
+  meta-form?
+  (syntax meta-form-syntax))
+
+(define (form->syntax form)
+  (if (meta-form? form)
+      (meta-form-syntax form)
+      form))
 
 ;;;;;;;;;;;;;;
 ;; Expander ;;
@@ -235,9 +252,14 @@
       (if (current-top-level?)
           (values (reverse! stxdef*) (expand-definitions rdef*) #f)
           (values #f #f #f))
-      (expand-form (car stx*) (cdr stx*) stxdef* rdef* env add! add-prop!)))
+      (let* ((form (car stx*))
+	     (stx (form->syntax form))
+	     (meta? (meta-form? form)))
+	(expand-form stx (cdr stx*) stxdef* rdef* env add! add-prop! meta?))))
 
-(define (expand-form stx stx* stxdef* rdef* env add! add-prop!)
+(define (expand-form stx stx* stxdef* rdef* env add! add-prop! meta?)
+  (define (syntax->form* stx*)
+    (if meta? (map make-meta-form stx*) stx*))
   (let ((loc (syntax-object-srcloc stx)))
     (receive (stx type val) (syntax-type stx env)
       (case type
@@ -248,7 +270,7 @@
            (add! id1 lbl)
            (expand-form* stx* stxdef* rdef* env add! add-prop!)))
         ((begin)
-         (expand-form* (append (parse-begin stx #f) stx*)
+         (expand-form* (append (syntax->form* (parse-begin stx #f)) stx*)
                        stxdef* rdef* env add! add-prop!))
         ((define-auxiliary-syntax)
          (receive (id sym) (parse-define-auxiliary-syntax stx)
@@ -259,42 +281,62 @@
                        (cons (expand-define-property stx add-prop!) stxdef*)
                        rdef* env add! add-prop!))
         ((define-record-type)
-         (expand-form* stx*
-                       stxdef*
-                       (cons (expand-define-record-type stx add!) rdef*)
-                       env add! add-prop!))
+         (if meta?
+             (expand-form* stx*
+                           (cons (expand-meta-define-record-type stx add!)
+                                 stxdef*)
+                           rdef* env add! add-prop!)
+             (expand-form* stx*
+                           stxdef*
+                           (cons (expand-define-record-type stx add!) rdef*)
+                           env add! add-prop!)))
         ((define-syntax define-syntax-parameter)
          (expand-form* stx*
                        (cons (expand-define-syntax type stx add!) stxdef*)
                        rdef* env add! add-prop!))
         ((define-values)
-         (expand-form* stx*
-                       stxdef*
-                       (cons (expand-define-values stx add!) rdef*)
-                       env add! add-prop!))
+	 (if meta?
+	     (expand-form* stx*
+			   (cons (expand-meta-define-values stx add!) stxdef*)
+			   rdef* env add! add-prop!)
+	     (expand-form* stx*
+			   stxdef*
+			   (cons (expand-define-values stx add!) rdef*)
+			   env add! add-prop!)))
         ((let-syntax letrec-syntax)
-         (expand-form* (append (expand-let-syntax* type stx) stx*)
+         (expand-form* (append (syntax->form* (expand-let-syntax* type stx))
+			       stx*)
                        stxdef*
                        rdef*
                        env add! add-prop!))
+	((meta-form)
+	 (expand-form* (cons (make-meta-form (parse-meta stx)) stx*)
+		       stxdef* rdef* env add! add-prop!))
         ((with-ellipsis)
-         (expand-form* (append (expand-with-ellipsis* stx) stx*)
+         (expand-form* (append (syntax->form* (expand-with-ellipsis* stx))
+			       stx*)
                        stxdef*
                        rdef*
                        env add! add-prop!))
         (else
-         (if (current-top-level?)
-             (expand-form* stx*
-                           stxdef*
-                           (cons (lambda ()
-                                   (build-command loc (expand stx)))
-                                 rdef*)
-                           env add! add-prop!)
-             (values (reverse! stxdef*)
-                     (expand-definitions rdef*)
-                     (build-begin loc
-                                  (parameterize ((current-keywords #f))
-                                    (map expand (cons stx stx*)))))))))))
+         (cond
+          (meta?
+           (eval-meta stx)
+           (expand-form* stx* stxdef* rdef* env add! add-prop!))
+          (else
+           ;; We have found a non-definition.
+           (if (current-top-level?)
+               (expand-form* stx*
+                             stxdef*
+                             (cons (lambda ()
+                                     (build-command loc (expand stx)))
+                                   rdef*)
+                             env add! add-prop!)
+               (values (reverse! stxdef*)
+                       (expand-definitions rdef*)
+                       (build-begin loc
+                                    (parameterize ((current-keywords #f))
+                                      (map expand (cons stx stx*)))))))))))))
 
 (define (expand-let-syntax* type stx)
   (let*-values (((ids inits body) (parse-let-syntax stx #f))
@@ -308,8 +350,7 @@
                            (if (eq? 'let-syntax type)
                                init
                                (add-substs env init))))))
-                  (bind! lbl b)
-                  (bind-meta! lbl b)))
+                  (bind! lbl b)))
               ids lbls inits)
     (add-substs* env body)))
 
@@ -317,64 +358,52 @@
   (let*-values (((id body) (parse-with-ellipsis stx #f))
                 ((lbl) (genlbl id)))
     (bind! lbl id)
-    (bind-meta! lbl id)
     (add-substs* (make-environment (list (ellipsis-identifier id))
                                    (list lbl))
                  body)))
 
 (define (expand-define-record-type stx add!)
-  (receive (rtd cname pred cfields names accs muts)
-      (parse-define-record-type stx)
-    (let ((indices (get-field-indices names cfields))
-          (cvar (genvar cname))
-          (pvar (genvar pred))
-          (avars (map genvar accs))
-          (mvars (map (lambda (mut) (and mut (genvar mut))) muts))
-          (rlbl (genlbl rtd))
-          (clbl (genlbl cname))
-          (plbl (genlbl pred))
-          (albls (map genlbl accs))
-          (mlbls (map (lambda (mut) (and mut (genlbl mut))) muts)))
-      (add! rtd rlbl)
-      (add! cname clbl)
-      (add! pred plbl)
-      (for-each add! accs albls)
-      (for-each (lambda (mut mlbl)
-                  (when mut
-                    (add! mut mlbl)))
-                muts mlbls)
-      (bind! rlbl (make-binding 'record-type-descriptor #f))
-      (bind! clbl (make-lexical-binding cvar))
-      (bind! plbl (make-lexical-binding pvar))
-      (for-each (lambda (albl avar)
-                  (bind! albl (make-lexical-binding avar)))
-                albls avars)
-      (for-each (lambda (mlbl mvar)
-                  (when mlbl
-                    (bind! mlbl (make-lexical-binding mvar))))
-                mlbls mvars)
-      (build-define-record-type
-       (syntax-object-srcloc stx) (identifier-name rtd)
-       (build-reference (syntax-object-srcloc cname) cvar)
-       (build-reference (syntax-object-srcloc pred) pvar)
-       indices (map identifier-name names)
-       (map (lambda (acc avar)
-              (build-reference (syntax-object-srcloc acc) avar))
-            accs avars)
-       (map (lambda (mut mvar)
-              (and mut
-                   (build-reference (syntax-object-srcloc mut) mvar)))
-            muts mvars)))))
+  (define-values (rtd ids builder) (parse-define-record-type stx))
+  (define rlbl (genlbl rtd))
+  (define lbls (map genlbl ids))
+  (define vars (map genvar ids))
+  (add! rtd rlbl)
+  (for-each add! ids lbls)
+  (bind! rlbl (make-binding 'record-type-descriptor #f))
+  (for-each bind-lexical! lbls vars)
+  (builder vars))
 
-(define (get-field-indices names cfields)
-  (map (lambda (cfield)
-         (let ((same? (lambda (name) (bound-identifier=? cfield name))))
-           (or (list-index same? names)
-               (raise-syntax-error
-                cfield
-                "unknown constructor field name ‘~a’"
-                (identifier-name cfield)))))
-       cfields))
+(define (expand-meta-define-record-type stx add!)
+  (define k (syntax-car stx))
+  (define loc (syntax-object-srcloc stx))
+  (define-values (rtd ids builder) (parse-define-record-type stx))
+  (define rlbl (genlbl rtd))
+  (define pid (datum->syntax k (generate-identifier)))
+  (define plbl (genlbl pid))
+  (define lbls (map genlbl ids))
+  (define vars (map genvar ids))
+  (add! rtd rlbl)
+  (add! pid plbl)
+  (for-each add! ids lbls)
+  (bind! rlbl (make-binding 'record-type-descriptor #f))
+  (do ((i 0 (+ i 1))
+       (lbls lbls (cdr lbls)))
+      ((null? lbls))
+    (bind! (car lbls) (make-meta-variable-binding plbl i)))
+  (let ((def
+         (list (build-body
+                loc
+                (list (builder vars))
+                (build-primitive-call
+                 loc
+                 'vector
+                 (map (lambda (id var)
+                        (build-reference (syntax-object-srcloc id)
+                                         var))
+                      ids vars)))
+               pid)))
+    (bind! plbl (make-property-binding def))
+    (build loc (set-property! ',plbl (list ,(car def) ',(cadr def))))))
 
 (define (expand-define-property stx add-prop!)
   (let*-values (((id key expr) (parse-define-property stx))
@@ -391,7 +420,6 @@
                 ((b) (make-property-binding def)))
     (add-prop! id (label/props-add il/p klbl plbl))
     (bind! plbl b)
-    (bind-meta! plbl b)
     (build (syntax-object-srcloc stx)
            (set-property! ',plbl (list ,(car def) ',(cadr def))))))
 
@@ -400,12 +428,28 @@
                 ((id init) (parse-define-syntax stx))
                 ((def) (expand-transformer id init))
                 ((lbl) (genlbl id))
-                ((var) (genvar id))
                 ((b) (make-transformer-binding type def)))
     (add! id lbl)
     (bind! lbl b)
-    (bind-meta! lbl b)
     (build srcloc (set-keyword! ',lbl (list ,(car def) ',(cadr def))))))
+
+(define (expand-meta-define-values stx add!)
+  (define loc (syntax-object-srcloc stx))
+  (define-values (formals init) (parse-define-values stx))
+  (define-values (ids variadic?) (parse-formals formals))
+  (define id (datum->syntax (syntax-car stx) (generate-identifier)))
+  (define lbls (map genlbl ids))
+  (define plbl (genlbl id))
+  (define n (if variadic? (- -1 (length ids)) (length ids)))
+  (add! id plbl)
+  (for-each add! ids lbls)
+  (do ((i 0 (+ i 1))
+       (lbls lbls (cdr lbls)))
+      ((null? lbls))
+    (bind! (car lbls) (make-meta-variable-binding plbl i)))
+  (let ((def (expand-meta-definition id init n)))
+    (bind! plbl (make-property-binding def))
+    (build loc (set-property! ',plbl (list ,(car def) ',(cadr def))))))
 
 (define (expand-define-values stx add!)
   (let*-values (((formals init) (parse-define-values stx))
@@ -426,8 +470,8 @@
                            (expand init)))))
 
 (define (expand stx)
-  (let*-values (((stx type val) (syntax-type stx #f))
-                ((loc) (syntax-object-srcloc stx)))
+  (receive (stx type val) (syntax-type stx #f)
+    (define loc (syntax-object-srcloc stx))
     (case type
       ((begin stx)
        (expand-begin stx))
@@ -444,6 +488,8 @@
        (build-literal loc val))
       ((let-syntax letrec-syntax)
        (expand-let-syntax type stx))
+      ((meta-variable)
+       (build-meta-reference loc stx val))
       ((mutable-variable)
        (build-global-reference loc val))
       ((primitive)
@@ -454,8 +500,12 @@
         (identifier-name stx)))
       ((with-ellipsis)
        (expand-with-ellipsis stx))
+      ((out-of-phase)
+       (raise-syntax-error stx
+                           "out of phase identifier ‘~a’"
+                           (identifier-name stx)))
       (else
-       (raise-syntax-error stx "invalid expression type ")))))
+       (raise-syntax-error stx "invalid expression type")))))
 
 (define (expand-body stx env)
   (with-frame '() '()
@@ -478,7 +528,7 @@
   (let*-values (((ids inits body) (parse-let-syntax stx #t))
                 ((lbls) (map genlbl ids))
                 ((env) (make-environment ids lbls)))
-    (with-meta-frame lbls
+    (with-frame lbls
         (map (lambda (id init)
                (make-transformer-binding 'define-syntax
                                          (expand-transformer
@@ -492,7 +542,7 @@
 (define (expand-with-ellipsis stx)
   (let*-values (((id body) (parse-with-ellipsis stx #t))
                 ((lbl) (genlbl id)))
-    (with-meta-frame (list lbl) (list id)
+    (with-frame (list lbl) (list id)
       (expand-body body (make-environment (list (ellipsis-identifier id))
                                           (list lbl))))))
 
@@ -544,26 +594,61 @@
     (values (cadr form) (caddr form) (cadddr form))))
 
 (define (parse-define-record-type stx)
-  (let ((fail
-         (lambda ()
-           (raise-syntax-error stx "ill-formed record-type definition")))
-        (form (syntax->list stx)))
-    (unless (and form (<= 4 (length form))) (fail))
-    (let ((rtd (cadr form))
-          (constructor (syntax->list (caddr form)))
-          (pred (cadddr form)))
-      (unless (and (identifier? rtd)
-                   constructor
-                   (every identifier? constructor)
-                   (identifier? pred))
-        (fail))
-      (let*-values (((names accs muts) (parse-record-fields (cddddr form)))
-                    ((cfields) (cdr constructor)))
-        (unless (valid-bound-identifiers? names)
-          (raise-syntax-error stx "invalid record-type field names"))
-        (unless (valid-bound-identifiers? cfields)
-          (raise-syntax-error stx "invalid constructor field names"))
-        (values rtd (car constructor) pred cfields names accs muts)))))
+  (define (fail)
+    (raise-syntax-error stx "ill-formed record-type definition"))
+  (define form (syntax->list stx))
+  (unless (and form (<= 4 (length form))) (fail))
+  (let ((rtd (cadr form))
+        (constructor (syntax->list (caddr form)))
+        (pred (cadddr form)))
+    (unless (and (identifier? rtd)
+                 constructor
+                 (every identifier? constructor)
+                 (identifier? pred))
+      (fail))
+    (receive (names accs muts) (parse-record-fields (cddddr form))
+      (define cname (car constructor))
+      (define cfields (cdr constructor))
+      (unless (valid-bound-identifiers? names)
+        (raise-syntax-error stx "invalid record-type field names"))
+      (unless (valid-bound-identifiers? cfields)
+        (raise-syntax-error stx "invalid constructor field names"))
+      (let ((indices (get-field-indices names cfields)))
+        (define ids
+          `(,cname ,pred ,@accs ,@(filter values muts)))
+        (define (builder vars)
+          (define cvar (car vars))
+          (define pvar (cadr vars))
+          (define-values (avars mvars) (split-at (cddr vars) (length accs)))
+          (build-define-record-type
+           (syntax-object-srcloc stx) (identifier-name rtd)
+           (build-reference (syntax-object-srcloc cname) cvar)
+           (build-reference (syntax-object-srcloc pred) pvar)
+           indices (map identifier-name names)
+           (map (lambda (acc avar)
+                  (build-reference (syntax-object-srcloc acc) avar))
+                accs avars)
+           (let f ((muts muts) (mvars mvars))
+             (if (null? muts)
+                 '()
+                 (let ((mut (car muts)))
+                   (if mut
+                       (cons (build-reference (syntax-object-srcloc mut)
+                                              (car mvars))
+                             (f (cdr muts) (cdr mvars)))
+                       (cons #f
+                             (f (cdr muts) mvars))))))))
+        (values rtd ids builder)))))
+
+(define (get-field-indices names cfields)
+  (map (lambda (cfield)
+         (let ((same? (lambda (name) (bound-identifier=? cfield name))))
+           (or (list-index same? names)
+               (raise-syntax-error
+                cfield
+                "unknown constructor field name ‘~a’"
+                (identifier-name cfield)))))
+       cfields))
 
 (define (parse-record-fields fields)
   (let f ((fields fields))
@@ -634,6 +719,11 @@
                           (cons (cadr form) inits)))))
         (unless (valid-bound-identifiers? ids) (fail))
         (values ids inits (syntax-cdr (syntax-cdr stx)))))))
+
+(define (parse-meta stx)
+  (unless (syntax-pair? stx)
+    (raise-syntax-error stx "ill-formed meta form"))
+  (syntax-cdr stx))
 
 (define (parse-with-ellipsis stx non-empty?)
   (let ((form (syntax->list stx)))

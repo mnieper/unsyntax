@@ -27,11 +27,31 @@
 ;; Bindings ;;
 ;;;;;;;;;;;;;;
 
+;;; During expansion, a current meta level is maintained.  During
+;;; expansion of the right hand sides of syntax or meta definitions,
+;;; the meta level is increased by one.
+
+;;; A binding also has a meta level. If the meta level is
+;;; non-negative, the binding is only available at a phase with the
+;;; same meta level.  If the meta level META-LEVEL is negative, the
+;;; binding is available at phases such that CURRENT-META-LEVEL >= -
+;;; META-LEVEL - 1.
+
 (define-record-type <binding>
-  (make-binding type value)
+  (%make-binding type value meta-level)
   binding?
   (type %binding-type)
-  (value binding-value))
+  (value binding-value)
+  (meta-level binding-meta-level))
+
+(define (make-runtime-binding type value)
+  (%make-binding type value (current-meta-level)))
+
+(define (make-binding type value)
+  (%make-binding type value (- -1 (current-meta-level))))
+
+(define (make-meta-binding type value)
+  (%make-binding type value (- -2 (current-meta-level))))
 
 (define (binding-type b) (and b (%binding-type b)))
 
@@ -79,17 +99,6 @@
                                                       '())))
        body1 body2 ...))))
 
-(define-syntax with-meta-frame
-  (syntax-rules ()
-    ((with-frame lbl* b* body1 body2 ...)
-     (parameterize ((current-store (extend-store (current-store)
-                                                 lbl*
-                                                 b*))
-                    (current-meta-store (extend-store (current-meta-store)
-                                                      lbl*
-                                                      b*)))
-       body1 body2 ...))))
-
 (define-syntax with-bindings
   (syntax-rules ()
     ((with-bindings lbls bs body1 body2 ...)
@@ -99,7 +108,6 @@
              (lambda ()
                (let ((tmps (map lookup labels)))
                  (for-each bind! labels bindings)
-                 (for-each bind-meta! labels bindings)
                  (set! bindings tmps)))))
        (dynamic-wind
          swap!
@@ -107,21 +115,30 @@
            body1 body2 ...)
          swap!)))))
 
+(define (current-store-ref lbl)
+  (store-ref (current-store) lbl))
+
 (define (lookup lbl)
-  (or (store-ref (current-store) lbl)
-      (and lbl
-           (auxiliary-syntax-label? lbl)
-           (make-binding 'macro-parameter
-                         (list (auxiliary-syntax (auxiliary-syntax-name lbl))
-                               #f)))))
+  (and-let* ((binding
+              (or (current-store-ref lbl)
+                  (and lbl
+                       (auxiliary-syntax-label? lbl)
+                       (make-binding
+                        'macro-parameter
+                        (list (auxiliary-syntax (auxiliary-syntax-name lbl))
+                              #f))))))
+    (if (binding? binding)
+        (let ((ml (binding-meta-level binding))
+              (cml (current-meta-level)))
+          (if (or (= ml cml)
+                  (and (< ml 0) (<= (- -1 ml) cml)))
+              binding
+              (make-binding 'out-of-phase #f)))
+        binding)))
 
 (define (bind! lbl b)
   (when lbl
     (store-set! (current-store) lbl b)))
-
-(define (bind-meta! lbl b)
-  (when lbl
-    (store-set! (current-meta-store) lbl b)))
 
 (define (bind-core! lbl b)
   (store-set! *core-store* lbl b))
@@ -129,12 +146,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; The Current Global Store ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define-syntax with-meta-store
-  (syntax-rules ()
-    ((with-meta-store body1 body2 ...)
-     (parameterize ((current-store (current-meta-store)))
-       body1 body2 ...))))
 
 (define (bind-global! lbl b)
   (store-set! (current-global-store) lbl b))
@@ -153,3 +164,19 @@
 
 (define (set-property! lbl val)
   (list-set! (binding-value (lookup lbl)) 1 val))
+
+(define (arguments->vector id n producer)
+  (define l (if (<= 0 n) n (- -1 n)))
+  (define res (make-vector l))
+  (receive args (producer)
+    (define k (length args))
+    (unless (or (and (<= 0 n) (= k n))
+                (and (< n 0) (<= (- -2 n) k)))
+      (raise-syntax-error id "wrong number of arguments"))
+    (do ((i 0 (+ i 1))
+         (args args (cdr args)))
+        ((= i l) res)
+      (vector-set! res i
+                   (if (and (< n 0) (= i (- l 1)))
+                       args
+                       (car args))))))
