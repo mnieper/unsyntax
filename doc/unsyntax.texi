@@ -117,11 +117,12 @@ is then evaluated by an existing Scheme implementation.
 @cindex @rnrs{6}
 @cindex @rnrs{7} (large)
 As said, Unsyntax implements the @rnrs{7} standard with a number of
-extensions.  Besides implementing a number of SRFIs that do not possess
-a portable implementation otherwise, Unsyntax notably fully implements
-the syntax-case system of @rnrs{6}.  It can be used as a test-bed for
-further additions to @rnrs{7}, which may become part of the future @rnrs{7}
-(large) standard.
+extensions.  Besides implementing a number of SRFIs that do not
+possess a portable implementation otherwise, Unsyntax notably fully
+implements the syntax-case system of @rnrs{6} and the @rnrs{6} record
+system besides the @rnrs{7} record system.  It can be used as a
+test-bed for further additions to @rnrs{7}, which may become part of
+the future @rnrs{7} (large) standard.
 
 @cindex Alex Shinn
 @cindex bootstrap
@@ -156,7 +157,7 @@ This is an example session of Unsyntax's REPL:
 @cindex interpreter
 @example
 $ unsyntax-scheme
-Unsyntax 0.0.2
+Unsyntax 0.0.3
 Copyright (C) 2020 Marc Nieper-Wißkirchen
 
 This is free software: you are free to change and redistribute it.
@@ -286,6 +287,31 @@ The @code{(scheme time)} library provides access to time-related values.
 @item (scheme write)
 The @code{(scheme write)} library provides procedures for writing Scheme
 objects.
+
+@end table
+
+@section @rnrs{6} libraries
+
+A few @rnrs{6} libraries are also provided:
+@table @code
+
+@cindex @code{(rnrs records syntactic (6))}
+@cindex Syntactic Layer
+@cindex Records
+@item (rnrs records syntactic (6))
+Syntactic layer for @rnrs{6} records.
+
+@cindex @code{(rnrs records procedural (6))}
+@cindex Procedural Layer
+@cindex Records
+@item (rnrs records syntactic (6))
+Procedural layer for @rnrs{6} records.
+
+@cindex @code{(rnrs records inspection (6))}
+@cindex Inspection
+@cindex Records
+@item (rnrs records inspection (6))
+Inspection for @rnrs{6} records.
 
 @end table
 
