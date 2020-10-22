@@ -75,7 +75,7 @@
         (let ((e ,(expand expr)))
           ,(parameterize ((current-literal?
                            (lambda (id)
-                             (member id lits free-identifier=?))))
+                             (member id lits bound-identifier=?))))
              (fold-right (lambda (clause next)
                            (let ((f (generate-variable "f")))
                              (build loc
@@ -85,7 +85,8 @@
                                                 (build loc
                                                   (f))))))))
                          (build loc
-                           (raise-syntax-error e '"syntax error"))
+                                (raise-syntax-error e '"syntax error: ~s"
+                                                    (syntax->datum e)))
                          clauses)))))))
 
 (define (gen-clause loc e clause f)
