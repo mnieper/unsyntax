@@ -194,9 +194,9 @@
 
 (define (expand-top-level stx import-env k)
   (with-frame '() '()
-    (receive (stxdefs defs expr env)
+    (receive (bindings stxdefs defs expr env)
         (expand-internal (add-substs import-env stx) import-env)
-      (k stxdefs defs env))))
+      (k bindings stxdefs defs env))))
 
 (define (expand-internal stx import-env)
   (parameterize ((current-top-level? (and import-env #t)))
@@ -237,27 +237,28 @@
                              id "trying to define property on the local keyword
  ‘~a’"
                              (identifier-name id))))))))
-      (receive (stxdefs defs expr)
+      (receive (bindings stxdefs defs expr)
           (parameterize ((current-keywords (make-kwd-table)))
-            (expand-form* body '() '() env add! add-prop!))
+            (expand-form* body '() '() '() env add! add-prop!))
         (unless stxdefs (raise-syntax-error stx "no expressions in body"))
-        (values stxdefs defs expr env)))))
+        (values bindings stxdefs defs expr env)))))
 
 (define (expand-definitions rdefs)
   (map (lambda (def) (if (procedure? def) (def) def))
        (reverse! rdefs)))
 
-(define (expand-form* stx* stxdef* rdef* env add! add-prop!)
+(define (expand-form* stx* bindings stxdef* rdef* env add! add-prop!)
   (if (null? stx*)
       (if (current-top-level?)
-          (values (reverse! stxdef*) (expand-definitions rdef*) #f)
-          (values #f #f #f))
+          (values bindings (reverse! stxdef*) (expand-definitions rdef*) #f)
+          (values #f #f #f #f))
       (let* ((form (car stx*))
 	     (stx (form->syntax form))
 	     (meta? (meta-form? form)))
-	(expand-form stx (cdr stx*) stxdef* rdef* env add! add-prop! meta?))))
+	(expand-form stx (cdr stx*) bindings stxdef* rdef* env add! add-prop!
+                     meta?))))
 
-(define (expand-form stx stx* stxdef* rdef* env add! add-prop! meta?)
+(define (expand-form stx stx* bindings stxdef* rdef* env add! add-prop! meta?)
   (define (syntax->form* stx*)
     (if meta? (map make-meta-form stx*) stx*))
   (let ((loc (syntax-object-srcloc stx)))
@@ -268,53 +269,66 @@
                        ((lbl) (resolve id2)))
            (kwd-table-add! (current-keywords) id2 lbl)
            (add! id1 lbl)
-           (expand-form* stx* stxdef* rdef* env add! add-prop!)))
+           (expand-form* stx* bindings stxdef* rdef* env add! add-prop!)))
         ((begin)
          (expand-form* (append (syntax->form* (parse-begin stx #f)) stx*)
+                       bindings
                        stxdef* rdef* env add! add-prop!))
         ((define-auxiliary-syntax)
          (receive (id sym) (parse-define-auxiliary-syntax stx)
            (add! id (auxiliary-syntax-label sym))
-           (expand-form* stx* stxdef* rdef* env add! add-prop!)))
+           (expand-form* stx* bindings stxdef* rdef* env add! add-prop!)))
         ((define-property)
-         (expand-form* stx*
-                       (cons (expand-define-property stx add-prop!) stxdef*)
-                       rdef* env add! add-prop!))
+         (receive (bindings stxdef)
+             (expand-define-property stx bindings add-prop!)
+           (expand-form* stx* bindings
+                         (cons stxdef stxdef*)
+                         rdef* env add! add-prop!)))
         ((define-record-type)
          (if meta?
-             (expand-form* stx*
-                           (cons (expand-meta-define-record-type stx add!)
-                                 stxdef*)
-                           rdef* env add! add-prop!)
-             (expand-form* stx*
-                           stxdef*
-                           (cons (expand-define-record-type stx add!) rdef*)
-                           env add! add-prop!)))
+             (receive (bindings stxdef)
+                 (expand-meta-define-record-type stx bindings add!)
+               (expand-form* stx* bindings
+                             (cons stxdef stxdef*)
+                             rdef* env add! add-prop!))
+             (receive (bindings def)
+                 (expand-define-record-type stx bindings add!)
+               (expand-form* stx* bindings
+                             stxdef*
+                             (cons def rdef*)
+                             env add! add-prop!))))
         ((define-syntax define-syntax-parameter)
-         (expand-form* stx*
-                       (cons (expand-define-syntax type stx add!) stxdef*)
-                       rdef* env add! add-prop!))
+         (receive (bindings stxdef)
+             (expand-define-syntax type stx bindings add!)
+           (expand-form* stx* bindings
+                         (cons stxdef stxdef*)
+                         rdef* env add! add-prop!)))
         ((define-values)
 	 (if meta?
-	     (expand-form* stx*
-			   (cons (expand-meta-define-values stx add!) stxdef*)
-			   rdef* env add! add-prop!)
-	     (expand-form* stx*
-			   stxdef*
-			   (cons (expand-define-values stx add!) rdef*)
-			   env add! add-prop!)))
+             (receive (bindings stxdef)
+                 (expand-meta-define-values stx bindings add!)
+               (expand-form* stx* bindings
+                             (cons stxdef stxdef*)
+                             rdef* env add! add-prop!))
+             (receive (bindings def) (expand-define-values stx bindings add!)
+               (expand-form* stx* bindings
+                             stxdef* (cons def rdef*)
+                             env add! add-prop!))))
         ((let-syntax letrec-syntax)
          (expand-form* (append (syntax->form* (expand-let-syntax* type stx))
 			       stx*)
+                       bindings
                        stxdef*
                        rdef*
                        env add! add-prop!))
 	((meta-form)
 	 (expand-form* (cons (make-meta-form (parse-meta stx)) stx*)
+                       bindings
 		       stxdef* rdef* env add! add-prop!))
         ((with-ellipsis)
          (expand-form* (append (syntax->form* (expand-with-ellipsis* stx))
 			       stx*)
+                       bindings
                        stxdef*
                        rdef*
                        env add! add-prop!))
@@ -322,17 +336,18 @@
          (cond
           (meta?
            (eval-meta stx)
-           (expand-form* stx* stxdef* rdef* env add! add-prop!))
+           (expand-form* stx* bindings stxdef* rdef* env add! add-prop!))
           (else
            ;; We have found a non-definition.
            (if (current-top-level?)
-               (expand-form* stx*
+               (expand-form* stx* bindings
                              stxdef*
                              (cons (lambda ()
                                      (build-command loc (expand stx)))
                                    rdef*)
                              env add! add-prop!)
-               (values (reverse! stxdef*)
+               (values bindings
+                       (reverse! stxdef*)
                        (expand-definitions rdef*)
                        (build-begin loc
                                     (parameterize ((current-keywords #f))
@@ -362,7 +377,7 @@
                                    (list lbl))
                  body)))
 
-(define (expand-define-record-type stx add!)
+(define (expand-define-record-type stx bindings add!)
   (define-values (rtd ids builder) (parse-define-record-type stx))
   (define rlbl (genlbl rtd))
   (define lbls (map genlbl ids))
@@ -371,9 +386,13 @@
   (for-each add! ids lbls)
   (bind! rlbl (make-binding 'record-type-descriptor #f))
   (for-each bind-lexical! lbls vars)
-  (builder vars))
+  (values
+   (fold (lambda (lbl var bindings)
+           (alist-cons lbl (list 'variable var) bindings))
+         bindings lbls vars)
+   (builder vars)))
 
-(define (expand-meta-define-record-type stx add!)
+(define (expand-meta-define-record-type stx bindings add!)
   (define k (syntax-car stx))
   (define loc (syntax-object-srcloc stx))
   (define-values (rtd ids builder) (parse-define-record-type stx))
@@ -386,26 +405,33 @@
   (add! pid plbl)
   (for-each add! ids lbls)
   (bind! rlbl (make-binding 'record-type-descriptor #f))
-  (do ((i 0 (+ i 1))
-       (lbls lbls (cdr lbls)))
-      ((null? lbls))
-    (bind! (car lbls) (make-meta-variable-binding plbl i)))
-  (let ((def
-         (list (build-body
-                loc
-                (list (builder vars))
-                (build-primitive-call
-                 loc
-                 'vector
-                 (map (lambda (id var)
-                        (build-reference (syntax-object-srcloc id)
-                                         var))
-                      ids vars)))
-               pid)))
-    (bind! plbl (make-property-binding def))
-    (build loc (set-property! ',plbl (list ,(car def) ',(cadr def))))))
+  (let ((bs
+         (let f ((i 0) (lbls lbls))
+           (if (null? lbls) '()
+               (cons (make-meta-variable-binding plbl i)
+                     (f (+ i 1) (cdr lbls)))))))
+    (for-each bind! lbls bs)
+    (let ((def
+           (list (build-body
+                  loc
+                  (list (builder vars))
+                  (build-primitive-call
+                   loc
+                   'vector
+                   (map (lambda (id var)
+                          (build-reference (syntax-object-srcloc id)
+                                           var))
+                        ids vars)))
+                 pid)))
+      (bind! plbl (make-property-binding def))
+      (values
+       (fold (lambda (lbl b bindings)
+               (alist-cons lbl (cons 'meta-variable (binding-value b))
+                           bindings))
+             (alist-cons plbl (list 'property) bindings) lbls bs)
+       (build loc (set-property! ',plbl (list ,(car def) ',(cadr def))))))))
 
-(define (expand-define-property stx add-prop!)
+(define (expand-define-property stx bindings add-prop!)
   (let*-values (((id key expr) (parse-define-property stx))
                 ((def) (expand-property id expr))
                 ((il/p)
@@ -420,10 +446,12 @@
                 ((b) (make-property-binding def)))
     (add-prop! id (label/props-add il/p klbl plbl))
     (bind! plbl b)
-    (build (syntax-object-srcloc stx)
-           (set-property! ',plbl (list ,(car def) ',(cadr def))))))
+    (values
+     (alist-cons plbl (list 'property) bindings)
+     (build (syntax-object-srcloc stx)
+       (set-property! ',plbl (list ,(car def) ',(cadr def)))))))
 
-(define (expand-define-syntax type stx add!)
+(define (expand-define-syntax type stx bindings add!)
   (let*-values (((srcloc) (syntax-object-srcloc stx))
                 ((id init) (parse-define-syntax stx))
                 ((def) (expand-transformer id init))
@@ -431,9 +459,11 @@
                 ((b) (make-transformer-binding type def)))
     (add! id lbl)
     (bind! lbl b)
-    (build srcloc (set-keyword! ',lbl (list ,(car def) ',(cadr def))))))
+    (values
+     (alist-cons lbl (list (binding-type b)) bindings)
+     (build srcloc (set-keyword! ',lbl (list ,(car def) ',(cadr def)))))))
 
-(define (expand-meta-define-values stx add!)
+(define (expand-meta-define-values stx bindings add!)
   (define loc (syntax-object-srcloc stx))
   (define-values (formals init) (parse-define-values stx))
   (define-values (ids variadic?) (parse-formals formals))
@@ -443,15 +473,22 @@
   (define n (if variadic? (- -1 (length ids)) (length ids)))
   (add! id plbl)
   (for-each add! ids lbls)
-  (do ((i 0 (+ i 1))
-       (lbls lbls (cdr lbls)))
-      ((null? lbls))
-    (bind! (car lbls) (make-meta-variable-binding plbl i)))
-  (let ((def (expand-meta-definition id init n)))
-    (bind! plbl (make-property-binding def))
-    (build loc (set-property! ',plbl (list ,(car def) ',(cadr def))))))
+  (let ((bs
+         (let f ((i 0) (lbls lbls))
+           (if (null? lbls) '()
+               (cons (make-meta-variable-binding plbl i)
+                     (f (+ i 1) (cdr lbls)))))))
+    (for-each bind! lbls bs)
+    (let ((def (expand-meta-definition id init n)))
+      (bind! plbl (make-property-binding def))
+      (values
+       (fold (lambda (lbl b bindings)
+               (alist-cons lbl (cons 'meta-variable (binding-value b))
+                           bindings))
+             (alist-cons plbl (list 'property) bindings) lbls bs)
+       (build loc (set-property! ',plbl (list ,(car def) ',(cadr def))))))))
 
-(define (expand-define-values stx add!)
+(define (expand-define-values stx bindings add!)
   (let*-values (((formals init) (parse-define-values stx))
                 ((ids variadic?) (parse-formals formals))
                 ((lbls) (map genlbl ids))
@@ -462,12 +499,16 @@
                 ((bs) (map make-lexical-binding vars)))
     (for-each add! ids lbls)
     (for-each bind! lbls bs)
-    (lambda ()
-      (build-define-values (syntax-object-srcloc stx)
-                           (build-formals (syntax-object-srcloc formals)
-                                          refs
-                                          variadic?)
-                           (expand init)))))
+    (values
+     (fold (lambda (lbl var bindings)
+             (alist-cons lbl (list 'variable var) bindings))
+           bindings lbls vars)
+     (lambda ()
+       (build-define-values (syntax-object-srcloc stx)
+                            (build-formals (syntax-object-srcloc formals)
+                                           refs
+                                           variadic?)
+                            (expand init))))))
 
 (define (expand stx)
   (receive (stx type val) (syntax-type stx #f)
@@ -509,7 +550,7 @@
 
 (define (expand-body stx env)
   (with-frame '() '()
-    (receive (stxdefs defs expr inner-env)
+    (receive (bindings stxdefs defs expr inner-env)
         (expand-internal
          (datum->syntax #f (add-substs* env stx) (syntax-object-srcloc stx)) #f)
       (build-body (syntax-object-srcloc stx) defs expr))))

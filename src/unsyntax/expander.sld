@@ -42,8 +42,7 @@
    install-library
    install-alias!
    install-auxiliary-syntax!
-   bind-global-variable!
-   bind-global-keyword!
+   create-global-binding!
    environment-import*
    visit-collector
    invoke-collector

@@ -46,7 +46,7 @@
 		   (invoke-collector (make-library-collector)))
       (expand-top-level body
 			import-env
-			(lambda (stxdefs defs env)
+			(lambda (bindings stxdefs defs env)
 			  (values defs
 				  imported-libs
 				  (get-invoke-dependencies

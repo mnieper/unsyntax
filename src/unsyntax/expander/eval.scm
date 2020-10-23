@@ -122,6 +122,7 @@
 	       (f (cdr body) (list (if #f #f))))
 	      ((define-property)
 	       (expand-define-property stx
+                                       '()
 				       (lambda (id l/p)
 					 (environment-set!/props env id l/p)))
 	       (f (cdr body) (list (if #f #f))))
@@ -136,8 +137,9 @@
 		   (define-values! stx env))
 	       (f (cdr body) (list (if #f #f))))
 	      ((define-syntax define-syntax-parameter)
-	       (expand-define-syntax type stx (lambda (id lbl)
-						(environment-set! env id lbl)))
+	       (expand-define-syntax type stx '()
+                                     (lambda (id lbl)
+                                       (environment-set! env id lbl)))
 	       (f (cdr body) (list (if #f #f))))
 	      ((import)
 	       (environment-import* env (parse-import-declaration stx))
@@ -183,7 +185,7 @@
     (unless (label=? lbl (resolve id))
       (raise-syntax-error id "trying to redefine the local keyword ‘~a’"
 			  (identifier-name id))))
-  (expand-meta-define-record-type stx add!))
+  (expand-meta-define-record-type stx '() add!))
 
 (define (define-values! stx env)
   (let*-values (((formals init) (parse-define-values stx))
@@ -211,7 +213,7 @@
     (unless (label=? lbl (resolve id))
       (raise-syntax-error id "trying to redefine the local keyword ‘~a’"
 			  (identifier-name id))))
-  (expand-meta-define-values stx add!))
+  (expand-meta-define-values stx '() add!))
 
 (define (parse-import-declaration stx)
   (let ((form (syntax->list stx)))

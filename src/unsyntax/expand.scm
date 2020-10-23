@@ -61,11 +61,16 @@
          ;; TODO: Unify this code with `make-initializer' in
          ;; library-manager.scm.
          (append (library-invoke-code lib)
-                 (map (lambda (var)
-                        (let ((loc (cdr var)))
-                          `(define-values ,(generate-variable "_")
-                             (set-global! ',loc ,loc))))
-                      (library-variables lib)))))
+                 (fold (lambda (label+binding acc)
+                         (case (cadr label+binding)
+                           ((variable)
+                            (let ((loc (caddr label+binding)))
+                              (cons
+                               `(define-values ,(generate-variable "_")
+                                  (set-global! ',loc ,loc))
+                               acc)))
+                           (else acc)))
+                      '() (library-bindings lib)))))
     (hash-table-set! libnames lib var)
     `((define ,var
         (install-library
@@ -97,10 +102,8 @@
                    (if #f #f))))
          ;; Exports
          ',(exports->alist (library-exports lib))
-         ;; Keywords
-         ',(library-keywords lib)
-         ;; Variables
-         ',(library-variables lib)))
+         ;; Bindings
+         ',(library-bindings lib)))
       ,@(if (invreq? lib)
             invoker
             '()))))

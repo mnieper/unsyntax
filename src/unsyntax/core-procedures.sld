@@ -30,8 +30,7 @@
    install-library
    install-alias!
    install-auxiliary-syntax!
-   bind-global-variable!
-   bind-global-keyword!
+   create-global-binding!
    set-global!
    set-keyword!
    set-property!

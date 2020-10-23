@@ -79,58 +79,49 @@
       (library-bind-globals! lib)
       lib)))
 
-(define bind-global-variable!
+(define create-global-binding!
   (case-lambda
-    ((lbl loc)
-     (bind-global-variable! lbl loc #f))
-    ((lbl loc lib)
-     (bind-global! lbl
-                   (make-binding 'global-variable (list lib loc))))))
-
-(define bind-global-keyword!
-  (case-lambda
-    ((lbl type)
-     (bind-global-keyword! lbl type #f))
-    ((lbl type lib)
-     (bind-global! lbl
-                   (if (pair? type)
-                       (case (car type)
-                         ((meta-variable)
-                          (make-meta-binding 'meta-variable (cdr type))))
-                       (case type
-                         ((property)
-                          (make-binding 'global-property (list lib #f)))
-                         ((macro macro-parameter)
-                          (make-binding 'global-keyword
-                                        (list lib type #f)))))))))
+    ((lbl binding)
+     (create-global-binding! lbl binding #f))
+    ((lbl binding lib)
+     (bind-global!
+      lbl
+      (case (car binding)
+        ((variable)
+         (make-binding 'global-variable (list lib (cadr binding))))
+        ((meta-variable)
+         (make-meta-binding 'meta-variable (cdr binding)))
+        ((property)
+         (make-binding 'global-property (list lib #f)))
+        ((macro macro-parameter) =>
+         (lambda (type)
+           (make-binding 'global-keyword (list lib type #f))))
+        (else (error "create-global-binding!: invalid binding" binding)))))))
 
 (define (library-bind-globals! lib)
   (for-each (lambda (entry)
-              (bind-global-variable! (car entry) (cdr entry) lib))
-            (library-variables lib))
-  (for-each (lambda (entry)
-              (bind-global-keyword! (car entry) (cdr entry) lib))
-            (library-keywords lib)))
+              (create-global-binding! (car entry) (cdr entry) lib))
+            (library-bindings lib)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; Library Installer ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (install-stdlib name version exports keywords vars)
+(define (install-stdlib name version exports bindings)
   (library-table-intern!
    name
    (lambda ()
      (make-library name version '() '() '() '() '() #f #f
                    (alist->exports exports)
-                   keywords vars))))
+                   bindings))))
 
 (define (install-library name version visreqs invreqs visiter invoker exports
-                         keywords vars)
+                         bindings)
   (library-table-intern!
    name
    (lambda ()
      (let ((lib (make-library name version '() visreqs invreqs '() '() visiter
-                              invoker (alist->exports exports) keywords vars)))
+                              invoker (alist->exports exports) bindings)))
        (library-bind-globals! lib)
        lib))))
 
@@ -199,41 +190,6 @@
 ;; Library Expander ;;
 ;;;;;;;;;;;;;;;;;;;;;;
 
-(define (get-props l/p)
-  (map (lambda (a)
-         (cons (cdr a) 'property))
-       (label/props-props l/p)))
-
-(define (get-kwds env)
-  (environment-fold/props
-   (lambda (id l/p kwds)
-     (let ((lbl (label/props-label l/p)))
-       (if (auxiliary-syntax-label? lbl) kwds
-           (let ((b (current-store-ref lbl)))
-             (case (binding-type b)
-               ((macro macro-parameter property)
-                => (lambda (type)
-                     (append (get-props l/p)
-                             (alist-cons lbl type kwds))))
-               ((meta-variable)
-                (append (get-props l/p)
-                        (alist-cons lbl (cons 'meta-variable (binding-value b))
-                                    kwds)))
-               ((lexical)
-                (append (get-props l/p) kwds))
-               (else kwds))))))
-   '() env))
-
-(define (get-vars env)
-  (environment-fold (lambda (id lbl vars)
-                      (let ((b (current-store-ref lbl)))
-                        (case (binding-type b)
-                          ((lexical)
-                           (alist-cons lbl (binding-value b) vars))
-                          (else
-                           vars))))
-                    '() env))
-
 (define (get-exports export-specs envs)
   (let ((exports (make-exports)))
     (for-each (lambda (spec)
@@ -251,30 +207,34 @@
                    (visit-collector (make-library-collector)))
       (expand-top-level (datum->syntax #f body loc)
                         import-env
-                        (lambda (stxdefs defs env)
-                          (let-values (((vars) (get-vars env))
-                                       ((kwds) (get-kwds env)))
-			    (make-library name
-                                          version
-					  imported-libs
-                                          (visit-requirements)
-					  (invoke-requirements)
-                                          stxdefs
-                                          defs
-                                          (make-visiter loc stxdefs)
-					  (make-initializer loc defs
-                                                            (map cdr vars))
-					  (get-exports export-specs
-						       (list env import-env))
-                                          kwds
-                                          vars)))))))
+                        (lambda (bindings stxdefs defs env)
+                          (make-library name
+                                        version
+                                        imported-libs
+                                        (visit-requirements)
+                                        (invoke-requirements)
+                                        stxdefs
+                                        defs
+                                        (make-visiter loc stxdefs)
+                                        (make-initializer loc defs bindings)
+                                        (get-exports export-specs
+                                                     (list env import-env))
+                                        bindings))))))
 
 (define (make-visiter srcloc stxdefs)
   (let ((body (build-begin srcloc stxdefs)))
     (lambda ()
      (execute body))))
 
-(define (make-initializer srcloc defs locs)
+(define (make-initializer srcloc defs bindings)
+  (define locs
+    (filter-map (lambda (label+binding)
+                  (case (cadr label+binding)
+                    ((variable)
+                     (caddr label+binding))
+                    (else
+                     #f)))
+                bindings))
   (let ((body (build-initializer-body srcloc defs locs)))
     (lambda ()
       (execute body))))

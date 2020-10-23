@@ -147,11 +147,8 @@ Bootstrap Unsyntax and build its standard library.
   (append-map (lambda (lib)
                 (append
                  (map (lambda (entry)
-                        `(bind-global-variable! ',(car entry) ',(cdr entry)))
-                      (library-variables lib))
-                 (map (lambda (entry)
-                        `(bind-global-keyword! ',(car entry) ',(cdr entry)))
-                      (library-keywords lib))))
+                        `(create-global-binding! ',(car entry) ',(cdr entry)))
+                      (library-bindings lib))))
               libs))
 
 (define (build-visiters libs)
@@ -162,8 +159,7 @@ Bootstrap Unsyntax and build its standard library.
      (install-stdlib ',(library-name lib)
                      ',(library-version lib)
                      ',(exports->alist (library-exports lib))
-                     ',(library-keywords lib)
-                     ',(library-variables lib))))
+                     ',(library-bindings lib))))
 
 (define (find-library/die name)
   (or (find-library #f name (lambda (ver) #t))

@@ -29,7 +29,7 @@
 
 (define-record-type <library>
   (make-library name version imports visreqs invreqs vis-code inv-code visiter
-                invoker exports keywords vars)
+                invoker exports bindings)
   library?
   ;; The library name as a list of symbols and non-negative exact integers.
   (name library-name)
@@ -52,11 +52,9 @@
   (invoker library-invoker library-set-invoker!)
   ;; The library exports as a finite mapping from names to labels with props.
   (exports library-exports)
-  ;; The library keywords are an association list from labels to types.
-  (keywords library-keywords)
-  ;; The library variables are an association list from labels to
-  ;; locations.
-  (vars library-variables))
+  ;; The library bindings are an association list from labels to lists
+  ;; of the form (TYPE PAYLOAD ...).
+  (bindings library-bindings))
 
 ;;;;;;;;;;;;;;;;;;
 ;; Dependencies ;;

@@ -35,8 +35,7 @@
           library-visiter library-set-visiter!
 	  library-invoker library-set-invoker!
           library-exports
-          library-keywords
-          library-variables
+          library-bindings
           get-dependencies
           get-invoke-dependencies)
   (import (scheme base)
