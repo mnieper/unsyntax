@@ -41,8 +41,6 @@
                    define-record-type
                    define-syntax
                    define-values
-                   delay
-                   delay-force
                    do
                    else
                    guard

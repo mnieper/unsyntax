@@ -96,6 +96,8 @@
         ((macro macro-parameter) =>
          (lambda (type)
            (make-binding 'global-keyword (list lib type #f))))
+        ((module)
+         (make-binding 'module (cdr binding)))
         (else (error "create-global-binding!: invalid binding" binding)))))))
 
 (define (library-bind-globals! lib)
@@ -190,10 +192,10 @@
 ;; Library Expander ;;
 ;;;;;;;;;;;;;;;;;;;;;;
 
-(define (get-exports export-specs envs)
+(define (get-exports export-specs env)
   (let ((exports (make-exports)))
     (for-each (lambda (spec)
-                (export-spec-export! spec envs exports))
+                (export-spec-export! spec env exports))
               export-specs)
     exports))
 
@@ -201,7 +203,7 @@
   (let*-values
       (((loc) (syntax-object-srcloc stx))
        ((export-specs import-sets body) (parse-library-declarations decls))
-       ((import-env) (make-environment))
+       ((import-env) (make-rib))
        ((imported-libs) (environment-import* import-env import-sets)))
     (parameterize ((invoke-collector (make-library-collector))
                    (visit-collector (make-library-collector)))
@@ -217,8 +219,7 @@
                                         defs
                                         (make-visiter loc stxdefs)
                                         (make-initializer loc defs bindings)
-                                        (get-exports export-specs
-                                                     (list env import-env))
+                                        (get-exports export-specs env)
                                         bindings))))))
 
 (define (make-visiter srcloc stxdefs)
@@ -301,6 +302,7 @@
 ;; Library Exports ;;
 ;;;;;;;;;;;;;;;;;;;;;
 
+;; TODO: Move this to (unsyntax interface).
 (define (make-exports)
   (make-hash-table eq-comparator))
 
@@ -338,50 +340,97 @@
                  import-specs)
        (hash-table-keys libs)))))
 
-(define (environment-import env import-spec)
-  (let* ((import-set (parse-import-spec import-spec))
-         (fail (lambda ()
-                 (raise-syntax-error import-set "invalid import set")))
-         (form (syntax->list import-set)))
-    (when (or (not form) (null? form))
-      (fail))
-    (cond ((library-reference import-set)
-           => (lambda (ref)
-                (let ((lib (import-library ref)))
-                  (unless lib
-                    (raise-syntax-error import-set
-                                        "library not found ‘~a’"
-                                        (syntax->datum import-set)))
-                  (environment-add-library-exports! env lib import-set)
-                  lib)))
-          ((not (identifier? (car form)))
-           (fail))
-          ;; Magic auxiliary syntax library
-          ((and (eq? 'only (identifier-name (car form)))
-                (not (null? (cdr form)))
-                (syntax-pair? (cadr form))
-                (auxiliary-syntax-library? (syntax->datum (cadr form))))
-           (import-auxiliary-syntax! (cddr form) env)
-           #f)
-          (else
-           (let ((orig-env (make-environment)))
-             (let ((lib (environment-import orig-env (cadr form))))
-               (case (identifier-name (car form))
-                 ((only)
-                  (map-environment-only! (cddr form) orig-env env))
-                 ((except)
-                  (map-environment-except! import-set (cddr form) orig-env env))
-                 ((prefix)
-                  (unless (= 3 (length form))
-                    (fail))
-                  (map-environment-prefix! (caddr form) orig-env env))
-                 ((rename)
-                  (map-environment-rename! import-set (cddr form) orig-env env))
-                 (else
-                  (fail)))
-               lib))))))
+(define (environment-import rib import-spec)
+  (expand-import-spec import-spec rib
+                      (lambda (name id)
+                        (symbol=? name (identifier-name id)))))
 
-(define (library-reference stx)
+;;; Parse an import-spec and import the imported identifiers into
+;;; RIB.  Return the imported library.
+(define (expand-import-spec import-spec rib auxiliary-syntax?)
+  (define k (make-identifier #f '()))
+  (define-values (import-set mid lib)
+    (let f ((import-set-form (parse-import-spec import-spec auxiliary-syntax?)))
+      (define (fail)
+        (raise-syntax-error import-set-form "invalid import-set"))
+      (define form (syntax->list import-set-form))
+      (unless form (fail))
+      (cond
+       ((library-reference import-set-form auxiliary-syntax?) =>
+        (lambda (ref)
+          (let ((lib (import-library ref)))
+            (unless lib
+              (raise-syntax-error import-set
+                                  "library not found ‘~a’"
+                                  (syntax->datum import-set)))
+            (values (export-set->import-set k (library-export-set lib))
+                    ;; TODO: Use library-ref syntax as context.
+                    k
+                    lib))))
+       ((not (identifier? (car form))) (fail))
+       ((and (auxiliary-syntax? 'only (car form))
+             (not (null? (cdr form)))
+             (syntax-pair? (cadr form))
+             (auxiliary-syntax-library? (syntax->datum (cadr form))))
+        (check-identifiers (cddr form))
+        ;; For K, see above.
+        (values (import-set-auxiliary-syntax k (cddr form))
+                k
+                #f))
+       (else
+        (receive (import-set mid lib) (f (cadr form))
+          (define kwd (car form))
+          (cond
+           ;; only
+           ((auxiliary-syntax? 'only kwd)
+            (check-identifiers (cddr form))
+            (values (import-set-only import-set (cddr form))
+                    mid lib))
+           ;; except
+           ((auxiliary-syntax? 'except kwd)
+            (check-identifiers (cddr form))
+            (values (import-set-except import-set (cddr form))
+                    mid lib))
+           ;; prefix
+           ((auxiliary-syntax? 'prefix kwd)
+            (unless (= 3 (length form)) (fail))
+            (check-identifiers (cddr form))
+            (values (import-set-prefix import-set (caddr form))
+                    mid lib))
+           ;; rename
+           ((auxiliary-syntax? 'rename kwd)
+            (let f ((stx* (cddr form)) (from-id* '()) (to-id* '()))
+              (if (null? stx*)
+                  (values (import-set-rename import-set (reverse! from-id*)
+                                             (reverse! to-id*))
+                          mid lib)
+                  (receive (from-id to-id) (parse-rename (car stx*))
+                    (f (cdr stx*)
+                       (cons from-id from-id*)
+                       (cons to-id to-id*))))))
+           (else
+            (fail))))))))
+  (define loc (syntax-object-srcloc mid))
+  (define substs (syntax-object-substs mid))
+  (define (import! exported-id l/p)
+    (define id (make-syntax-object (identifier-name exported-id)
+                                   (syntax-object-marks exported-id)
+                                   substs
+                                   loc))
+    ;; TODO: Use add!/add-prop!.
+    ;; TOOD: See import-module! in expander/expand.scm.
+    (rib-set!/props rib id l/p))
+  (import-set-for-each import! import-set)
+  lib)
+
+(define (check-identifiers stx*)
+  (for-each (lambda (stx)
+              (unless (identifier? stx)
+                (raise-syntax-error stx "identifier expected")))
+            stx*))
+
+(define (library-reference stx auxiliary-syntax?)
+  ;; TODO: May use of auxiliary-syntax?.
   (and-let* ((form (syntax->list stx)))
     (or (and (or (null? form)
                  (null? (cdr form))
@@ -392,7 +441,8 @@
              (eq? 'library (identifier-name (car form)))
              (cadr form)))))
 
-(define (parse-import-spec import-spec)
+(define (parse-import-spec import-spec auxiliary-syntax?)
+  ;; TODO: May use of auxiliary-syntax?.
   (let ((form (syntax->list import-spec))
         (fail (lambda ()
                 (raise-syntax-error import-spec "invalid import spec"))))
@@ -419,110 +469,20 @@
                          ((exact-integer? (syntax->datum (cadr form)))))))
     (raise-syntax-error stx "invalid import import level")))
 
-(define (import-auxiliary-syntax! stx* env)
-  (for-each (lambda (id)
-              (unless (identifier? id)
-                (raise-syntax-error id "identifier expected"))
-              (environment-set! env id
-                                (auxiliary-syntax-label (identifier-name id))))
-            stx*))
-
-(define (map-environment-only! stx* orig-env env)
-  (for-each (lambda (id)
-	      (unless (identifier? id)
-		(raise-syntax-error id "identifier expected"))
-	      (let ((l/p (environment-ref/props orig-env id)))
-		(environment-set!/props env id l/p)))
-	    stx*))
-
-(define (map-environment-except! stx stx* orig-env env)
-  (let ((excepted (make-hash-table eq-comparator)))
-    (for-each
-     (lambda (id)
-       (unless (identifier? id)
-         (raise-syntax-error id "identifier expected"))
-       (let ((name (identifier-name id)))
-         (unless (environment-ref orig-env id)
-           (raise-syntax-error id
-                               "identifier ‘~a’ not found in original set"
-                               name))
-         (hash-table-update! excepted
-                             name
-                             values
-                             (lambda () #t)
-                             (lambda (_)
-                               (raise-syntax-error
-                                stx
-                                "identifier ’~a’ appears twice in subset"
-                                name)))))
-     stx*)
-    (environment-for-each
-     (lambda (id l/p)
-       (unless (hash-table-ref/default excepted (identifier-name id) #f)
-         (environment-set!/props env id l/p)))
-     orig-env)))
-
-(define (map-environment-prefix! stx orig-env env)
-  (unless (identifier? stx)
-    (raise-syntax-error stx "identifier expected"))
-  (let ((prefix (symbol->string (identifier-name stx))))
-    (environment-for-each
-     (lambda (orig-id l/p)
-       (let*
-           ((orig-name (identifier-name orig-id))
-            (name (string->symbol (string-append prefix
-                                                 (symbol->string orig-name)))))
-         (environment-set!/props env
-                                 (datum->syntax orig-id name)
-                                 l/p)))
-     orig-env)))
-
-(define (map-environment-rename! stx stx* orig-env env)
-  (let ((renames (make-hash-table eq-comparator)))
-    (for-each
-     (lambda (stx)
-       (let ((form (syntax->list stx)))
-         (unless (and form
-                      (= 2 (length form))
-                      (identifier? (car form))
-                      (identifier? (cadr form)))
-           (raise-syntax-error stx "invalid rename"))
-         (let ((from (identifier-name (car form)))
-               (to (identifier-name (cadr form))))
-           (unless (environment-ref orig-env (car form))
-             (raise-syntax-error stx
-                                 "identifier ‘~a’ not found in original set"
-                                 from))
-           (hash-table-update! renames
-                               from
-                               values
-                               (lambda () to)
-                               (lambda (to)
-                                 (raise-syntax-error
-                                  stx
-                                  "identifier ’~a’ already renamed to ‘~a’"
-                                  from
-                                  to))))))
-     stx*)
-    (environment-for-each
-     (lambda (orig-id l/p)
-       (let* ((orig-name (identifier-name orig-id))
-              (name (hash-table-ref/default renames orig-name orig-name)))
-         (environment-set!/props env (datum->syntax orig-id name) l/p)))
-     orig-env)))
-
-(define (environment-add-library-exports! env lib stx)
-  (let ((srcloc (syntax-object-srcloc stx)))
-    (exports-for-each
-     (lambda (name l/p)
-       (environment-set!/props env (datum->syntax #f name srcloc) l/p))
-     (library-exports lib))))
+(define (parse-rename stx)
+  (define form (syntax->list stx))
+  (unless (and form
+               (= 2 (length form))
+               (identifier? (car form))
+               (identifier? (cadr form)))
+    (raise-syntax-error stx "invalid rename"))
+  (values (car form) (cadr form)))
 
 ;;;;;;;;;;;;;;;;;;
 ;; Export Specs ;;
 ;;;;;;;;;;;;;;;;;;
 
-(define (export-spec-export! export-spec envs exports)
+(define (export-spec-export! export-spec env exports)
   (receive (from* to*) (parse-export-spec export-spec)
     (for-each
      (lambda (from to)
@@ -530,17 +490,14 @@
              (to-name (identifier-name to)))
          (when (exports-ref exports to-name)
            (raise-syntax-error to "identifier exported twice ‘~a’" to-name))
-         (let f ((envs envs))
-           (if (null? envs)
-               (raise-syntax-error from
-                                   "trying to export unbound identifier ‘~a’"
-                                   from-name)
-               (cond
-                ((environment-ref/props (car envs) from)
-                 => (lambda (l/p)
-                      (exports-set! exports to-name l/p)))
-                (else
-                 (f (cdr envs))))))))
+         (cond
+	  ((rib-ref/props env from)
+	   => (lambda (l/p)
+		(exports-set! exports to-name l/p)))
+	  (else
+	   (raise-syntax-error from
+			       "trying to export unbound identifier ‘~a’"
+			       from-name)))))
      from* to*)))
 
 (define (parse-export-spec spec)

@@ -40,20 +40,21 @@
   (bind! lbl (make-lexical-binding var)))
 
 (define (valid-bound-identifiers? stx*)
-  (let ((env (make-environment)))
-    (for-each (lambda (stx)
-                (unless (identifier? stx)
-                  (raise-syntax-error stx "identifier expected"))
-                (environment-update! env
-                                     stx
-                                     values
-                                     (lambda () #f)
-                                     (lambda (val)
-                                       (raise-syntax-error
-                                        stx
-                                        "duplicate identifier ‘~a’ bound"
-                                        (identifier-name stx)))))
-              stx*)))
+  (define table (make-identifier-table))
+  (for-each
+   (lambda (stx)
+     (unless (identifier? stx)
+       (raise-syntax-error stx "identifier expected"))
+     (identifier-table-update! table
+			       stx
+			       values
+			       (lambda () #f)
+			       (lambda (val)
+				 (raise-syntax-error
+				  stx
+				  "duplicate identifier ‘~a’ bound"
+				  (identifier-name stx)))))
+   stx*))
 
 ;;;;;;;;;;;;;;;;;
 ;; Syntax Type ;;
@@ -98,7 +99,7 @@
   (and (marks=? (car entry1) (car entry2))
        (label=? (cdr entry1) (cdr entry2))))
 
-(define (syntax-type stx env)
+(define (syntax-type stx rib)
   (cond
    ((syntax-pair? stx)
     (let ((h (syntax-car stx)))
@@ -111,17 +112,18 @@
             ((alias begin define-auxiliary-syntax define-property
               define-record-type
               define-values define-syntax define-syntax-parameter import
-	      meta-form module-form let-syntax letrec-syntax with-ellipsis)
+              import-only meta-form module-form let-syntax letrec-syntax
+              with-ellipsis)
              => (lambda (type)
                   (values stx type #f)))
             ((core)
              (values stx 'core (binding-value b)))
             ((macro macro-parameter)
              (syntax-type (transform/macro (binding-value b)
-                                           stx env) env))
+                                           stx rib) rib))
             ((global-keyword)
-             (syntax-type (transform/global-keyword (binding-value b) stx env)
-                          env))
+             (syntax-type (transform/global-keyword (binding-value b) stx rib)
+                          rib))
             (else
              (values stx 'call #f)))))
        (else
@@ -137,14 +139,17 @@
                (case (binding-type b)
                  ((macro macro-parameter)
                   (syntax-type (transform/macro (binding-value b)
-                                                stx env) env))
+                                                stx rib) rib))
                  ((global-keyword)
                   (syntax-type (transform/global-keyword (binding-value b)
-                                                         stx env)
-                               env))
+                                                         stx rib)
+                               rib))
                  ((#f)
                   (raise-syntax-error stx
                                       "displaced identifier ‘~a’"
+                                      (identifier-name stx)))
+                 ((module)
+                  (raise-syntax-error stx "invalid use of module ‘~a’"
                                       (identifier-name stx)))
                  (else
                   => (lambda (t)
@@ -159,7 +164,7 @@
               ((capture-syntactic-environment? datum)
                (syntax-type ((capture-syntactic-environment-procedure datum)
                              (datum->syntax stx #f))
-                            env))
+                            rib))
               (else
                (values stx 'other #f)))))))))
 
@@ -192,48 +197,37 @@
 (define current-top-level? (make-parameter #f))
 (define current-keywords (make-parameter #f))
 
-(define (expand-top-level stx import-env k)
+(define (expand-top-level stx import-rib k)
   (with-frame '() '()
-    (receive (bindings stxdefs defs expr env)
-        (expand-internal (add-substs import-env stx) '() import-env #t #f)
-      (k bindings stxdefs defs env))))
+    (receive (bindings stxdefs defs expr rib)
+        (expand-internal stx '() import-rib #t #f)
+      (k bindings stxdefs defs rib))))
 
-(define (expand-internal stx bindings import-env top-level? meta?)
+(define (expand-internal stx bindings import-rib top-level? meta?)
   (define (syntax->form* stx*)
     (if meta? (map make-meta-form stx*) stx*))
  (parameterize ((current-top-level? top-level?))
     (letrec*
-        ((env (make-environment))
-         (body (syntax->form* (add-substs* env stx)))
+        ((rib (or import-rib (make-rib)))
+         (body (syntax->form* (add-substs* rib stx)))
          (add! (lambda (id lbl)
                  (let ((name (identifier-name id)))
-                   (when (and import-env (environment-ref import-env id))
-                     (raise-syntax-error
-                      id
-                      "trying to redefine imported identifier ‘~a’"
-                      name))
                    (when (kwd-table-contains? (current-keywords)
                                               id (resolve id))
                      (raise-syntax-error
                       id
-                      "trying to define an identifier ‘~a’ whose binding has
- already been used"
+                      "trying to define an identifier ‘~a’ whose binding has already been used"
                       name))
                    (when id
-                     (environment-set! env id lbl)
+                     (rib-set! rib id lbl)
                      (unless (label=? lbl (resolve id))
                        (raise-syntax-error
                         id "trying to redefine the local keyword ‘~a’"
                         (identifier-name id)))))))
          (add-prop! (lambda (id l/p)
                       (let ((name (identifier-name id)))
-                        (when (and import-env (environment-ref import-env id))
-                          (raise-syntax-error
-                           id
-                           "trying to redefine imported identifier ‘~a’"
-                           name))
                         (when id
-                          (environment-set!/props env id l/p)
+                          (rib-set!/props rib id l/p)
                           (unless (label=? (label/props-label l/p) (resolve id))
                             (raise-syntax-error
                              id "trying to define property on the local keyword
@@ -241,15 +235,15 @@
                              (identifier-name id))))))))
       (receive (bindings stxdefs defs expr)
           (parameterize ((current-keywords (make-kwd-table)))
-            (expand-form* body bindings '() '() env add! add-prop!))
+            (expand-form* body bindings '() '() rib add! add-prop!))
         (unless stxdefs (raise-syntax-error stx "no expressions in body"))
-        (values bindings stxdefs defs expr env)))))
+        (values bindings stxdefs defs expr rib)))))
 
 (define (expand-definitions rdefs)
   (map (lambda (def) (if (procedure? def) (def) def))
        (reverse! rdefs)))
 
-(define (expand-form* stx* bindings stxdef* rdef* env add! add-prop!)
+(define (expand-form* stx* bindings stxdef* rdef* rib add! add-prop!)
   (if (null? stx*)
       (if (current-top-level?)
           (values bindings (reverse! stxdef*) (expand-definitions rdef*) #f)
@@ -257,94 +251,97 @@
       (let* ((form (car stx*))
 	     (stx (form->syntax form))
 	     (meta? (meta-form? form)))
-	(expand-form stx (cdr stx*) bindings stxdef* rdef* env add! add-prop!
+	(expand-form stx (cdr stx*) bindings stxdef* rdef* rib add! add-prop!
                      meta?))))
 
-(define (expand-form stx stx* bindings stxdef* rdef* env add! add-prop! meta?)
+(define (expand-form stx stx* bindings stxdef* rdef* rib add! add-prop! meta?)
   (define (syntax->form* stx*)
     (if meta? (map make-meta-form stx*) stx*))
   (let ((loc (syntax-object-srcloc stx)))
-    (receive (stx type val) (syntax-type stx env)
+    (receive (stx type val) (syntax-type stx rib)
       (case type
         ((alias)
          (let*-values (((id1 id2) (parse-alias stx))
                        ((lbl) (resolve id2)))
            (kwd-table-add! (current-keywords) id2 lbl)
            (add! id1 lbl)
-           (expand-form* stx* bindings stxdef* rdef* env add! add-prop!)))
+           (expand-form* stx* bindings stxdef* rdef* rib add! add-prop!)))
         ((begin)
          (expand-form* (append (syntax->form* (parse-begin stx #f)) stx*)
                        bindings
-                       stxdef* rdef* env add! add-prop!))
+                       stxdef* rdef* rib add! add-prop!))
         ((define-auxiliary-syntax)
          (receive (id sym) (parse-define-auxiliary-syntax stx)
            (add! id (auxiliary-syntax-label sym))
-           (expand-form* stx* bindings stxdef* rdef* env add! add-prop!)))
+           (expand-form* stx* bindings stxdef* rdef* rib add! add-prop!)))
         ((define-property)
          (receive (bindings stxdef)
              (expand-define-property stx bindings add-prop!)
            (expand-form* stx* bindings
                          (cons stxdef stxdef*)
-                         rdef* env add! add-prop!)))
+                         rdef* rib add! add-prop!)))
         ((define-record-type)
          (if meta?
              (receive (bindings stxdef)
                  (expand-meta-define-record-type stx bindings add!)
                (expand-form* stx* bindings
                              (cons stxdef stxdef*)
-                             rdef* env add! add-prop!))
+                             rdef* rib add! add-prop!))
              (receive (bindings def)
                  (expand-define-record-type stx bindings add!)
                (expand-form* stx* bindings
                              stxdef*
                              (cons def rdef*)
-                             env add! add-prop!))))
+                             rib add! add-prop!))))
         ((define-syntax define-syntax-parameter)
          (receive (bindings stxdef)
              (expand-define-syntax type stx bindings add!)
            (expand-form* stx* bindings
                          (cons stxdef stxdef*)
-                         rdef* env add! add-prop!)))
+                         rdef* rib add! add-prop!)))
         ((define-values)
 	 (if meta?
              (receive (bindings stxdef)
                  (expand-meta-define-values stx bindings add!)
                (expand-form* stx* bindings
                              (cons stxdef stxdef*)
-                             rdef* env add! add-prop!))
+                             rdef* rib add! add-prop!))
              (receive (bindings def) (expand-define-values stx bindings add!)
                (expand-form* stx* bindings
                              stxdef* (cons def rdef*)
-                             env add! add-prop!))))
+                             rib add! add-prop!))))
+        ((import import-only)
+         (expand-import! type stx rib add! add-prop!)
+         (expand-form* stx* bindings stxdef* rdef* rib add! add-prop!))
         ((let-syntax letrec-syntax)
          (expand-form* (append (syntax->form* (expand-let-syntax* type stx))
 			       stx*)
                        bindings
                        stxdef*
                        rdef*
-                       env add! add-prop!))
+                       rib add! add-prop!))
 	((meta-form)
 	 (expand-form* (cons (make-meta-form (parse-meta stx)) stx*)
                        bindings
-		       stxdef* rdef* env add! add-prop!))
-        ;; TODO: Implement named modules.
+		       stxdef* rdef* rib add! add-prop!))
         ((module-form)
-         (receive (bindings sd* d*) (expand-module stx bindings add! meta?)
+         (receive (bindings sd* d*)
+             (expand-module stx bindings add! add-prop! meta?)
            (expand-form* stx* bindings (append-reverse sd* stxdef*)
                          (append-reverse d* rdef*)
-                         env add! add-prop!)))
+                         rib add! add-prop!)))
         ((with-ellipsis)
          (expand-form* (append (syntax->form* (expand-with-ellipsis* stx))
 			       stx*)
                        bindings
                        stxdef*
                        rdef*
-                       env add! add-prop!))
+                       rib add! add-prop!))
         (else
          (cond
           (meta?
            (eval-meta stx)
-           (expand-form* stx* bindings stxdef* rdef* env add! add-prop!))
+           (expand-form* stx* bindings stxdef* rdef* rib add! add-prop!))
           (else
            ;; We have found a non-definition.
            (if (current-top-level?)
@@ -353,7 +350,7 @@
                              (cons (lambda ()
                                      (build-command loc (expand stx)))
                                    rdef*)
-                             env add! add-prop!)
+                             rib add! add-prop!)
                (values bindings
                        (reverse! stxdef*)
                        (expand-definitions rdef*)
@@ -364,7 +361,7 @@
 (define (expand-let-syntax* type stx)
   (let*-values (((ids inits body) (parse-let-syntax stx #f))
                 ((lbls) (map genlbl ids))
-                ((env) (make-environment ids lbls)))
+                ((rib) (make-rib ids lbls)))
     (for-each (lambda (id lbl init)
                 (let ((b (make-transformer-binding
                           'define-syntax
@@ -372,16 +369,16 @@
                            id
                            (if (eq? 'let-syntax type)
                                init
-                               (add-substs env init))))))
+                               (add-substs rib init))))))
                   (bind! lbl b)))
               ids lbls inits)
-    (add-substs* env body)))
+    (add-substs* rib body)))
 
 (define (expand-with-ellipsis* stx)
   (let*-values (((id body) (parse-with-ellipsis stx #f))
                 ((lbl) (genlbl id)))
     (bind! lbl id)
-    (add-substs* (make-environment (list (ellipsis-identifier id))
+    (add-substs* (make-rib (list (ellipsis-identifier id))
                                    (list lbl))
                  body)))
 
@@ -518,23 +515,70 @@
                                            variadic?)
                             (expand init))))))
 
-;;; TODO: Understand named modules.
-(define (expand-module stx bindings add! meta?)
+(define (expand-module stx bindings add! add-prop! meta?)
+  (define-values (name exports body) (parse-module stx))
   (define k (syntax-car stx))
-  (define-values (exports body) (parse-module stx))
-  (receive (bindings stxdefs defs expr env)
+  (receive (bindings stxdefs defs expr rib)
       (expand-internal body bindings #f #t meta?)
-    (let ((exports (add-substs* env exports)))
-      (for-each (lambda (id)
-                  (define lbl (resolve id))
-                  (define local-id (datum->syntax k (identifier-name id)))
-                  (unless lbl
-                    (raise-syntax-error
-                     id "trying to export unbound identifier ‘~a’"
-                     (identifier-name id)))
-                  (add! id lbl))
-                exports))
-    (values bindings stxdefs defs)))
+    (define marks (syntax-object-marks (or name k)))
+    (define id* (add-substs* rib exports))
+    (define l/p*
+      (map (lambda (id)
+             (or (resolve/props id)
+                 (raise-syntax-error
+                  id "trying to export unbound identifier ‘~a’"
+                  (identifier-name id))))
+           id*))
+    (define export-set (make-export-set marks id* l/p*))
+    (cond
+     (name
+      (let ((lbl (genlbl name)))
+        (add! name lbl)
+        (bind! lbl (make-binding 'module export-set))
+        (values (alist-cons lbl (cons 'module export-set)
+                            bindings)
+                stxdefs
+                defs)))
+     (else
+      (import-module! k export-set add! add-prop!)
+      (values bindings stxdefs defs)))))
+
+(define (import-module! k export-set add! add-prop!)
+  (define loc (syntax-object-srcloc k))
+  (define substs (syntax-object-substs k))
+  (define import-set (export-set->import-set k export-set))
+  (define (import! exported-id l/p)
+    (define id (make-syntax-object (identifier-name exported-id)
+                                   (syntax-object-marks exported-id)
+                                   substs
+                                   loc))
+    (add! id (label/props-label l/p))
+    (add-prop! id l/p))
+  (import-set-for-each import! import-set))
+
+(define (expand-import! type stx rib add! add-prop!)
+  (define mids (parse-import stx))
+  (define k (syntax-car stx))
+  (define lbls
+    (map-in-order
+     (lambda (id)
+       (unless (identifier? id)
+	 (raise-syntax-error id "module identifier expected"))
+       (or (resolve id)
+	   (raise-syntax-error id "identifier ‘~a’ unbound"
+			       (identifier-name id))))
+     mids))
+  (when (eq? type 'import-only)
+    (rib-add-barrier! rib (map syntax-object-marks mids)))
+  (for-each (lambda (id lbl)
+              (define b (lookup lbl))
+              (case (binding-type b)
+                ((module)
+                 (import-module! id (binding-value b) add! add-prop!))
+                (else
+                 (raise-syntax-error id "identifier ‘~a’ does not name a module"
+                                     (identifier-name)))))
+            mids lbls))
 
 (define (expand stx)
   (receive (stx type val) (syntax-type stx #f)
@@ -574,11 +618,11 @@
       (else
        (raise-syntax-error stx "invalid expression type")))))
 
-(define (expand-body stx env)
+(define (expand-body stx rib)
   (with-frame '() '()
-    (receive (bindings stxdefs defs expr inner-env)
+    (receive (bindings stxdefs defs expr inner-rib)
         (expand-internal
-         (datum->syntax #f (add-substs* env stx) (syntax-object-srcloc stx))
+         (datum->syntax #f (add-substs* rib stx) (syntax-object-srcloc stx))
          '() #f #f #f)
       (build-body (syntax-object-srcloc stx) defs expr))))
 
@@ -595,7 +639,7 @@
 (define (expand-let-syntax type stx)
   (let*-values (((ids inits body) (parse-let-syntax stx #t))
                 ((lbls) (map genlbl ids))
-                ((env) (make-environment ids lbls)))
+                ((rib) (make-rib ids lbls)))
     (with-frame lbls
         (map (lambda (id init)
                (make-transformer-binding 'define-syntax
@@ -603,15 +647,15 @@
                                           id
                                           (if (eq? 'let-syntax type)
                                               init
-                                              (add-substs env init)))))
+                                              (add-substs rib init)))))
 	     ids inits)
-      (expand-body body env))))
+      (expand-body body rib))))
 
 (define (expand-with-ellipsis stx)
   (let*-values (((id body) (parse-with-ellipsis stx #t))
                 ((lbl) (genlbl id)))
     (with-frame (list lbl) (list id)
-      (expand-body body (make-environment (list (ellipsis-identifier id))
+      (expand-body body (make-rib (list (ellipsis-identifier id))
                                           (list lbl))))))
 
 ;;;;;;;;;;;;;
@@ -766,6 +810,12 @@
       (raise-syntax-error formals "invalid formals"))
     (values ids variadic?)))
 
+(define (parse-import stx)
+  (let ((form (syntax->list stx)))
+    (unless (pair? form)
+      (raise-syntax-error stx "ill-formed import form"))
+    (cdr form)))
+
 (define (parse-let-syntax stx non-empty?)
   (let ((fail
          (lambda ()
@@ -793,17 +843,23 @@
     (raise-syntax-error stx "ill-formed meta form"))
   (syntax-cdr stx))
 
-;; TODO: Implement named modules.
 (define (parse-module stx)
-  (define form (syntax->list stx))
-  (unless (and form
-               (<= 2 (length form)))
+  (define (fail)
     (raise-syntax-error stx "ill-formed module form"))
-  (let ((exports (syntax->list (cadr form))))
-    (unless (and exports
-                 (valid-bound-identifiers? exports))
-      (raise-syntax-error (cadr form) "ill-formed module exports"))
-    (values exports (syntax-cdr (syntax-cdr stx)))))
+  (define form (syntax->list stx))
+  (unless (and form (<= 2 (length form)))
+    (fail))
+  (receive (name exports body)
+      (if (identifier? (cadr form))
+          (begin
+            (unless (pair? (cddr form))
+              (fail))
+            (values (cadr form) (caddr form)
+                    (syntax-cdr (syntax-cdr (syntax-cdr stx)))))
+          (values #f (cadr form) (syntax-cdr (syntax-cdr stx))))
+    (unless (and exports (valid-bound-identifiers? exports))
+      (raise-syntax-error exports "ill-formed module exports"))
+    (values name exports body)))
 
 (define (parse-with-ellipsis stx non-empty?)
   (let ((form (syntax->list stx)))

@@ -25,7 +25,7 @@
 
 (include-library-declarations "stdlibs/runtime-exports.scm")
 (export current-features with-error-handler expand-unsyntax unsyntax-scheme
-        install-library environment syntax-object)
+        install-library rib syntax-object)
 (import (rename (except (scheme base) define-record-type)
                 (features host-features))
         (scheme case-lambda)
@@ -49,10 +49,10 @@
         (unsyntax syntax-object)
         (unsyntax gensym))
 (begin
-  (define-syntax environment
+  (define-syntax rib
     (syntax-rules ()
-      ((environment . substs)
-       (cons #f 'substs))))
+      ((rib chunk* ...)
+       (list #f 'chunk* ...))))
 
   (define-syntax syntax-object
     (syntax-rules ()

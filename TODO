@@ -2,6 +2,16 @@
 
 * Language
 
+** Libraries
+
+***  Allow local imports of libraries.
+
+** Modules
+
+*** Finish implementation of modules.
+
+*** Merge module and library import forms.
+
 * Backends
 
   Support other backends besides Chibi-Scheme.
@@ -15,8 +25,6 @@
 ** Do not emit ‘(define-values _... ...)’ in the library and program top-level.
 
 * Code
-
-** Rename the environment type from (unsyntax environment) into rib.
 
 -----
 

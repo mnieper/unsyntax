@@ -28,13 +28,13 @@
 ;;;;;;;;;;;;;;;;;;
 
 (define (environment . import-sets)
-  (let ((env (make-environment)))
+  (let ((env (make-rib)))
     (%environment-import env import-sets)
     env))
 
 (define (mutable-environment . import-sets)
-  (let ((env (make-mutable-environment)))
-    (environment-set! env (datum->syntax #f 'import) 'import)
+  (let ((env (make-mutable-rib)))
+    (rib-set! env (datum->syntax #f 'import) 'import)
     (%environment-import env import-sets)
     env))
 
@@ -44,18 +44,18 @@
             import-sets))
 
 (define (environment-define! env name val)
-  (unless (environment-mutable? env)
+  (unless (rib-mutable? env)
     (raise-error 'environment-define
                  "trying to define ‘~a’ in immutable environment" name))
   (mutable-set! env (datum->syntax #f name) val))
 
 (define (mutable-ref/props env id)
-  (or (environment-ref/props env id)
+  (or (rib-ref/props env id)
       (and (symbol? (identifier-name id))
            (let* ((var (genvar id))
                  (lbl (genlbl id))
                  (l/p (make-label/props lbl '())))
-             (environment-set!/props env id l/p)
+             (rib-set!/props env id l/p)
              (bind-global! lbl (make-binding 'mutable-variable var))
              (set-global! var (box (if #f #f)))
              l/p))))
@@ -82,7 +82,7 @@
 
 (define (eval-syntax stx env)
   (let ((wrapped (add-substs env stx)))
-    (if (environment-mutable? env)
+    (if (rib-mutable? env)
         (eval-repl wrapped env)
         (eval-expression wrapped))))
 
@@ -96,6 +96,7 @@
     (let ((expr (expand stx)))
       (values expr (invoke-requirements)))))
 
+;; TODO: Implement modules in the interactive environment.
 (define (eval-repl stx env)
   (parameterize ((current-global-resolver
                   (lambda (id) (mutable-ref/props env id))))
@@ -111,20 +112,20 @@
 	      ((alias)
 	       (let*-values (((id1 id2) (parse-alias stx))
 			     ((lbl) (resolve id2)))
-		 (environment-set! env id1 lbl)
+		 (rib-set! env id1 lbl)
 		 (f (cdr body) (list (if #f #f)))))
 	      ((begin)
 	       (f (append (syntax->form* (parse-begin stx #f)) (cdr body))
 		  vals))
 	      ((define-auxiliary-syntax)
 	       (receive (id sym) (parse-define-auxiliary-syntax stx)
-		 (environment-set! env id (auxiliary-syntax-label sym)))
+		 (rib-set! env id (auxiliary-syntax-label sym)))
 	       (f (cdr body) (list (if #f #f))))
 	      ((define-property)
 	       (expand-define-property stx
                                        '()
 				       (lambda (id l/p)
-					 (environment-set!/props env id l/p)))
+					 (rib-set!/props env id l/p)))
 	       (f (cdr body) (list (if #f #f))))
 	      ((define-record-type)
                (if meta?
@@ -139,10 +140,11 @@
 	      ((define-syntax define-syntax-parameter)
 	       (expand-define-syntax type stx '()
                                      (lambda (id lbl)
-                                       (environment-set! env id lbl)))
+                                       (rib-set! env id lbl)))
 	       (f (cdr body) (list (if #f #f))))
 	      ((import)
-	       (environment-import* env (parse-import-declaration stx))
+               ;; FIXME: parse-import can return a list of identifiers.
+	       (environment-import* env (parse-import stx))
 	       (f (cdr body) (list (if #f #f))))
 	      ((meta-form)
 	       (f (cons (make-meta-form (parse-meta stx)) (cdr body)) vals))
@@ -176,12 +178,12 @@
   (for-each (lambda (id val)
               (mutable-set! env id val))
             ids vals)
-  (environment-set! env rtd rlbl)
+  (rib-set! env rtd rlbl)
   (bind! rlbl (make-binding 'record-type-descriptor #f)))
 
 (define (meta-define-record-type! stx env)
   (define (add! id lbl)
-    (environment-set! env id lbl)
+    (rib-set! env id lbl)
     (unless (label=? lbl (resolve id))
       (raise-syntax-error id "trying to redefine the local keyword ‘~a’"
 			  (identifier-name id))))
@@ -209,16 +211,8 @@
 
 (define (meta-define-values! stx env)
   (define (add! id lbl)
-    (environment-set! env id lbl)
+    (rib-set! env id lbl)
     (unless (label=? lbl (resolve id))
       (raise-syntax-error id "trying to redefine the local keyword ‘~a’"
 			  (identifier-name id))))
   (expand-meta-define-values stx '() add!))
-
-(define (parse-import-declaration stx)
-  (let ((form (syntax->list stx)))
-    (unless (and (pair? form)
-		 (identifier? (car form))
-		 (eq? 'import (identifier-name (car form))))
-      (raise-syntax-error stx "ill-formed import declaration"))
-    (cdr form)))

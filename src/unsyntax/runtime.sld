@@ -47,7 +47,7 @@
           (unsyntax auxiliary-syntax)
 	  (unsyntax define-record-type)
           (unsyntax error)
-          (unsyntax environment)
+          (unsyntax rib)
           (unsyntax expander)
           (unsyntax features)
           (unsyntax identifier)

@@ -31,7 +31,6 @@
    environment
    mutable-environment
    environment-define!
-   parse-import-declaration
    ;; exports
    exports->alist
    exports-map->list
@@ -73,13 +72,14 @@
           (unsyntax auxiliary-syntax)
           (unsyntax backend)
           (unsyntax builder)
-          (unsyntax environment)
           (unsyntax error)
           (only (unsyntax features) current-features)
           (unsyntax identifier)
+          (unsyntax interface)
           (unsyntax library)
           (unsyntax library-locator)
           (unsyntax read-syntax)
+          (unsyntax rib)
           (unsyntax store)
           (unsyntax syntactic-closure)
           (unsyntax syntax)

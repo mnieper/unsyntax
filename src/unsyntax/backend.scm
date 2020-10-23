@@ -230,7 +230,7 @@
     (hash-table-fold (lambda (env var+alist defs)
                        (if var+alist
                            (cons `(define ,(car var+alist)
-                                    (environment ,@(cadr var+alist)))
+                                    (rib ,@(cadr var+alist)))
                                  defs)
                            defs))
                      c env-table)))
@@ -247,11 +247,11 @@
                       env-table
                       env
                       (lambda ()
-                        (let ((alist (environment->alist env lookup)))
-                          (if (null? alist)
+                        (let ((datum (rib->datum env lookup)))
+                          (if (not datum)
                               #f
                               (list (generate-variable "e")
-                                    alist)))))))
+                                    datum)))))))
              (car res))))))
     (receive (out simple?)
         (let f ((e e))

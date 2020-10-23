@@ -30,7 +30,7 @@
   (import (scheme base)
 	  (unsyntax backend)
 	  (unsyntax builder)
-	  (unsyntax environment)
+	  (unsyntax rib)
 	  (unsyntax error)
 	  (unsyntax expander)
 	  (unsyntax identifier)

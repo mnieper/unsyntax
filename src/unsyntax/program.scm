@@ -40,7 +40,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;
 
 (define (expand-program stx)
-  (let*-values (((import-env) (make-environment))
+  (let*-values (((import-env) (make-rib))
                 ((imported-libs body) (parse-program stx import-env)))
     (parameterize ((visit-collector (make-library-collector))
 		   (invoke-collector (make-library-collector)))
@@ -68,6 +68,14 @@
                  (eq? 'import (syntax-object-expr (syntax-car (car body)))))
             (f libs body)
             (values libs body))))))
+
+(define (parse-import-declaration stx)
+  (let ((form (syntax->list stx)))
+    (unless (and (pair? form)
+		 (identifier? (car form))
+		 (eq? 'import (identifier-name (car form))))
+      (raise-syntax-error stx "ill-formed import declaration"))
+    (cdr form)))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; Program Reader ;;

@@ -29,7 +29,7 @@
           (rename sc-identifier? identifier?) identifier=?
           make-synthetic-identifier)
   (import (scheme base)
-          (unsyntax environment)
+          (unsyntax rib)
           (unsyntax identifier)
           (unsyntax syntactic-closure)
           (unsyntax transformer))

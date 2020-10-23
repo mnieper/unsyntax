@@ -27,13 +27,13 @@
 ;; Core Environment ;;
 ;;;;;;;;;;;;;;;;;;;;;;
 
-(define *core-environment* (make-environment))
+(define *core-rib* (make-rib))
 (define *core-exports* (make-exports))
 (define (core-exports) *core-exports*)
 
 (define (define-export! name lbl)
   ;; TODO: Use a commom prefix for these labels.
-  (environment-set! *core-environment* (datum->syntax #f name) lbl)
+  (rib-set! *core-rib* (datum->syntax #f name) lbl)
   (exports-set! *core-exports* name (make-label/props lbl '())))
 
 (define (define-core! name b)
@@ -80,7 +80,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (core-syntax e)
-  (add-substs *core-environment* (datum->syntax #f e)))
+  (add-substs *core-rib* (datum->syntax #f e)))
 
 (define (define-core-transformer! name transformer)
   (define-core! name (make-binding 'macro (list transformer #f))))

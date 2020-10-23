@@ -54,7 +54,7 @@
           (srfi 8)
           (srfi 125)
           (srfi 128)
-          (unsyntax environment)
+          (unsyntax rib)
           (unsyntax gensym)
           (unsyntax eval)
           (unsyntax store)

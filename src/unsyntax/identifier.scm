@@ -44,3 +44,79 @@
      (generate-identifier (gensym "t")))
     ((sym)
      (make-syntax-object sym (list (make-mark)) '() #f))))
+
+;;;;;;;;;;;;;;;;;;;;;;;
+;; Identifier Tables ;;
+;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (make-identifier-table) (make-hash-table eq-comparator))
+
+(define identifier-table? hash-table?)
+
+(define (identifier-table-cell identifier-table id)
+  (define name (identifier-name id))
+  (define marks (syntax-object-marks id))
+  (define (failure) #f)
+  (define (success alist) (assoc marks alist marks=?))
+  (hash-table-ref identifier-table name failure success))
+
+(define identifier-table-cell-ref cdr)
+
+(define identifier-table-cell-set! set-cdr!)
+
+(define (identifier-table-ref identifier-table id)
+  (and-let* ((cell (identifier-table-cell identifier-table id)))
+    (identifier-table-cell-ref cell)))
+
+(define (identifier-table-update! identifier-table id update failure success)
+  (define name (identifier-name id))
+  (define marks (syntax-object-marks id))
+  (define (updater alist)
+    (cond ((assoc marks alist marks=?)
+           => (lambda (p)
+                (set-cdr! p (update (success (cdr p))))
+                alist))
+          (else
+           (alist-cons marks (update (failure)) alist))))
+  (hash-table-update!/default identifier-table name updater '()))
+
+(define (identifier-table-set! identifier-table id val)
+  (identifier-table-update! identifier-table
+			    id
+			    values
+			    (lambda ()
+			      val)
+			    (lambda (prev-val)
+			      val)))
+
+(define (identifier-table-for-each proc table)
+  (hash-table-for-each
+   (lambda (name alist)
+     (for-each (lambda (p)
+                 (proc (make-identifier name (car p)) (cdr p)))
+               alist))
+   table))
+
+
+(define (identifier-table->datum table filter)
+  (hash-table-fold
+   (lambda (name alist datum)
+     (fold (lambda (p datum)
+             (cond
+              ((filter (cdr p)) =>
+               (lambda (val)
+                 (define marks (car p))
+                 (alist-cons (cons name marks) val datum)))
+              (else datum)))
+	   datum alist))
+   '() table))
+
+(define (datum->identifier-table datum)
+  (define res (make-identifier-table))
+  (for-each (lambda (p)
+              (define name (caar p))
+              (define marks (cdar p))
+              (define val (cdr p))
+              (identifier-table-set! res (make-identifier name marks) val))
+            datum)
+  res)

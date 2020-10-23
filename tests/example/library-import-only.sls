@@ -23,28 +23,15 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define-library (unsyntax identifier)
-  (export make-identifier identifier?
-          identifier-name
-          bound-identifier=?
-	  generate-identifier
-          make-identifier-table
-          identifier-table?
-	  identifier-table-cell
-	  identifier-table-cell-ref
-	  identifier-table-cell-set!
-          identifier-table-ref
-          identifier-table-set!
-          identifier-table-update!
-          identifier-table-for-each
-          identifier-table->datum
-          datum->identifier-table)
+(library (example library-import-only)
+  (export barrier-x)
   (import (scheme base)
-	  (scheme case-lambda)
-          (srfi 1)
-          (srfi 2)
-          (srfi 125)
-          (srfi 128)
-	  (unsyntax gensym)
-          (unsyntax syntax))
-  (include "identifier.scm"))
+	  (unsyntax))
+  (define barrier-x 'before-barrier)
+  (module m (define quote))
+  (import-only m)
+  (define barrier-x 'after-barrier))
+
+;; Local Variables:
+;; mode: scheme
+;; End:

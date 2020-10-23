@@ -92,20 +92,20 @@
 (define (gen-clause loc e clause f)
   (let*-values (((pattern fender output) (parse-syntax-case-clause clause))
                 ((matcher pvars) (gen-matcher loc e pattern '() f))
-                ((env) (make-environment))
+                ((rib) (make-rib))
                 ((lbls) (map genlbl pvars)))
     (for-each (lambda (pvar lbl)
-                (environment-set! env (car pvar) lbl))
+                (rib-set! rib (car pvar) lbl))
               pvars lbls)
     (matcher (lambda ()
                (with-frame lbls
                    (map (lambda (pvar)
                           (make-pvar-binding (cdr pvar)))
                         pvars)
-                 (let ((expanded-output (expand (add-substs env output))))
+                 (let ((expanded-output (expand (add-substs rib output))))
                    (if fender
                        (build loc
-                         (if ,(expand (add-substs env fender))
+                         (if ,(expand (add-substs rib fender))
                              ,expanded-output
                              ,(f)))
                        expanded-output)))))))
@@ -289,7 +289,7 @@
 (define (syntax-transformer lvl)
   (lambda (stx)
     (let*-values (((tmpl) (parse-syntax stx))
-                  ((out env var?)
+                  ((out envs var?)
                    (gen-template tmpl '() lvl #f)))
       out)))
 

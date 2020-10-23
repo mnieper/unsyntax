@@ -57,7 +57,7 @@
           (srfi 125)
           (srfi 128)
           (unsyntax auxiliary-syntax)
-          (unsyntax environment)
+          (unsyntax rib)
           (unsyntax error)
           (unsyntax library)
           (unsyntax variable))

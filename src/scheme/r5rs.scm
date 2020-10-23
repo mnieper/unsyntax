@@ -37,7 +37,6 @@
 		      cond
 		      define
 		      define-syntax
-		      delay
 		      do
 		      else
 		      if
@@ -51,7 +50,8 @@
 		      quasiquote
 		      quote
 		      set!
-		      syntax-rules)))
+		      syntax-rules)
+               '(only (scheme lazy) delay)))
 
 (define (scheme-report-environment version)
   (unless (and (exact-integer? version) (= 5 version))

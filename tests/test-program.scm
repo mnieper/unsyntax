@@ -29,8 +29,10 @@
         (srfi 211 syntax-case)
         (srfi 213)
         (example library)
+	(example library-import-only)
         (for (example r6rs-library ((<= 6)))
-          run expand (meta -1)))
+          run expand (meta -1))
+        (rename (unsyntax) (import import-module)))
 (import (rename (scheme base) (define import)))
 
 (import quux 'import)
@@ -71,5 +73,12 @@
   (let ()
     (define-apple apple)
     apple))
+
+(test-equal 'pear
+  (let ()
+    (import-module fruits)
+    pear))
+
+(test-equal 'after-barrier barrier-x)
 
 (test-end)

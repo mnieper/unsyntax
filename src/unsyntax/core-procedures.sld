@@ -88,7 +88,7 @@
           (srfi 111)
           (unsyntax auxiliary-syntax)
 	  (unsyntax command-line)
-          (unsyntax environment)
+          (unsyntax rib)
           (rename (unsyntax error)
                   (reader-error? read-error?))
 	  (unsyntax expand)

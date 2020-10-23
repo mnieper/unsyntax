@@ -26,7 +26,8 @@
 (import (scheme base)
         (unsyntax)
         (srfi :211 syntax-case)
-        (srfi :64))
+        (srfi :64)
+        (srfi :213))
 
 (test-begin "Unsyntax Extensions Tests")
 
@@ -78,7 +79,7 @@
   (test-equal 'lion local-lion)
   (test-equal 'tiger local-tiger))
 
-(test-group "Modules"
+(test-group "Anonymous modules"
   (test-equal 42
     (let* ()
       (module (a)
@@ -108,5 +109,36 @@
              (define id apple)))))
       (define-apple apple)
       apple)))
+
+(test-group "Named modules"
+  (test-equal 'baz
+    (let ((a 'baz))
+      (module m (a)
+        (define a 'quux))
+      a))
+
+  (test-equal 'pear
+    (let ()
+      (module fruits (pear)
+        (define pear 'pear))
+      (import fruits)
+      pear)))
+
+(test-group "Modules and properties"
+  (test-equal 42
+    (let* ()
+      (define key)
+      (module (id) (define id) (define-property id key #'42))
+      (define-syntax foo (lambda (x) (lambda (p) (p #'id #'key))))
+      foo)))
+
+(test-group "import-only"
+  (test-equal 11
+    (let* ()
+      (define x 10)
+      (module m (define))
+      (import-only m)
+      (define x 11)
+      x)))
 
 (test-end)

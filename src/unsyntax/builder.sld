@@ -65,7 +65,7 @@
           (srfi 8)
           (srfi 111)
           (unsyntax backend)
-          (unsyntax environment)
+          (unsyntax rib)
           (unsyntax error)
           (unsyntax store)
           (unsyntax syntax)

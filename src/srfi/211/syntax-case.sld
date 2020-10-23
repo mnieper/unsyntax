@@ -47,7 +47,7 @@
           (unsyntax derived-forms)
           (unsyntax error)
           (unsyntax gensym)
-          (unsyntax environment)
+          (unsyntax rib)
           (unsyntax identifier)
           (unsyntax syntax))
   (include "syntax-case.scm"))

@@ -32,6 +32,7 @@
 (define-core-syntax! 'define-syntax-parameter)
 (define-core-syntax! 'define-values)
 (define-core-syntax! 'import)
+(define-core-syntax! 'import-only)
 (define-core-syntax! 'meta 'meta-form)
 (define-core-syntax! 'module 'module-form)
 (define-core-syntax! 'splicing-let-syntax 'let-syntax)

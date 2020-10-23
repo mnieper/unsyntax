@@ -1,6 +1,6 @@
 ;; Copyright © Marc Nieper-Wißkirchen (2020).
 
-;; This file is part of unsyntax.
+;; This file is part of Unsyntax.
 
 ;; Permission is hereby granted, free of charge, to any person
 ;; obtaining a copy of this software and associated documentation files
@@ -23,40 +23,25 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define-library (unsyntax environment)
-  (export make-label
-          label?
-          make-label/props
-          label/props-label
-          label/props-props
-          label/props-add
-          label=?
-          label-comparator
-          make-environment
-          make-mutable-environment
-          environment-mutable?
-          environment-ref
-          environment-ref/props
-          environment-update!
-          environment-set!
-          environment-set!/props
-          environment-for-each
-          environment-fold
-          environment-fold/props
-          environment->alist
-          current-global-resolver
-          resolve
-          resolve/props
-          resolve-prop
-          free-identifier=?)
+(define-library (unsyntax interface)
+  (export make-export-set
+          export-set->import-set
+          library-export-set
+          import-set-for-each
+          import-set-auxiliary-syntax
+          import-set-only
+          import-set-except
+          import-set-prefix
+          import-set-rename)
   (import (scheme base)
-          (scheme case-lambda)
           (srfi 1)
-          (srfi 2)
           (srfi 125)
           (srfi 128)
+          (unsyntax auxiliary-syntax)
           (unsyntax error)
-          (unsyntax gensym)
           (unsyntax identifier)
+          (unsyntax library)
+          (unsyntax rib)
+          (unsyntax symbol)
           (unsyntax syntax))
-  (include "environment.scm"))
+  (include "interface.scm"))

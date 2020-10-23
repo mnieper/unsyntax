@@ -62,7 +62,7 @@
                                 vars)
                            variadic?)
             (with-frame lbls (map make-lexical-binding vars)
-              (expand-body body (make-environment ids lbls))))))
+              (expand-body body (make-rib ids lbls))))))
 
 ;;;;;;;;;;;;;;;;;;
 ;; Conditionals ;;
@@ -97,7 +97,7 @@
     (let*-values (((ids inits body) (parse-letrec stx))
                   ((lbls) (map genlbl ids))
                   ((vars) (map genvar ids))
-                  ((env) (make-environment ids lbls)))
+                  ((rib) (make-rib ids lbls)))
       (with-frame lbls (map make-lexical-binding vars)
         ((case kwd
             ((letrec) build-letrec)
@@ -107,9 +107,9 @@
               (map syntax-object-srcloc ids)
               vars)
          (map (lambda (init)
-                (expand (add-substs env init)))
+                (expand (add-substs rib init)))
               inits)
-         (expand-body body env))))))
+         (expand-body body rib))))))
 
 (define-core-form! 'letrec (letrec-expander 'letrec))
 (define-core-form! 'letrec* (letrec-expander 'letrec*))
@@ -145,7 +145,7 @@
                   ((vars-list) (map (lambda (ids) (map genvar ids)) ids-list))
                   ((ids) (concatenate ids-list))
                   ((lbls) (map genlbl ids))
-                  ((env) (make-environment ids lbls)))
+                  ((rib) (make-rib ids lbls)))
       (with-frame lbls
           (append-map (lambda (vars) (map make-lexical-binding vars)) vars-list)
         (build-let-values (syntax-object-srcloc stx)
@@ -159,7 +159,7 @@
                                   variadic?))
                                formals-list ids-list vars-list variadic?-list)
                           (map expand inits)
-                          (expand-body body env))))))
+                          (expand-body body rib))))))
 
 (define (parse-let-values stx)
   (let ((fail
@@ -196,7 +196,7 @@
       (build-parameterize (syntax-object-srcloc stx)
                           (map expand params)
                           (map expand inits)
-                          (expand-body body (make-environment))))))
+                          (expand-body body (make-rib))))))
 
 (define (parse-parameterize stx)
   (let ((fail
@@ -320,7 +320,7 @@
                  (make-transformer-binding 'define-syntax-parameter
                                            (expand-transformer id init)))
                ids inits)
-        (expand-body body (make-environment))))))
+        (expand-body body (make-rib))))))
 
 (define (parse-syntax-parameterize stx)
   (let ((fail
