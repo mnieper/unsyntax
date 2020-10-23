@@ -111,7 +111,7 @@
             ((alias begin define-auxiliary-syntax define-property
               define-record-type
               define-values define-syntax define-syntax-parameter import
-	      meta-form let-syntax letrec-syntax with-ellipsis)
+	      meta-form module-form let-syntax letrec-syntax with-ellipsis)
              => (lambda (type)
                   (values stx type #f)))
             ((core)
@@ -195,14 +195,16 @@
 (define (expand-top-level stx import-env k)
   (with-frame '() '()
     (receive (bindings stxdefs defs expr env)
-        (expand-internal (add-substs import-env stx) import-env)
+        (expand-internal (add-substs import-env stx) '() import-env #t #f)
       (k bindings stxdefs defs env))))
 
-(define (expand-internal stx import-env)
-  (parameterize ((current-top-level? (and import-env #t)))
+(define (expand-internal stx bindings import-env top-level? meta?)
+  (define (syntax->form* stx*)
+    (if meta? (map make-meta-form stx*) stx*))
+ (parameterize ((current-top-level? top-level?))
     (letrec*
         ((env (make-environment))
-         (body (add-substs* env stx))
+         (body (syntax->form* (add-substs* env stx)))
          (add! (lambda (id lbl)
                  (let ((name (identifier-name id)))
                    (when (and import-env (environment-ref import-env id))
@@ -239,7 +241,7 @@
                              (identifier-name id))))))))
       (receive (bindings stxdefs defs expr)
           (parameterize ((current-keywords (make-kwd-table)))
-            (expand-form* body '() '() '() env add! add-prop!))
+            (expand-form* body bindings '() '() env add! add-prop!))
         (unless stxdefs (raise-syntax-error stx "no expressions in body"))
         (values bindings stxdefs defs expr env)))))
 
@@ -325,6 +327,12 @@
 	 (expand-form* (cons (make-meta-form (parse-meta stx)) stx*)
                        bindings
 		       stxdef* rdef* env add! add-prop!))
+        ;; TODO: Implement named modules.
+        ((module-form)
+         (receive (bindings sd* d*) (expand-module stx bindings add! meta?)
+           (expand-form* stx* bindings (append-reverse sd* stxdef*)
+                         (append-reverse d* rdef*)
+                         env add! add-prop!)))
         ((with-ellipsis)
          (expand-form* (append (syntax->form* (expand-with-ellipsis* stx))
 			       stx*)
@@ -510,6 +518,24 @@
                                            variadic?)
                             (expand init))))))
 
+;;; TODO: Understand named modules.
+(define (expand-module stx bindings add! meta?)
+  (define k (syntax-car stx))
+  (define-values (exports body) (parse-module stx))
+  (receive (bindings stxdefs defs expr env)
+      (expand-internal body bindings #f #t meta?)
+    (let ((exports (add-substs* env exports)))
+      (for-each (lambda (id)
+                  (define lbl (resolve id))
+                  (define local-id (datum->syntax k (identifier-name id)))
+                  (unless lbl
+                    (raise-syntax-error
+                     id "trying to export unbound identifier ‘~a’"
+                     (identifier-name id)))
+                  (add! id lbl))
+                exports))
+    (values bindings stxdefs defs)))
+
 (define (expand stx)
   (receive (stx type val) (syntax-type stx #f)
     (define loc (syntax-object-srcloc stx))
@@ -552,7 +578,8 @@
   (with-frame '() '()
     (receive (bindings stxdefs defs expr inner-env)
         (expand-internal
-         (datum->syntax #f (add-substs* env stx) (syntax-object-srcloc stx)) #f)
+         (datum->syntax #f (add-substs* env stx) (syntax-object-srcloc stx))
+         '() #f #f #f)
       (build-body (syntax-object-srcloc stx) defs expr))))
 
 (define (expand-begin stx)
@@ -765,6 +792,18 @@
   (unless (syntax-pair? stx)
     (raise-syntax-error stx "ill-formed meta form"))
   (syntax-cdr stx))
+
+;; TODO: Implement named modules.
+(define (parse-module stx)
+  (define form (syntax->list stx))
+  (unless (and form
+               (<= 2 (length form)))
+    (raise-syntax-error stx "ill-formed module form"))
+  (let ((exports (syntax->list (cadr form))))
+    (unless (and exports
+                 (valid-bound-identifiers? exports))
+      (raise-syntax-error (cadr form) "ill-formed module exports"))
+    (values exports (syntax-cdr (syntax-cdr stx)))))
 
 (define (parse-with-ellipsis stx non-empty?)
   (let ((form (syntax->list stx)))

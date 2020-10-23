@@ -24,8 +24,8 @@
 ;; SOFTWARE.
 
 (library (unsyntax)
-  (export meta)
-  (import (only (unsyntax $bootstrap) meta)))
+  (export meta module)
+  (import (only (unsyntax $bootstrap) meta module)))
 
 ;; Local Variables:
 ;; mode: scheme

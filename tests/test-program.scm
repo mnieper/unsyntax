@@ -67,4 +67,9 @@
                       meta-foo)))
     foo))
 
+(test-equal 'apple
+  (let ()
+    (define-apple apple)
+    apple))
+
 (test-end)

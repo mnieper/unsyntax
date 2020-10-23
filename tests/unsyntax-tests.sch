@@ -78,4 +78,35 @@
   (test-equal 'lion local-lion)
   (test-equal 'tiger local-tiger))
 
+(test-group "Modules"
+  (test-equal 42
+    (let* ()
+      (module (a)
+        (define b 42)
+        (define (a) b))
+      (define b 41)
+      (a)))
+
+  (test-equal 'meta
+    (let* ()
+      (module (id)
+        (define x 'meta)
+        (meta module (id)
+          (define id #'x)))
+      (define-syntax foo
+        (lambda (stx)
+          id))
+      foo))
+
+  (test-equal 'apple
+    (let* ()
+      (module (define-apple)
+          (define apple 'apple)
+        (define-syntax define-apple
+          (syntax-rules ()
+            ((define-apple id)
+             (define id apple)))))
+      (define-apple apple)
+      apple)))
+
 (test-end)

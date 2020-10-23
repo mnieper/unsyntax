@@ -24,7 +24,7 @@
 ;; SOFTWARE.
 
 (define-library (example library)
-  (export foo bar meta-foo)
+  (export foo bar meta-foo define-apple)
   (import (scheme base)
           (srfi :211 syntax-case)
           (srfi 213)
@@ -39,4 +39,11 @@
         ((bar) 'bar)))
     (define-property foo * "the-answer")
 
-    (meta define meta-foo #'42)))
+    (meta define meta-foo #'42)
+
+    (module (define-apple)
+      (define apple 'apple)
+      (define-syntax define-apple
+        (syntax-rules ()
+          ((define-apple id)
+           (define id apple)))))))
