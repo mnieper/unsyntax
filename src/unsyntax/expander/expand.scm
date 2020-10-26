@@ -516,20 +516,21 @@
                             (expand init))))))
 
 (define (expand-module stx bindings add! add-prop! meta?)
-  (define-values (name exports body) (parse-module stx))
+  (define-values (name export-specs body) (parse-module stx))
   (define k (syntax-car stx))
   (receive (bindings stxdefs defs expr rib)
       (expand-internal body bindings #f #t meta?)
-    (define marks (syntax-object-marks (or name k)))
-    (define id* (add-substs* rib exports))
-    (define l/p*
-      (map (lambda (id)
-             (or (resolve/props id)
-                 (raise-syntax-error
-                  id "trying to export unbound identifier ‘~a’"
-                  (identifier-name id))))
-           id*))
-    (define export-set (make-export-set marks id* l/p*))
+    ;; (define marks (syntax-object-marks (or name k)))
+    ;; (define id* (add-substs* rib exports))
+    ;; (define l/p*
+    ;;   (map (lambda (id)
+    ;;          (or (resolve/props id)
+    ;;              (raise-syntax-error
+    ;;               id "trying to export unbound identifier ‘~a’"
+    ;;               (identifier-name id))))
+    ;;        id*))
+    ;; (define export-set (make-export-set marks id* l/p*))
+    (define export-set (get-exports export-specs rib))
     (cond
      (name
       (let ((lbl (genlbl name)))
@@ -540,13 +541,13 @@
                 stxdefs
                 defs)))
      (else
-      (import-module! k export-set add! add-prop!)
+      (local-import! k (export-set->import-set k export-set)
+                     add! add-prop!)
       (values bindings stxdefs defs)))))
 
-(define (import-module! k export-set add! add-prop!)
+(define (local-import! k import-set add! add-prop!)
   (define loc (syntax-object-srcloc k))
   (define substs (syntax-object-substs k))
-  (define import-set (export-set->import-set k export-set))
   (define (import! exported-id l/p)
     (define id (make-syntax-object (identifier-name exported-id)
                                    (syntax-object-marks exported-id)
@@ -557,28 +558,20 @@
   (import-set-for-each import! import-set))
 
 (define (expand-import! type stx rib add! add-prop!)
-  (define mids (parse-import stx))
-  (define k (syntax-car stx))
-  (define lbls
-    (map-in-order
-     (lambda (id)
-       (unless (identifier? id)
-	 (raise-syntax-error id "module identifier expected"))
-       (or (resolve id)
-	   (raise-syntax-error id "identifier ‘~a’ unbound"
-			       (identifier-name id))))
-     mids))
+  (define-values (import-sets ks)
+    (let f ((import-specs (parse-import stx)) (import-sets '()) (ks '()))
+      (if (null? import-specs)
+          (values (reverse! import-sets) (reverse! ks))
+          (receive (import-set k)
+              (expand-import-spec (car import-specs) #t)
+            (f (cdr import-specs)
+               (cons import-set import-sets)
+               (cons k ks))))))
   (when (eq? type 'import-only)
-    (rib-add-barrier! rib (map syntax-object-marks mids)))
-  (for-each (lambda (id lbl)
-              (define b (lookup lbl))
-              (case (binding-type b)
-                ((module)
-                 (import-module! id (binding-value b) add! add-prop!))
-                (else
-                 (raise-syntax-error id "identifier ‘~a’ does not name a module"
-                                     (identifier-name)))))
-            mids lbls))
+    (rib-add-barrier! rib (map syntax-object-marks ks)))
+  (for-each (lambda (import-set k)
+              (local-import! k import-set add! add-prop!))
+            import-sets ks))
 
 (define (expand stx)
   (receive (stx type val) (syntax-type stx #f)
@@ -691,8 +684,8 @@
          (lambda ()
            (raise-syntax-error stx "ill-formed auxiliary syntax definition")))
         (form (syntax->list stx)))
-    (unless (and form (= 3 (length form))) (fail))
-    (let ((id (cadr form)) (sym (caddr form)))
+    (unless (and form (<= 2 (length form) 3)) (fail))
+    (let* ((id (cadr form)) (sym (if (null? (cddr form)) id (caddr form))))
       (unless (and (identifier? id) (identifier? sym)) (fail))
       (values id (identifier-name sym)))))
 
@@ -854,10 +847,10 @@
           (begin
             (unless (pair? (cddr form))
               (fail))
-            (values (cadr form) (caddr form)
+            (values (cadr form) (syntax->list (caddr form))
                     (syntax-cdr (syntax-cdr (syntax-cdr stx)))))
-          (values #f (cadr form) (syntax-cdr (syntax-cdr stx))))
-    (unless (and exports (valid-bound-identifiers? exports))
+          (values #f (syntax->list (cadr form)) (syntax-cdr (syntax-cdr stx))))
+    (unless exports
       (raise-syntax-error exports "ill-formed module exports"))
     (values name exports body)))
 

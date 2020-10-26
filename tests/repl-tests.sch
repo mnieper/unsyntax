@@ -55,22 +55,22 @@
 (test-repl 1 a)
 (test-repl '(2 3) b)
 
-(repl (import (srfi 212)))
+(repl (import (srfi :212)))
 (repl (alias z y))
 (repl (set! z 1))
 (test-repl 1 y)
 
-(repl (import (srfi 211 identifier-syntax)))
+(repl (import (srfi :211 identifier-syntax)))
 (repl (define-syntax foo (identifier-syntax 2)))
 (test-repl 2 foo)
 
-(repl (import (srfi 188)))
+(repl (import (srfi :188)))
 (test-repl 4 (begin (splicing-let-syntax ((foo (identifier-syntax 4)))
                       (define x foo))
                     x))
 
-(repl (import (srfi 211 syntax-case)
-              (srfi 211 with-ellipsis)))
+(repl (import (srfi :211 syntax-case)
+              (srfi :211 with-ellipsis)))
 (test-repl '(a b c) (with-ellipsis :::
                       (syntax-case #'(a b c) ()
                         ((x :::) (syntax->datum #'(x :::))))))

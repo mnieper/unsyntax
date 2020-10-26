@@ -26,7 +26,8 @@
 (define *exports* (core-exports))
 
 (define (make-bootstrap-library)
-  (make-library '(unsyntax $bootstrap) '() '() '() '() '() '() #f #f *exports*
+  (make-library '(unsyntax $bootstrap) '() '() '() '() '() #f #f
+                (identifier-table->export-set '() *exports*)
                 '()))
 
 (define (install-bootstrap-library!)

@@ -29,18 +29,19 @@
 
 (define (environment . import-sets)
   (let ((env (make-rib)))
-    (%environment-import env import-sets)
+    (%rib-import env import-sets)
     env))
 
 (define (mutable-environment . import-sets)
   (let ((env (make-mutable-rib)))
-    (rib-set! env (datum->syntax #f 'import) 'import)
-    (%environment-import env import-sets)
+    ;; TODO: Use the import form from (unsyntax).
+    ;; (rib-set! env (datum->syntax #f 'import) 'import)
+    (%rib-import env import-sets)
     env))
 
-(define (%environment-import env import-sets)
+(define (%rib-import env import-sets)
   (for-each (lambda (import-set)
-              (environment-import env (datum->syntax #f import-set)))
+              (rib-import env (datum->syntax #f import-set)))
             import-sets))
 
 (define (environment-define! env name val)
@@ -142,9 +143,12 @@
                                      (lambda (id lbl)
                                        (rib-set! env id lbl)))
 	       (f (cdr body) (list (if #f #f))))
-	      ((import)
-               ;; FIXME: parse-import can return a list of identifiers.
-	       (environment-import* env (parse-import stx))
+	      ((import import-only)
+               (expand-import! type stx env
+                               (lambda (id lbl)
+                                 (rib-set! env id lbl))
+                               (lambda (id l/p)
+                                 (rib-set!/props env id l/p)))
 	       (f (cdr body) (list (if #f #f))))
 	      ((meta-form)
 	       (f (cons (make-meta-form (parse-meta stx)) (cdr body)) vals))

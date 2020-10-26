@@ -28,7 +28,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (run stx)
-  (let-values (((defs implibs invreqs) (expand-program stx))
+  (let-values (((defs invreqs) (expand-program stx))
 	       ((loc) (syntax-object-srcloc stx)))
     (for-each invoke-library! invreqs)
     (execute (build-body loc defs
@@ -40,15 +40,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;
 
 (define (expand-program stx)
-  (let*-values (((import-env) (make-rib))
-                ((imported-libs body) (parse-program stx import-env)))
+  (let* ((import-env (make-rib))
+         (body (parse-program stx import-env)))
     (parameterize ((visit-collector (make-library-collector))
 		   (invoke-collector (make-library-collector)))
       (expand-top-level body
 			import-env
 			(lambda (bindings stxdefs defs env)
 			  (values defs
-				  imported-libs
 				  (get-invoke-dependencies
                                    (invoke-requirements))))))))
 
@@ -58,16 +57,16 @@
       (raise-syntax-error stx "ill-formed program"))
     (when (null? body)
       (raise-syntax-error stx "missing import declaration"))
-    (let f ((libs '()) (body body))
+    (let f ((body body))
       (let* ((import-sets (parse-import-declaration (car body)))
-             (libs (environment-import* env import-sets libs))
              (body (cdr body)))
+        (rib-import* env import-sets)
         (if (and (not (resolve (add-substs env 'import)))
                  (pair? body)
                  (syntax-pair? (car body))
                  (eq? 'import (syntax-object-expr (syntax-car (car body)))))
-            (f libs body)
-            (values libs body))))))
+            (f body)
+            body)))))
 
 (define (parse-import-declaration stx)
   (let ((form (syntax->list stx)))

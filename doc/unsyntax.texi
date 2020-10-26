@@ -493,9 +493,10 @@ module as in the following example:
                  (string->symbol
                   (apply string-append
                          (map (lambda (x)
-                                (cond ((string? x) x)
-                                      ((identifier? x)
-                                       (symbol->string (syntax->datum x)))))
+                                (cond
+                                 ((string? x) x)
+                                 ((identifier? x)
+                                 (symbol->string (syntax->datum x)))))
                               args)))))
 
 (define-syntax define-zoo
@@ -510,6 +511,31 @@ module as in the following example:
 local-lion @result{} lion
 local-tiger @result{} tiger
 @end lisp
+
+@defspec import import-spec...
+An @code{import} form can appear wherever a definition is allowed.  It
+lexically imports the bindings as specified by the @var{import specs}
+into the enclosing definition context.
+@end defspec
+
+@defspec import-only import-spec...
+An @code{import-only} form can appear wherever a definition is
+allowed.  It lexically hides all existing bindings and then imports
+the bindings as specified by the @var{import specs} into the enclosing
+lexical context.
+@end defspec
+
+@defspec module [module name] (export-spec...) body...
+A @code{module} form can appear wherever a definition is allowed.
+When a @code{module} form is expanded, the body is expanded but the
+created bindings are not visible outside.  If @var{module name} is
+given, it is bound to an expand-time representation of the module,
+which can be used in place of a library reference in local
+@code{import} and @code{import-only} forms.  The exported bindings are
+determined according to the @var{export-specs}.  If @var{module name} is
+omitted, an anonymous module is created and implicitly imported through
+@code{import} where it is defined.
+@end defspec
 
 @section Implementation notes
 

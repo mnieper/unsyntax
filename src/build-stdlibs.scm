@@ -43,6 +43,8 @@
         (unsyntax expander)
         (unsyntax gensym)
         (unsyntax program-name)
+        (unsyntax identifier)
+        (unsyntax interface)
         (unsyntax library)
         (unsyntax library-locator)
         (unsyntax rib)
@@ -95,12 +97,12 @@ Bootstrap Unsyntax and build its standard library.
      (export ,@(build-exports (current-globals)))
      (include-library-declarations "stdlibs/runtime.scm")
      (begin (gensym-count ,(gensym-count))
-            ,@(compile* (append (build-defs* (current-libraries))
+            ,@(compile* (append (build-defs* (expanded-libraries))
                                 (build-symbol-defs core-lib)
                                 (build-auxlibs auxlibs)
                                 (build-installers libs aliases)
-                                (build-globals (current-libraries))
-                                (build-visiters (current-libraries)))))))
+                                (build-globals (expanded-libraries))
+                                (build-visiters (expanded-libraries)))))))
 
 (define (build-exports globals)
   (fold-right (lambda (entry locs)
@@ -119,9 +121,10 @@ Bootstrap Unsyntax and build its standard library.
   (library-invoke-code lib))
 
 (define (build-symbol-defs core-lib)
-  (exports-map->list
-   (lambda (name l/p)
-     `(define ,name ,(cadr (binding-value (lookup (label/props-label l/p))))))
+  (export-set-map->list
+   (lambda (id l/p)
+     `(define ,(identifier-name id)
+        ,(cadr (binding-value (lookup (label/props-label l/p))))))
    (library-exports core-lib)))
 
 (define (build-auxlibs auxlibs)
@@ -152,13 +155,13 @@ Bootstrap Unsyntax and build its standard library.
               libs))
 
 (define (build-visiters libs)
-  (append-map library-visit-code (current-libraries)))
+  (append-map library-visit-code (expanded-libraries)))
 
 (define (build-installer lib var)
   `(define ,var
      (install-stdlib ',(library-name lib)
                      ',(library-version lib)
-                     ',(exports->alist (library-exports lib))
+                     ',(library-exports lib)
                      ',(library-bindings lib))))
 
 (define (find-library/die name)

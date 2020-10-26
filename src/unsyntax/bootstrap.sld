@@ -27,6 +27,7 @@
   (export install-bootstrap-library!)
   (import (scheme base)
           (unsyntax expander)
+          (unsyntax interface)
           (unsyntax library)
           (unsyntax store))
   (include "bootstrap.scm"))

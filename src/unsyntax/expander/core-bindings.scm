@@ -28,13 +28,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;
 
 (define *core-rib* (make-rib))
-(define *core-exports* (make-exports))
+(define *core-exports* (make-identifier-table))
 (define (core-exports) *core-exports*)
 
 (define (define-export! name lbl)
   ;; TODO: Use a commom prefix for these labels.
   (rib-set! *core-rib* (datum->syntax #f name) lbl)
-  (exports-set! *core-exports* name (make-label/props lbl '())))
+  (identifier-table-set! *core-exports*
+                         (make-identifier name '())
+                         (make-label/props lbl '())))
 
 (define (define-core! name b)
   (define-export! name name)

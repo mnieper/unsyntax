@@ -27,7 +27,6 @@
   (export make-library library?
           library-name
           library-version
-          library-imports
           library-visit-requirements
 	  library-invoke-requirements
           library-visit-code
@@ -36,7 +35,6 @@
 	  library-invoker library-set-invoker!
           library-exports
           library-bindings
-          get-dependencies
           get-invoke-dependencies)
   (import (scheme base)
           (srfi 1)

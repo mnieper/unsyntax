@@ -27,33 +27,31 @@
 ;; Code Writer ;;
 ;;;;;;;;;;;;;;;;;
 
-(define (write-code defs implibs invreqs)
+(define (write-code defs invreqs)
   (for-each (lambda (form)
               (write form)
               (newline))
-            (build-code defs implibs invreqs)))
+            (build-code defs invreqs)))
 
-(define (build-code defs implibs invreqs)
+(define (build-code defs invreqs)
   `((import (unsyntax stdlibs))
     (current-features ',(current-features))
     ,@(compile* `((with-error-handler
                    (lambda ()
                      (begin
-                       ,@(append (build-libs implibs invreqs)
+                       ,@(append (build-libs invreqs)
                                  defs)
                        (if #f #f))))))))
 
-(define (build-libs implibs invreqs)
+(define (build-libs invreqs)
   (let* ((libvars (make-hash-table eq-comparator))
          (invreqs (hash-table-unfold null? (lambda (invreqs)
                                              (values (car invreqs) #t))
                                      cdr invreqs eq-comparator))
          (invreq? (lambda (lib) (hash-table-ref/default invreqs lib #f))))
     (append-map (lambda (lib)
-                  (if (stdlib? lib)
-                      '()
-                      (build-lib lib invreq? libvars)))
-                (get-dependencies implibs))))
+                  (build-lib lib invreq? libvars))
+                (expanded-libraries))))
 
 (define (build-lib lib invreq? libnames)
   (let ((var (generate-variable "library"))
@@ -101,15 +99,12 @@
                    ,@invoker
                    (if #f #f))))
          ;; Exports
-         ',(exports->alist (library-exports lib))
+         ',(library-exports lib)
          ;; Bindings
          ',(library-bindings lib)))
       ,@(if (invreq? lib)
             invoker
             '()))))
-
-(define (stdlib? lib)
-  (null? (library-imports lib)))
 
 ;;;;;;;;;;;;;;;;;;
 ;; Main Program ;;
@@ -137,9 +132,9 @@
                   #f #f)
        (unless source
 	 (raise-error #f "no input file"))
-       (let*-values (((defs implibs invreqs)
+       (let*-values (((defs invreqs)
 		      (expand-program (read-program source)))
-		     ((output) (lambda () (write-code defs implibs invreqs))))
+		     ((output) (lambda () (write-code defs invreqs))))
 	 (cond (target
 		(when (file-exists? target)
 		  (delete-file target))

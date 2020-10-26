@@ -28,15 +28,13 @@
 ;;;;;;;;;;;;;;;
 
 (define-record-type <library>
-  (make-library name version imports visreqs invreqs vis-code inv-code visiter
+  (make-library name version visreqs invreqs vis-code inv-code visiter
                 invoker exports bindings)
   library?
   ;; The library name as a list of symbols and non-negative exact integers.
   (name library-name)
   ;; The library version as a list of non-negative exact integers.
   (version library-version)
-  ;; The list of directly imported libraries.
-  (imports library-imports)
   ;; The list of libraries that have to be invoked [sic!] before
   ;; visiting this library.
   (visreqs library-visit-requirements)
@@ -50,7 +48,7 @@
   (visiter library-visiter library-set-visiter!)
   ;; Thunk that invokes the library when called.
   (invoker library-invoker library-set-invoker!)
-  ;; The library exports as a finite mapping from names to labels with props.
+  ;; The library exports are an export set as defined in (unsyntax interface).
   (exports library-exports)
   ;; The library bindings are an association list from labels to lists
   ;; of the form (TYPE PAYLOAD ...).
@@ -59,19 +57,6 @@
 ;;;;;;;;;;;;;;;;;;
 ;; Dependencies ;;
 ;;;;;;;;;;;;;;;;;;
-
-(define (get-dependencies libs)
-  (reverse!
-   (let ((seen (make-hash-table eq-comparator)))
-     (let f ((libs libs) (deps '()))
-       (if (null? libs)
-           deps
-           (let ((deps (f (library-imports (car libs)) deps)))
-             (if (hash-table-ref/default seen (car libs) #f)
-                 (f (cdr libs) deps)
-                 (begin
-                   (hash-table-set! seen (car libs) #t)
-                   (f (cdr libs) (cons (car libs) deps))))))))))
 
 (define (get-invoke-dependencies libs)
   (reverse!

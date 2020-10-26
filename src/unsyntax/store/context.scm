@@ -28,17 +28,29 @@
 ;;;;;;;;;;;;;;
 
 (define-record-type <context>
-  (make-context libraries globals locations)
+  (make-context expanded-libraries libraries globals locations)
   context?
+  (expanded-libraries context-expanded-libraries context-set-expanded-libraries!)
   (libraries context-library-table)
   (globals context-global-store)
   (locations context-locations))
 
 (define (new-context)
-  (make-context (make-library-table) (new-store)
+  (make-context '()
+		(make-library-table)
+		(new-store)
                 (make-hash-table variable-comparator)))
 
 (define current-context (make-parameter (new-context)))
+
+(define (record-expanded-library! lib)
+  (when lib
+    (context-set-expanded-libraries!
+     (current-context)
+     (cons lib (context-expanded-libraries (current-context))))))
+
+(define (expanded-libraries)
+  (reverse (context-expanded-libraries (current-context))))
 
 (define (current-library-table)
   (context-library-table (current-context)))

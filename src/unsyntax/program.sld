@@ -37,5 +37,6 @@
           (unsyntax library)
 	  (unsyntax read-syntax)
 	  (unsyntax source-location)
+	  (unsyntax store)
 	  (unsyntax syntax))
   (include "program.scm"))

@@ -97,6 +97,15 @@
                alist))
    table))
 
+(define (identifier-table->alist table)
+  (hash-table-fold
+   (lambda (name alist datum)
+     (fold (lambda (p datum)
+             (define marks (car p))
+             (define val (cdr p))
+             (alist-cons (make-identifier name marks) val datum))
+           datum alist))
+   '() table))
 
 (define (identifier-table->datum table filter)
   (hash-table-fold

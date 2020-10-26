@@ -31,7 +31,8 @@
           binding-type
           binding-value
           library-table-intern!
-          current-libraries
+	  record-expanded-library!
+	  expanded-libraries
           with-frame
           with-bindings
           current-store-ref

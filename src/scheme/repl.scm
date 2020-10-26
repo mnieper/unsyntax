@@ -28,6 +28,7 @@
     (let
         ((env
           (mutable-environment
+            '(only (unsyntax) import)
             '(only (scheme base)
                    ...
                    =>

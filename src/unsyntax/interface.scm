@@ -45,10 +45,14 @@
               (proc (caar p) (cdar p) (cdr p)))
             (export-set-exports export-set)))
 
-(define (library-export-set lib)
-  (define-values (name* l/p*) (hash-table-entries (library-exports lib)))
-  (make-export-set '() (map (lambda (name) (make-identifier name '())) name*)
-                   l/p*))
+(define (identifier-table->export-set marks table)
+  (define alist (identifier-table->alist table))
+  (make-export-set marks (map car alist) (map cdr alist)))
+
+(define (export-set-map->list proc export-set)
+  (map (lambda (p)
+         (proc (make-identifier (caar p) (cdar p)) (cdr p)))
+       (export-set-exports export-set)))
 
 ;;;;;;;;;;;;;;;;;
 ;; Import Sets ;;

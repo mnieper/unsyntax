@@ -20,6 +20,11 @@ Unsyntax NEWS
   expand-time and available to the right-hand sides of syntax and
   property definitions.
 
+*** Modules and local imports
+
+  Libraries can now be lexically locally imported.  Moreover, a new
+  module form allows to define modules in a lexically local scope.
+
 ** Libraries
 
 *** SRFI 111

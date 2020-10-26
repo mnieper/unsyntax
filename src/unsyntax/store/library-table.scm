@@ -31,6 +31,3 @@
 (define (make-library-table) (make-hash-table library-name-comparator))
 (define (library-table-intern! name failure)
   (hash-table-intern! (current-library-table) name failure))
-
-(define (current-libraries)
-  (get-dependencies (hash-table-values (current-library-table))))

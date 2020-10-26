@@ -25,8 +25,9 @@
 
 (define-library (unsyntax interface)
   (export make-export-set
+          identifier-table->export-set
+          export-set-map->list
           export-set->import-set
-          library-export-set
           import-set-for-each
           import-set-auxiliary-syntax
           import-set-only

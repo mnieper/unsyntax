@@ -88,6 +88,14 @@
       (define b 41)
       (a)))
 
+  (test-equal 42
+    (let* ()
+      (module ((rename a a%))
+        (define b 42)
+        (define (a) b))
+      (define b 41)
+      (a%)))
+
   (test-equal 'meta
     (let* ()
       (module (id)

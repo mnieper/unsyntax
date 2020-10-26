@@ -43,6 +43,7 @@
 	  (unsyntax library-locator)
 	  (unsyntax program)
 	  (unsyntax program-name)
+	  (unsyntax store)
           (unsyntax variable)
 	  (unsyntax version-etc))
   (include "expand.scm"))

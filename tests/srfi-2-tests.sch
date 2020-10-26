@@ -29,7 +29,7 @@
 	(srfi 2)
 	(srfi 64))
 
-(eval '(import (srfi 2)) (interaction-environment))
+(eval '(import (srfi :2)) (interaction-environment))
 
 (test-begin "SRFI 2")
 

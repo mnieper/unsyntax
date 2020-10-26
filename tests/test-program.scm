@@ -81,4 +81,14 @@
 
 (test-equal 'after-barrier barrier-x)
 
+(test-equal 3
+  (let* ()
+    (import-module (rename (library (scheme base)) (+ plus)))
+    (plus 1 2)))
+
+(test-equal 9
+  (let* ()
+    (import-module (example library-local))
+    (sq 3)))
+
 (test-end)

@@ -4,13 +4,12 @@
 
 ** Libraries
 
-***  Allow local imports of libraries.
-
 ** Modules
 
-*** Finish implementation of modules.
+** Hygiene
 
-*** Merge module and library import forms.
+  Reconsider whether local import and cond-expand forms should match
+  keywords by symbol instead of binding equality.
 
 * Backends
 

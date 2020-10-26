@@ -31,21 +31,17 @@
    environment
    mutable-environment
    environment-define!
-   ;; exports
-   exports->alist
-   exports-map->list
    ;; library-manager
    find-library
-   make-exports
    install-stdlib
    install-library
    install-alias!
    install-auxiliary-syntax!
    create-global-binding!
-   environment-import*
+   rib-import*
+   make-library-collector
    visit-collector
    invoke-collector
-   make-library-collector
    visit-requirements
    invoke-requirements
    visit-library!
