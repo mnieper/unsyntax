@@ -138,7 +138,9 @@
     ((who message form)
      (syntax-violation who message form #f))
     ((who message form subform)
-     (raise-syntax-error #f message))))
+     (raise-syntax-error (if (syntax-object? subform) subform
+                             (and (syntax-object? form) form))
+                         message))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Global Error Handler ;;
