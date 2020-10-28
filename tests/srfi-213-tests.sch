@@ -51,4 +51,15 @@
                            (define-property x info "x-new-info")
                            (get-property x info)))
 
+(test-assert
+    (let ()
+      (define y)
+      (define-property x info #'id)
+      (define-property y info #'id)
+      (let-syntax ((get (lambda (stx)
+                          (lambda (p)
+                            (bound-identifier=? (p #'x #'info)
+                                                (p #'y #'info))))))
+        get)))
+
 (test-end)
