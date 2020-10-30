@@ -53,4 +53,6 @@
                      (lambda (stx wr out)
                        (write-string "#<syntax " out)
                        (wr (syntax->datum stx))
+                       (write-char #\space out)
+                       (wr (syntax-object-marks stx))
                        (write-string ">" out))))

@@ -85,6 +85,7 @@
 (define-syntax with-syntax
   (lambda (stx)
     (syntax-case stx ()
-      ((_ ((p* e*) ...) body1 body2 ...)
+      ((k ((p* e*) ...) body1 body2 ...)
        #'(syntax-case (list e* ...) ()
-           ((p* ...) (letrec* () body1 body2 ...)))))))
+           ((p* ...) (letrec* () body1 body2 ...))
+           (_ (raise-syntax-error #'k "invalid syntax")))))))
