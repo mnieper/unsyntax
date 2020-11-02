@@ -67,6 +67,7 @@
           (unsyntax backend)
           (unsyntax rib)
           (unsyntax error)
+          (unsyntax identifier)
           (unsyntax store)
           (unsyntax syntax)
           (unsyntax variable))

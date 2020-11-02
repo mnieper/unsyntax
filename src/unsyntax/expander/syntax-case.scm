@@ -177,9 +177,11 @@
      ((literal? pat)
       (values (lambda (k)
                 (build loc
-                  (if (free-identifier=? ',pat e)
-                      ,(k)
-                      ,(f))))
+                       (if (identifier? e)
+                           (if (free-identifier=? ',pat e)
+                               ,(k)
+                               ,(f))
+                           ,(f))))
               pvars))
      ;; <underscore>
      ((underscore? pat)

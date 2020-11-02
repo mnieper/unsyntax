@@ -101,6 +101,7 @@
                      equal?
                      fold-right
                      free-identifier=?
+                     identifier?
                      if
                      lambda
                      let
@@ -190,6 +191,8 @@
     ((_ loc (free-identifier=? x y))
      (build-primitive-call loc 'free-identifier=? (list (%build loc x)
                                                         (%build loc y))))
+    ((_ loc (identifier? x))
+     (build-primitive-call loc 'identifier? (list (%build loc x))))
     ((_ loc (fold-right p x* ::: ,y ...))
      (build-primitive-call loc 'fold-right (cons* (%build loc p)
 						 (%build loc x*) :::
