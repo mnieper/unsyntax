@@ -438,11 +438,8 @@
       (values (cadr form) (car form))
       (receive (name version-ref) (split-library-reference stx)
         (define last (list-ref name (- (length name) 1)))
-        (unless (identifier? last)
-          (raise-syntax-error
-           stx "cannot determine context from library name ‘~s’"
-           (syntax->datum name)))
-        (values stx last))))
+        (values stx (if (identifier? last) last
+                        (datum->syntax #f 'library))))))
 
 (define (parse-import-spec import-spec)
   (if (identifier? import-spec) import-spec

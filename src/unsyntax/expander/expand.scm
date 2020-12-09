@@ -54,7 +54,8 @@
 				  stx
 				  "duplicate identifier ‘~a’ bound"
 				  (identifier-name stx)))))
-   stx*))
+   stx*)
+  #t)
 
 ;;;;;;;;;;;;;;;;;
 ;; Syntax Type ;;
