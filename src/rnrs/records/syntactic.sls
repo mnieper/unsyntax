@@ -163,6 +163,9 @@
                   (identifier? #'field-name)
                   (list #'mutable #'field-name (accessor-name #'field-name)
                         (mutator-name #'field-name)))
+                 (field-name
+                  (identifier? #'field-name)
+                  (list #'immutable #'field-name (accessor-name #'field-name)))
                  (_
                   (syntax-violation 'define-record-type
                                     "invalid field spec"
