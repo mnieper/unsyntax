@@ -41,11 +41,12 @@
            (k (syntax-car stx))
            (srcloc (syntax-object-srcloc stx)))
       `(,(core-syntax 'begin)
-        ,@(append-map (lambda (filename)
-                        (datum->syntax
-                         k (read-file (datum->syntax #f filename srcloc) ci?)
-                         srcloc))
-                      filenames)))))
+        . ,(datum->syntax
+            k (append-map (lambda (filename)
+                            (datum->syntax
+                             k (read-file (datum->syntax #f filename srcloc) ci?)
+                             srcloc))
+                          filenames))))))
 
 (define-core-transformer! 'include (include-transformer #f))
 (define-core-transformer! 'include-ci (include-transformer #t))
