@@ -24,5 +24,5 @@
 ;; SOFTWARE.
 
 (define-library (srfi 206)
-  (export define-auxiliary-syntax)
+  (export auxiliary-syntax-name define-auxiliary-syntax)
   (import (unsyntax $bootstrap)))

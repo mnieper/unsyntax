@@ -24,6 +24,7 @@
 ;; SOFTWARE.
 
 (define-core-syntax! 'alias)
+(define-core-syntax! 'auxiliary-syntax-name)
 (define-core-syntax! 'begin)
 (define-core-syntax! 'define-auxiliary-syntax)
 (define-core-syntax! 'define-property)

@@ -29,7 +29,8 @@
 	(srfi 206)
         (srfi 211 syntax-case)
         (srfi 64)
-        (rename (only (srfi 206 all) foo bar) (bar baz)))
+        (rename (only (srfi 206 all) foo bar) (bar baz))
+        (srfi 213))
 
 (test-begin "SRFI 206")
 
@@ -93,5 +94,15 @@
     (let* ()
       (define-auxiliary-syntax baz baz)
       (not (free-identifier=? #'baz #'bar))))
+
+(test-equal 'foo
+  (let* ()
+    (define-auxiliary-syntax foo)
+    (define-syntax get-auxiliary-syntax-name
+      (lambda (stx)
+        (lambda (lookup)
+          (syntax-case stx ()
+            ((_ x) #`'#,(datum->syntax #'* (lookup #'x #'auxiliary-syntax-name)))))))
+    (get-auxiliary-syntax-name foo)))
 
 (test-end)
