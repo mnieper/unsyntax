@@ -23,8 +23,5 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(define-library (srfi 213)
-  (export capture-lookup define-property)
-  (import (unsyntax $bootstrap)
-          (scheme base))
-  (include "213.scm"))
+(define (capture-lookup proc)
+  proc)

@@ -51,7 +51,7 @@ scheme_sources = %D%/rnrs/records.sls %D%/rnrs/records/inspection.sls	\
 %D%/srfi/211/syntactic-closures.sld %D%/srfi/211/syntax-case.scm	\
 %D%/srfi/211/syntax-case.sld %D%/srfi/211/syntax-parameter.sld		\
 %D%/srfi/211/variable-transformer.sld %D%/srfi/211/with-ellipsis.sld	\
-%D%/srfi/212.sld %D%/srfi/213.sld %D%/unsyntax.sls			\
+%D%/srfi/212.sld %D%/srfi/213.scm %D%/srfi/213.sld %D%/unsyntax.sls	\
 %D%/unsyntax/assert.sld %D%/unsyntax/auxiliary-syntax.scm		\
 %D%/unsyntax/auxiliary-syntax.sld %D%/unsyntax/backend.scm		\
 %D%/unsyntax/backend.sld %D%/unsyntax/bootstrap.scm			\
