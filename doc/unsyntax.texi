@@ -554,7 +554,7 @@ For legacy code, the ambiguity is resolved as follows: The line
 between the import declarations and the body of a program is drawn
 either before at the first form that is not a pair whose car is the
 identifier @code{import} or whenever the identifier @code{import} is
-imported by the previous import declaration, whatever comes earler.
+imported by the previous import declaration, whatever comes earlier.
 
 @item
 Inclusion expressions in Unsyntax search for files relative to the
