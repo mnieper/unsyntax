@@ -325,7 +325,8 @@
 (define (sc-transform transformer stx k)
   (let ((transform (sc-macro-transformer-procedure transformer))
         (i (if (identifier? stx) stx (syntax-car stx))))
-    (sc-build-output stx (transform (syntax->sexpr stx i) i) k)))
+    (sc-build-output stx (transform (syntax->sexpr stx i) i)
+                     (add-mark (make-mark) k))))
 
 (define (sc-build-output stx e k)
   (let* ((loc (syntax-object-srcloc stx))
@@ -335,6 +336,10 @@
      (let g ((e e) (k k) (contexts '()))
        (let f ((e e))
 	 (cond
+          ;; FIXME: The same pair or vector may appear in different
+          ;; syntactic closures.  For the moment, disable gracefully
+          ;; handling of cyclic data structures.
+          #;
           ((hash-table-ref/default table e #f))
 	  ((pair? e)
            (let ((v (cons #f #f)))
@@ -353,7 +358,8 @@
 	    ((assoc (datum->syntax #f e) contexts bound-identifier=?)
 	     => (lambda (pair)
 		  (datum->syntax (cdr pair) (car pair))))
-	    (else (datum->syntax k e))))
+	    (else
+             (datum->syntax k e))))
 	  ((syntax-object? e)
 	   (cond
 	    ((and (identifier? e) (assoc e contexts bound-identifier=?))

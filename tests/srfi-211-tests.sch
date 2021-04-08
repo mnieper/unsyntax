@@ -165,6 +165,21 @@
         (list (foo foo)
               (foo bar))))))
 
+(test-group "Free identifiers"
+
+  (define-syntax macro
+    (sc-macro-transformer
+     (lambda (form env)
+       (let ((p1 (make-syntactic-closure env '() (cadr form)))
+             (p2 (make-syntactic-closure env '(internal) (caddr form))))
+         `(let ((internal 1))
+            (list ,p1 ,p2))))))
+
+  ;; See <https://gitlab.com/nieper/unsyntax/-/issues/4>.
+  (test-equal '(12 2)
+    (let ((internal 11))
+      (macro (+ internal 1) (+ internal 1)))))
+
 (test-group "define-macro"
   (define-macro (when cond exp . rest)
     `(if ,cond
