@@ -39,6 +39,14 @@
   (make-label/props (label/props-label l/p)
                     (alist-cons key-lbl prop-lbl (label/props-props l/p))))
 
+(define (label/props-merge new-l/p prev-l/p)
+  (let ((lbl (label/props-label new-l/p)))
+    (if (label=? lbl (label/props-label prev-l/p))
+        (make-label/props lbl
+                          (append (label/props-props new-l/p)
+                                  (label/props-props prev-l/p)))
+        new-l/p)))
+
 (define (label/props-filter pred l/p)
   (cons (label/props-label l/p)
         (filter (lambda (entry)
@@ -148,7 +156,7 @@
 	(raise-syntax-error
 	 id "duplicate definition of identifier ‘~a’"
 	 (identifier-name id)))
-      (identifier-table-cell-set! cell l/p))
+      (identifier-table-cell-set! cell (label/props-merge l/p prev-l/p)))
     (cond
      ((identifier-table-cell table id) => success)
      (else
